@@ -9,7 +9,7 @@ MCP Client + FastAPI 后端
 import asyncio
 import json
 import httpx
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -18,11 +18,43 @@ import os
 import sys
 import subprocess
 import uuid
+import secrets
+from datetime import datetime
 
 app = FastAPI()
 
+API_KEYS_FILE = os.path.join(os.path.dirname(__file__), "api_keys.json")
 API_KEYS = ["your_api_key_1"]
 DEFAULT_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
+
+
+def load_api_keys():
+    """从文件加载 API Keys"""
+    global API_KEYS
+    if os.path.exists(API_KEYS_FILE):
+        try:
+            with open(API_KEYS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, list):
+                    API_KEYS = data
+        except:
+            pass
+
+
+def save_api_keys():
+    """保存 API Keys 到文件"""
+    with open(API_KEYS_FILE, "w", encoding="utf-8") as f:
+        json.dump(API_KEYS, f, ensure_ascii=False, indent=2)
+
+
+def generate_api_key() -> str:
+    """生成随机 API Key"""
+    key = secrets.token_urlsafe(32)
+    return key
+
+
+# 初始化加载 keys
+load_api_keys()
 
 _http_client = None
 _mcp_process: Optional[subprocess.Popen] = None
@@ -417,6 +449,42 @@ async def chat(request: ChatRequest):
             yield f"data: [ERROR] Connection error: {str(e)}\n\n"
 
     return StreamingResponse(generate(), media_type="text/event-stream")
+
+
+# ============================================================
+#  API Key 管理 API
+# ============================================================
+@app.post("/api/keys/generate")
+async def generate_new_api_key():
+    """生成新的随机 API Key"""
+    new_key = generate_api_key()
+    API_KEYS.append(new_key)
+    save_api_keys()
+    return {"key": new_key, "message": "API Key 生成成功"}
+
+
+@app.get("/api/keys")
+async def list_api_keys():
+    """列出所有可用的 API Keys"""
+    return {"keys": API_KEYS}
+
+
+@app.delete("/api/keys/{key}")
+async def delete_api_key(key: str):
+    """删除指定的 API Key"""
+    if key in API_KEYS:
+        API_KEYS.remove(key)
+        save_api_keys()
+        return {"message": f"API Key 删除成功"}
+    else:
+        raise HTTPException(status_code=404, detail="API Key 不存在")
+
+
+@app.post("/api/keys/validate")
+async def validate_api_key(key: str = None):
+    """验证 API Key 是否有效"""
+    is_valid = key in API_KEYS if key else False
+    return {"valid": is_valid}
 
 
 # ============================================================

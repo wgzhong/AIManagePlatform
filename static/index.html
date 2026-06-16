@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Chat Console</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    color: #e4e4e7;
+    padding: 24px;
+  }
+  .container {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 24px;
+    max-width: 1400px;
+    width: 100%;
+    height: calc(100vh - 48px);
+  }
+  .panel {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+  .config-panel {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .config-panel::-webkit-scrollbar { width: 6px; }
+  .config-panel::-webkit-scrollbar-track { background: transparent; }
+  .config-panel::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 3px; }
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 6px 0 4px;
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .subtitle {
+    font-size: 12px;
+    color: #a1a1aa;
+    margin-bottom: 28px;
+    opacity: 0.8;
+  }
+  h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #a1a1aa;
+    margin: 20px 0 12px;
+    font-weight: 600;
+  }
+  .field { margin-bottom: 14px; }
+  label {
+    display: block;
+    font-size: 12px;
+    color: #d4d4d8;
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  input[type="text"],
+  input[type="number"],
+  textarea,
+  select {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: #e4e4e7;
+    font-size: 13px;
+    transition: all 0.2s;
+    outline: none;
+    font-family: inherit;
+  }
+  input:focus, textarea:focus, select:focus {
+    border-color: #a8edea;
+    background: rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 0 3px rgba(168, 237, 234, 0.15);
+  }
+  textarea {
+    resize: vertical;
+    min-height: 60px;
+    font-family: 'SF Mono', Consolas, monospace;
+    font-size: 12px;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+  }
+  .checkbox-row input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #a8edea;
+    cursor: pointer;
+  }
+  .checkbox-row label {
+    margin-bottom: 0;
+    cursor: pointer;
+  }
+  .chat-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #a1a1aa;
+  }
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    background: #4ade80;
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  .status-dot.thinking {
+    background: #fbbf24;
+    animation: pulse 1s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 16px;
+    margin-bottom: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .messages::-webkit-scrollbar { width: 6px; }
+  .messages::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 3px; }
+  .message {
+    margin-bottom: 18px;
+    animation: slideIn 0.3s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .message .label {
+    font-size: 11px;
+    color: #a1a1aa;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+  }
+  .message.user .label { color: #a8edea; }
+  .message.assistant .label { color: #fed6e3; }
+  .bubble {
+    padding: 14px 18px;
+    border-radius: 14px;
+    line-height: 1.7;
+    font-size: 14px;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+  }
+  .message.user .bubble {
+    background: linear-gradient(135deg, rgba(168, 237, 234, 0.15), rgba(168, 237, 234, 0.08));
+    border: 1px solid rgba(168, 237, 234, 0.3);
+  }
+  .message.assistant .bubble {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+  .message.error .bubble {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+  }
+  .cursor {
+    display: inline-block;
+    width: 2px;
+    height: 16px;
+    background: #a8edea;
+    margin-left: 2px;
+    animation: blink 1s step-end infinite;
+    vertical-align: text-bottom;
+  }
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+  .input-area {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+  }
+  .input-area textarea {
+    flex: 1;
+    min-height: 60px;
+    max-height: 200px;
+    font-family: inherit;
+    font-size: 14px;
+  }
+  button {
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    color: #1f1f2e;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    height: fit-content;
+  }
+  button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(168, 237, 234, 0.3);
+  }
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: #e4e4e7;
+  }
+  .btn-secondary:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: none;
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .badge-required {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+  }
+  .badge-hint {
+    background: rgba(168, 237, 234, 0.2);
+    color: #a8edea;
+  }
+  @media (max-width: 900px) {
+    .container {
+      grid-template-columns: 1fr;
+      height: auto;
+    }
+    .config-panel { max-height: 400px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="panel config-panel">
+    <h1>AI Chat Console</h1>
+    <div class="subtitle">多 API Key 轮询 · HTTP/2 流式输出 · 自动工具调用</div>
+
+    <h2>连接配置</h2>
+    <div class="field">
+      <label>API URL</label>
+      <input type="text" id="apiUrl" value="https://open.bigmodel.cn/api/paas/v4/chat/completions">
+    </div>
+    <div class="field">
+      <label>API Key <span class="badge badge-required">必填</span></label>
+      <input type="text" id="apiKey" placeholder="请填写您的 API Key">
+    </div>
+
+    <h2>模型参数</h2>
+    <div class="field">
+      <label>Model</label>
+      <input type="text" id="model" value="glm-5.1">
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Temperature</label>
+        <input type="number" id="temperature" value="0.7" step="0.1" min="0" max="2">
+      </div>
+      <div class="field">
+        <label>Max Tokens</label>
+        <input type="number" id="maxTokens" value="512" min="1">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Top P</label>
+        <input type="number" id="topP" value="0.7" step="0.1" min="0" max="1">
+      </div>
+      <div class="field">
+        <label>Top K</label>
+        <input type="number" id="topK" value="50" min="1">
+      </div>
+    </div>
+    <div class="field">
+      <label>Frequency Penalty</label>
+      <input type="number" id="freqPenalty" value="0.5" step="0.1" min="-2" max="2">
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="thinkToggle">
+      <label for="thinkToggle">启用思考模式</label>
+    </div>
+
+    <h2>MCP 工具调用 <span class="badge badge-hint">符合 MCP 协议</span></h2>
+    <div style="font-size: 12px; color: #a1a1aa; line-height: 1.8; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;">
+      <div>通过 <b style="color:#a8edea;">Model Context Protocol</b> 连接 MCP Server，自动发现并调用工具：</div>
+      <div>• <b style="color:#a8edea;">get_time</b> — 获取当前日期和时间</div>
+      <div>• <b style="color:#a8edea;">calculate</b> — 执行数学计算</div>
+      <div>• <b style="color:#a8edea;">read_file</b> — 读取本地文件内容</div>
+      <div style="margin-top:6px;color:#71717a;">协议: JSON-RPC 2.0 | Transport: STDIO</div>
+    </div>
+
+    <h2>系统提示</h2>
+    <div class="field">
+      <textarea id="systemPrompt" placeholder="例如：你是一个聪明的助手">你是一个聪明且富有创造力的助手</textarea>
+    </div>
+
+    <h2>操作</h2>
+    <button class="btn-secondary" style="width:100%;margin-top:8px;" onclick="clearChat()">清空对话</button>
+  </div>
+
+  <div class="panel chat-panel">
+    <div class="chat-header">
+      <div>
+        <h1 style="font-size:18px;margin:0;">对话</h1>
+      </div>
+      <div class="status">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">就绪</span>
+      </div>
+    </div>
+    <div class="messages" id="messages">
+      <div class="message assistant">
+        <div class="label">Assistant</div>
+        <div class="bubble">你好！我是 AI 助手，有什么可以帮你的吗？试试问我"现在几点"或者"计算 1+2*3"。</div>
+      </div>
+    </div>
+    <div class="input-area">
+      <textarea id="userInput" placeholder="输入消息，按 Enter 发送，Shift+Enter 换行" onkeydown="handleKey(event)"></textarea>
+      <button id="sendBtn" onclick="send()">发送</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let messages = [];
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
+  }
+
+  function clearChat() {
+    const container = document.getElementById('messages');
+    container.innerHTML = '';
+    messages = [];
+  }
+
+  function addMessage(role, content, isError = false) {
+    const container = document.getElementById('messages');
+    const msg = document.createElement('div');
+    msg.className = 'message ' + (isError ? 'error' : role);
+    const label = document.createElement('div');
+    label.className = 'label';
+    label.textContent = role === 'user' ? 'You' : (isError ? 'Error' : 'Assistant');
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = content;
+    msg.appendChild(label);
+    msg.appendChild(bubble);
+    container.appendChild(msg);
+    container.scrollTop = container.scrollHeight;
+    return bubble;
+  }
+
+  function setStatus(active, text) {
+    const dot = document.getElementById('statusDot');
+    const t = document.getElementById('statusText');
+    dot.className = 'status-dot' + (active ? ' thinking' : '');
+    t.textContent = text;
+  }
+
+  async function send() {
+    const input = document.getElementById('userInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    // 验证 API Key
+    const apiKey = document.getElementById('apiKey').value.trim();
+    if (!apiKey) {
+      alert('请先填写 API Key');
+      document.getElementById('apiKey').focus();
+      return;
+    }
+
+    input.value = '';
+    addMessage('user', text);
+    messages.push({ role: 'user', content: text });
+
+    const btn = document.getElementById('sendBtn');
+    btn.disabled = true;
+    setStatus(true, '思考中...');
+
+    const bubble = addMessage('assistant', '');
+    const cursor = document.createElement('span');
+    cursor.className = 'cursor';
+    bubble.appendChild(cursor);
+
+    const thinking = document.getElementById('thinkToggle').checked;
+
+    try {
+      const resp = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [
+            { role: 'system', content: document.getElementById('systemPrompt').value },
+            ...messages
+          ],
+          api_key: apiKey,
+          api_url: document.getElementById('apiUrl').value || undefined,
+          model: document.getElementById('model').value,
+          max_tokens: parseInt(document.getElementById('maxTokens').value),
+          temperature: parseFloat(document.getElementById('temperature').value),
+          top_p: parseFloat(document.getElementById('topP').value),
+          top_k: parseInt(document.getElementById('topK').value),
+          frequency_penalty: parseFloat(document.getElementById('freqPenalty').value),
+          enable_think: thinking
+        })
+      });
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n');
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            if (data === '[DONE]') continue;
+            try {
+              const obj = JSON.parse(data);
+              if (obj.content) {
+                fullText += obj.content;
+                bubble.textContent = fullText;
+                bubble.appendChild(cursor);
+                const container = document.getElementById('messages');
+                container.scrollTop = container.scrollHeight;
+              }
+            } catch (e) {}
+          }
+        }
+      }
+
+      // 确保最后一次更新
+      if (fullText) {
+        bubble.textContent = fullText;
+        bubble.appendChild(cursor);
+      } else {
+        bubble.textContent = '(无内容)';
+      }
+
+      cursor.remove();
+      setStatus(false, '就绪');
+    } catch (err) {
+      cursor.remove();
+      bubble.textContent = '请求失败: ' + err.message;
+      setStatus(false, '错误');
+    }
+
+    btn.disabled = false;
+  }
+</script>
+</body>
+</html>

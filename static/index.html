@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Manage Platform - Chat Console</title>
+<title>AIManagePlatform - 总控制台</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -16,8 +16,6 @@
   --accent-cyan: #87e8e8;
   --accent-pink: #ffc8dd;
   --danger: #ff6b6b;
-  --success: #4ade80;
-  --warn: #facc15;
 }
 body {
   font-family: "Segoe UI", PingFang SC, Microsoft YaHei, system-ui, sans-serif;
@@ -26,10 +24,9 @@ body {
   color: var(--text-main);
   padding: 16px;
 }
-/* 顶部导航 */
 .top-nav {
   max-width: 1500px;
-  margin: 0 auto 16px;
+  margin: 0 auto 32px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -38,6 +35,8 @@ body {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   backdrop-filter: blur(24px);
+  flex-wrap: wrap;
+  gap: 16px;
 }
 .nav-title {
   display: flex;
@@ -45,7 +44,7 @@ body {
   gap: 12px;
 }
 .nav-title h1 {
-  font-size: 22px;
+  font-size: 24px;
   background: var(--primary-gradient);
   -webkit-background-clip: text;
   color: transparent;
@@ -57,818 +56,336 @@ body {
   background: rgba(114, 224, 224, 0.12);
   color: var(--accent-cyan);
 }
-.nav-actions {
+.nav-config {
   display: flex;
-  gap: 10px;
-}
-/* 主容器 */
-.wrapper {
-  max-width: 1500px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: 380px 1fr;
-  gap: 16px;
-  height: calc(100vh - 120px);
-}
-.panel {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: 20px;
-  backdrop-filter: blur(24px);
-  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-  overflow: hidden;
-}
-/* 左侧配置面板 */
-.sidebar-panel {
-  display: flex;
-  flex-direction: column;
-}
-.sidebar-scroll {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-}
-.sidebar-scroll::-webkit-scrollbar { width: 5px; }
-.sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
-.collapse-card {
-  margin-bottom: 18px;
-  border-radius: 14px;
-  background: rgba(0,0,0,0.2);
-  border: 1px solid rgba(255,255,255,0.06);
-}
-.card-header {
-  padding: 14px 16px;
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  cursor: pointer;
+  gap: 16px;
+  flex-wrap: wrap;
 }
-.card-header h2 {
-  font-size: 14px;
-  letter-spacing: 0.5px;
-  color: var(--text-main);
-  font-weight: 600;
-}
-.card-toggle {
-  font-size: 16px;
-  color: var(--text-sub);
-  transition: transform 0.2s;
-}
-.card-body {
-  padding: 0 16px 16px;
-  display: none;
-}
-.card-body.open { display: block; }
-.field { margin-bottom: 14px; }
-label {
+.config-item {
   display: flex;
-  justify-content: space-between;
-  font-size: 12px;
+  align-items: center;
+  gap: 8px;
+}
+.config-label {
+  font-size: 13px;
   color: var(--text-sub);
-  margin-bottom: 6px;
 }
-.badge {
-  font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-.badge-req { background: rgba(255,107,107,0.18); color: #ffb4b4; }
-input[type="text"],
-textarea,
-select {
-  width: 100%;
+.config-input {
   background: rgba(0,0,0,0.25);
   border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 10px;
-  padding: 10px 12px;
+  border-radius: 8px;
+  padding: 8px 12px;
   color: #fff;
   font-size: 13px;
+  font-family: "Consolas", monospace;
   outline: none;
   transition: all 0.2s;
+  min-width: 200px;
 }
-input:focus, textarea:focus, select:focus {
+.config-input:focus {
   border-color: var(--accent-cyan);
-  box-shadow: 0 0 0 3px rgba(114, 224, 224, 0.12);
+  box-shadow: 0 0 0 2px rgba(114, 224, 224, 0.12);
 }
-.row-two {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+.config-input.error {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.1);
 }
-/* 滑块美化 */
-.slider-wrap {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.config-input.success {
+  border-color: rgba(74, 222, 128, 0.4);
 }
-.slider-wrap input[type="range"] { flex: 1; }
-.slider-val { min-width: 32px; text-align: right; color: var(--accent-cyan); font-weight: 500; }
-/* 开关 */
-.switch-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-}
-.switch {
-  position: relative;
-  width: 40px;
-  height: 20px;
-}
-.switch input { opacity: 0; width: 0; height: 0; }
-.slider-switch {
-  position: absolute;
-  cursor: pointer;
-  top:0; left:0; right:0; bottom:0;
-  background: rgba(255,255,255,0.1);
-  border-radius: 20px;
-  transition: .3s;
-}
-.slider-switch:before {
-  position: absolute;
-  content: "";
-  height: 16px; width:16px;
-  left:2px; bottom:2px;
-  background: white;
-  border-radius: 50%;
-  transition: .3s;
-}
-input:checked + .slider-switch { background: var(--accent-cyan); }
-input:checked + .slider-switch:before { transform: translateX(20px); }
-/* MCP工具卡片 */
-.mcp-list {
+.wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 8px;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 120px);
 }
-.mcp-item {
-  padding: 10px;
-  border-radius: 10px;
-  background: rgba(114,224,224,0.08);
-  border: 1px solid rgba(114,224,224,0.15);
+.hero-section {
+  text-align: center;
+  margin-bottom: 40px;
 }
-.mcp-name { font-weight: 600; font-size: 13px; color: var(--accent-cyan); }
-.mcp-desc { font-size: 11px; color: var(--text-sub); margin-top:3px; }
-/* 按钮通用 */
-.btn {
-  padding: 10px 16px;
-  border-radius: 10px;
-  border: none;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 13px;
-}
-.btn-primary {
+.hero-section h2 {
+  font-size: 36px;
+  margin-bottom: 16px;
   background: var(--primary-gradient);
-  color: #0a0a1a;
+  -webkit-background-clip: text;
+  color: transparent;
 }
-.btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(114,224,224,0.25); }
-.btn-secondary {
-  background: rgba(255,255,255,0.08);
-  color: var(--text-main);
+.hero-section p {
+  font-size: 16px;
+  color: var(--text-sub);
+  max-width: 600px;
+  line-height: 1.8;
 }
-.btn-secondary:hover { background: rgba(255,255,255,0.14); }
-.btn-group { display: flex; gap: 8px; margin-top:10px; }
-.btn-full { width: 100%; }
-button:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
-/* 右侧聊天面板 */
-.chat-panel {
-  display: flex;
-  flex-direction: column;
+.cards-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  width: 100%;
+  max-width: 800px;
 }
-.chat-header-bar {
-  padding: 18px 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid var(--glass-border);
-}
-.chat-title h2 { font-size: 18px; }
-.chat-stat { font-size:12px; color: var(--text-sub); }
-.status-row { display: flex; align-items: center; gap: 8px; }
-.dot {
-  width:9px; height:9px; border-radius:50%;
-  background: var(--success);
-  animation: pulse 2s infinite;
-}
-.dot.thinking { background: var(--warn); animation: pulse 0.8s infinite; }
-@keyframes pulse {
-  0%,100% { opacity:1; }
-  50% { opacity:0.35; }
-}
-/* 消息区域 */
-.msg-container {
-  flex:1;
-  padding: 20px 24px;
-  overflow-y: auto;
-}
-.msg-container::-webkit-scrollbar { width:5px; }
-.msg-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius:4px; }
-.msg-block { margin-bottom: 20px; animation: slideUp 0.3s ease; }
-@keyframes slideUp {
-  from { opacity:0; transform: translateY(10px); }
-  to { opacity:1; transform: translateY(0); }
-}
-.msg-head {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 6px;
-  padding: 0 4px;
-}
-.msg-role { font-size:12px; font-weight:600; letter-spacing:0.5px; }
-.msg-time { font-size:10px; color: var(--text-sub); opacity:0.7; }
-.msg-del { font-size:11px; color: var(--danger); cursor:pointer; opacity:0; transition:0.2s; }
-.msg-block:hover .msg-del { opacity:0.8; }
-.bubble {
-  padding:14px 18px;
-  border-radius:14px;
-  line-height:1.7;
-  font-size:14px;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  position: relative;
-}
-.msg-user .msg-role { color: var(--accent-cyan); }
-.msg-user .bubble {
-  background: linear-gradient(135deg, rgba(114,224,224,0.12), rgba(114,224,224,0.05));
-  border: 1px solid rgba(114,224,224,0.2);
-}
-.msg-assist .msg-role { color: var(--accent-pink); }
-.msg-assist .bubble {
-  background: rgba(255,255,255,0.06);
-  border:1px solid rgba(255,255,255,0.09);
-}
-.msg-error .bubble {
-  background: rgba(255,107,107,0.12);
-  border:1px solid rgba(255,107,107,0.2);
-  color: #ffc2c2;
-}
-/* 工具调用折叠块 */
-.tool-fold {
-  margin:10px 0;
-  border-radius:10px;
-  background: rgba(250,204,21,0.08);
-  border:1px solid rgba(250,204,21,0.15);
-}
-.tool-fold-head {
-  padding:10px 14px;
+.card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  backdrop-filter: blur(24px);
+  padding: 32px;
+  text-align: center;
   cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  font-size:13px;
-  color: #fef08a;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
-.tool-fold-body {
-  padding:0 14px 12px;
-  font-family: Consolas, monospace;
-  font-size:12px;
-  color: #e9e9eb;
-  display: none;
-}
-.tool-fold-body.open { display:block; }
-/* 代码块 */
-pre {
-  background: rgba(0,0,0,0.35);
-  padding:12px;
-  border-radius:8px;
-  overflow-x:auto;
-  margin:8px 0;
-}
-code { font-family: Consolas; font-size:12px; color: #a8e8ff; }
-.copy-btn {
+.card::before {
+  content: '';
   position: absolute;
-  top:8px; right:8px;
-  font-size:11px;
-  padding:3px 8px;
-  background: rgba(255,255,255,0.1);
-  border-radius:6px;
-  cursor:pointer;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: var(--primary-gradient);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 0;
 }
-/* 输入底部区域 */
-.input-footer {
-  padding:18px 24px;
-  border-top:1px solid var(--glass-border);
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 60px rgba(114, 224, 224, 0.15);
+  border-color: rgba(114, 224, 224, 0.3);
 }
-.input-row {
+.card:hover::before {
+  opacity: 0.05;
+}
+.card-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 20px;
+  border-radius: 16px;
+  background: rgba(114, 224, 224, 0.1);
   display: flex;
-  gap:12px;
-  align-items: flex-end;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  position: relative;
+  z-index: 1;
 }
-#userInput {
-  flex:1;
-  min-height: 72px;
-  max-height: 220px;
-  resize: vertical;
+.card:nth-child(2) .card-icon {
+  background: rgba(255, 200, 221, 0.1);
 }
-/* 打字光标 */
-.cursor {
-  display: inline-block;
-  width:2px; height:17px;
-  background: var(--accent-cyan);
-  margin-left:3px;
-  animation: blink 1s infinite;
-  vertical-align: text-bottom;
+.card:nth-child(3) .card-icon {
+  background: rgba(130, 210, 130, 0.1);
 }
-@keyframes blink {
-  0%,50% { opacity:1; }
-  51%,100% { opacity:0; }
+.card h3 {
+  font-size: 20px;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 1;
 }
-/* Toast弹窗 */
-.toast {
-  position: fixed;
-  bottom:24px; right:24px;
-  padding:12px 18px;
-  border-radius:10px;
-  background: rgba(0,0,0,0.75);
-  backdrop-filter: blur(10px);
-  border:1px solid rgba(255,255,255,0.1);
-  z-index:999;
-  font-size:13px;
-  transform: translateY(120px);
-  opacity:0;
-  transition: all 0.3s;
+.card p {
+  font-size: 14px;
+  color: var(--text-sub);
+  line-height: 1.6;
+  position: relative;
+  z-index: 1;
 }
-.toast.show { transform: translateY(0); opacity:1; }
-/* 响应式适配 */
-@media(max-width: 1080px) {
-  .wrapper { grid-template-columns: 1fr; height: auto; gap:16px; }
-  .sidebar-panel { max-height: 500px; }
+.card-arrow {
+  position: relative;
+  z-index: 1;
+  margin-top: 20px;
+  font-size: 20px;
+  color: var(--accent-cyan);
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: all 0.3s ease;
 }
-@media(max-width: 640px) {
-  .top-nav { flex-direction: column; gap:12px; align-items: flex-start; }
-  .row-two { grid-template-columns: 1fr; }
-  .input-row { flex-direction: column; }
-  .input-row button { width:100%; }
+.card:hover .card-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+.card:hover h3 {
+  color: var(--accent-cyan);
+}
+.card:nth-child(2):hover h3 {
+  color: var(--accent-pink);
+}
+.card:nth-child(2) .card-arrow {
+  color: var(--accent-pink);
+}
+.card:nth-child(3):hover h3 {
+  color: #82d282;
+}
+.card:nth-child(3) .card-arrow {
+  color: #82d282;
+}
+.footer-info {
+  margin-top: 60px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-sub);
+  opacity: 0.6;
+}
+.footer-info span {
+  margin: 0 12px;
+}
+@media(max-width: 768px) {
+  .cards-container {
+    grid-template-columns: 1fr;
+  }
+  .hero-section h2 {
+    font-size: 28px;
+  }
 }
 </style>
 </head>
 <body>
-<!-- 顶部导航 -->
 <div class="top-nav">
   <div class="nav-title">
     <h1>AIManagePlatform</h1>
-    <span class="nav-tag">MCP · OpenAI兼容流式</span>
+    <span class="nav-tag">总控制台</span>
   </div>
-  <div class="nav-actions">
-    <button class="btn btn-secondary" onclick="exportChat()">导出对话</button>
-    <button class="btn btn-secondary" onclick="clearAllChat()">清空全部</button>
+  <div class="nav-config">
+    <div class="config-item">
+      <span class="config-label">🔑 API Key <span style="color: var(--danger);">*</span></span>
+      <input type="text" class="config-input" id="apiKeyInput" placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxxxx" onkeyup="validateKey()">
+    </div>
+    <div class="config-item">
+      <span class="config-label">🌐 API 地址</span>
+      <input type="text" class="config-input" id="apiUrlInput" placeholder="https://open.bigmodel.cn/api/paas/v4/chat/completions" onkeyup="validateUrl()">
+    </div>
   </div>
 </div>
 
 <div class="wrapper">
-  <!-- 左侧配置栏 -->
-  <div class="panel sidebar-panel">
-    <div class="sidebar-scroll">
-      <!-- API Key 管理 -->
-      <div class="collapse-card">
-        <div class="card-header" onclick="toggleCard(this)">
-          <h2>🔑 API Key 管理</h2>
-          <span class="card-toggle">−</span>
-        </div>
-        <div class="card-body open">
-          <button class="btn btn-primary btn-full" onclick="generateApiKey()">生成新的随机 API Key</button>
-          <div style="margin-top:14px;font-size:12px;color:var(--text-sub);">
-            当前可用的 API Keys（ESP32可使用这些Key访问服务）：
-          </div>
-          <div id="keyList" style="margin-top:10px;max-height:200px;overflow-y:auto;"></div>
-        </div>
-      </div>
+  <div class="hero-section">
+    <h2>AI 管理平台</h2>
+    <p>选择您需要的功能模块，开始使用 AI 服务</p>
+  </div>
 
-      <!-- API连接配置 -->
-      <div class="collapse-card">
-        <div class="card-header" onclick="toggleCard(this)">
-          <h2>🔗 API 连接配置</h2>
-          <span class="card-toggle">−</span>
-        </div>
-        <div class="card-body open">
-          <div class="field">
-            <label>API 请求地址 <span class="badge badge-req">必填</span></label>
-            <input type="text" id="apiUrl" value="https://open.bigmodel.cn/api/paas/v4/chat/completions">
-          </div>
-          <div class="field">
-            <label>API Key <span class="badge badge-req">必填</span></label>
-            <input type="text" id="apiKey" placeholder="sk-xxxxxxxxxxxxxxxxxxxx">
-          </div>
-          <div class="field">
-            <label>模型名称</label>
-            <input type="text" id="modelName" value="glm-5.1">
-          </div>
-        </div>
-      </div>
+  <div class="cards-container">
+    <div class="card" onclick="navigateTo('/chat')">
+      <div class="card-icon">🤖</div>
+      <h3>AI 推理对话</h3>
+      <p>与 AI 模型进行实时对话，支持 MCP 工具调用（时间查询、数学计算、文件读取），体验流式响应效果</p>
+      <div class="card-arrow">→</div>
+    </div>
 
-      <!-- 生成参数 -->
-      <div class="collapse-card">
-        <div class="card-header" onclick="toggleCard(this)">
-          <h2>⚙️ 生成参数</h2>
-          <span class="card-toggle">−</span>
-        </div>
-        <div class="card-body open">
-          <div class="row-two">
-            <div class="field">
-              <label>Temperature 随机性</label>
-              <div class="slider-wrap">
-                <input type="range" id="tempSlider" min="0" max="2" step="0.1" value="0.7">
-                <span class="slider-val" id="tempVal">0.7</span>
-              </div>
-            </div>
-            <div class="field">
-              <label>Max Tokens 输出上限</label>
-              <input type="number" id="maxTokens" value="1024" min="64" max="8192">
-            </div>
-          </div>
-          <div class="row-two">
-            <div class="field">
-              <label>Top P</label>
-              <div class="slider-wrap">
-                <input type="range" id="topPSlider" min="0" max="1" step="0.1" value="0.7">
-                <span class="slider-val" id="topPVal">0.7</span>
-              </div>
-            </div>
-            <div class="field">
-              <label>Top K</label>
-              <input type="number" id="topK" value="50" min="1" max="100">
-            </div>
-          </div>
-          <div class="field">
-            <label>频率惩罚 Frequency Penalty</label>
-            <div class="slider-wrap">
-              <input type="range" id="freqSlider" min="-2" max="2" step="0.1" value="0.5">
-              <span class="slider-val" id="freqVal">0.5</span>
-            </div>
-          </div>
-          <div class="switch-row">
-            <span>启用模型思考标签 &lt;think&gt;</span>
-            <label class="switch">
-              <input type="checkbox" id="enableThink">
-              <span class="slider-switch"></span>
-            </label>
-          </div>
-        </div>
-      </div>
+    <div class="card" onclick="navigateTo('/keys')">
+      <div class="card-icon">🔑</div>
+      <h3>API Key 管理</h3>
+      <p>生成、查看、删除 API 密钥，管理访问凭证，支持导出和复制操作</p>
+      <div class="card-arrow">→</div>
+    </div>
 
-      <!-- MCP工具协议 -->
-      <div class="collapse-card">
-        <div class="card-header" onclick="toggleCard(this)">
-          <h2>🧰 MCP 工具调用</h2>
-          <span class="card-toggle">−</span>
-        </div>
-        <div class="card-body open">
-          <div class="mcp-list">
-            <div class="mcp-item">
-              <div class="mcp-name">get_time</div>
-              <div class="mcp-desc">获取当前系统日期、星期、时间</div>
-            </div>
-            <div class="mcp-item">
-              <div class="mcp-name">calculate</div>
-              <div class="mcp-desc">复杂四则、括号数学表达式计算</div>
-            </div>
-            <div class="mcp-item">
-              <div class="mcp-name">read_file</div>
-              <div class="mcp-desc">读取本地指定路径文本文件内容</div>
-            </div>
-          </div>
-          <div style="margin-top:10px;font-size:11px;color:#888;">
-            传输协议：JSON-RPC 2.0 | STDIO 通道
-          </div>
-        </div>
-      </div>
-
-      <!-- 系统提示词 -->
-      <div class="collapse-card">
-        <div class="card-header" onclick="toggleCard(this)">
-          <h2>📝 系统角色提示词</h2>
-          <span class="card-toggle">−</span>
-        </div>
-        <div class="card-body open">
-          <textarea id="sysPrompt" rows="5" placeholder="设定AI角色、回答规则、输出格式">你是专业AI助手，回答简洁清晰，复杂问题分步说明，可自动调用工具获取实时信息。</textarea>
-        </div>
-      </div>
-
-      <div class="btn-group">
-        <button class="btn btn-secondary btn-full" onclick="clearAllChat()">清空全部对话</button>
-      </div>
+    <div class="card" onclick="navigateTo('/devices')">
+      <div class="card-icon">📱</div>
+      <h3>硬件设备管理</h3>
+      <p>管理 ESP32 等硬件设备的设备码，分配管理员 API Key，支持设备使用记录查询</p>
+      <div class="card-arrow">→</div>
     </div>
   </div>
 
-  <!-- 右侧聊天主面板 -->
-  <div class="panel chat-panel">
-    <div class="chat-header-bar">
-      <div>
-        <h2>实时对话控制台</h2>
-        <div class="chat-stat" id="tokenStat">Token：0 输入 | 0 输出</div>
-      </div>
-      <div class="status-row">
-        <span class="dot" id="statusDot"></span>
-        <span id="statusText">就绪空闲</span>
-      </div>
-    </div>
-    <div class="msg-container" id="msgBox">
-      <div class="msg-block msg-assist">
-        <div class="msg-head">
-          <span class="msg-role">AI Assistant</span>
-          <span class="msg-time">刚刚</span>
-        </div>
-        <div class="bubble">你好，欢迎使用 AIManagePlatform 对话控制台！
-支持 MCP 工具调用，你可以问我：
-1. 现在几点
-2. 计算 128 * (256 + 72)
-3. 读取本地配置文件</div>
-      </div>
-    </div>
-    <div class="input-footer">
-      <div class="input-row">
-        <textarea id="userInput" placeholder="输入消息，Enter发送，Shift+Enter换行"></textarea>
-        <button class="btn btn-primary" id="sendBtn" onclick="sendMessage()">发送消息</button>
-      </div>
-    </div>
+  <div class="footer-info">
+    <span>MCP 协议 · JSON-RPC 2.0</span>
+    <span>|</span>
+    <span>OpenAI 兼容 API</span>
   </div>
 </div>
 
-<!-- Toast提示弹窗 -->
-<div class="toast" id="toast"></div>
-
 <script>
-let chatHistory = [];
-let totalPromptTokens = 0;
-let totalCompTokens = 0;
+const API_KEY_STORAGE = 'ai_platform_api_key';
+const API_URL_STORAGE = 'ai_platform_api_url';
+const DEFAULT_API_URL = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
 
-document.addEventListener('DOMContentLoaded', loadApiKeys);
+function getStoredKey() {
+  return localStorage.getItem(API_KEY_STORAGE) || '';
+}
 
-async function loadApiKeys() {
-  try {
-    const res = await fetch('/api/keys');
-    const data = await res.json();
-    renderKeyList(data.keys || []);
-  } catch (err) {
-    document.getElementById('keyList').innerHTML = '<div style="color:#ff6b6b;font-size:12px;">加载失败</div>';
+function getStoredUrl() {
+  return localStorage.getItem(API_URL_STORAGE) || DEFAULT_API_URL;
+}
+
+function saveKey(apiKey) {
+  localStorage.setItem(API_KEY_STORAGE, apiKey);
+}
+
+function saveUrl(apiUrl) {
+  localStorage.setItem(API_URL_STORAGE, apiUrl);
+}
+
+function validateKey() {
+  const input = document.getElementById('apiKeyInput');
+  
+  if (input.value.trim()) {
+    input.classList.remove('error');
+    input.classList.add('success');
+    saveKey(input.value.trim());
+  } else {
+    input.classList.remove('error', 'success');
   }
 }
 
-function renderKeyList(keys) {
-  const list = document.getElementById('keyList');
-  if (keys.length === 0) {
-    list.innerHTML = '<div style="padding:12px;text-align:center;color:var(--text-sub);font-size:12px;">暂无 API Keys，点击上方按钮生成</div>';
+function validateUrl() {
+  const input = document.getElementById('apiUrlInput');
+  
+  if (input.value.trim()) {
+    saveUrl(input.value.trim());
+  }
+}
+
+function navigateTo(path) {
+  const apiKey = document.getElementById('apiKeyInput').value.trim();
+  
+  if (!apiKey) {
+    const input = document.getElementById('apiKeyInput');
+    input.classList.add('error');
+    input.classList.remove('success');
+    input.focus();
     return;
   }
-  list.innerHTML = keys.map((key, index) => `
-    <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);margin-bottom:8px;">
-      <div style="flex:1;font-family:monospace;font-size:12px;color:var(--text-main);word-break:break-all;">
-        <div style="color:#72e0e0;font-weight:600;">Key ${index + 1}</div>
-        <div style="margin-top:4px;color:var(--text-sub);">${key}</div>
-      </div>
-      <div style="display:flex;gap:6px;">
-        <button class="btn btn-secondary" style="padding:6px 10px;font-size:11px;" onclick="copyKey('${key}')">复制</button>
-        <button class="btn" style="padding:6px 10px;font-size:11px;background:rgba(255,107,107,0.2);color:#ff6b6b;" onclick="deleteKey('${key}')">删除</button>
-      </div>
-    </div>
-  `).join('');
-}
-
-async function generateApiKey() {
-  try {
-    const res = await fetch('/api/keys/generate', { method: 'POST' });
-    const data = await res.json();
-    if (data.key) {
-      showToast('API Key 生成成功！');
-      loadApiKeys();
-    }
-  } catch (err) {
-    showToast('生成失败');
+  
+  saveKey(apiKey);
+  
+  const apiUrl = document.getElementById('apiUrlInput').value.trim();
+  if (apiUrl) {
+    saveUrl(apiUrl);
   }
+  
+  window.location.href = path;
 }
 
-async function deleteKey(key) {
-  if (!confirm(`确定删除这个 API Key 吗？\n${key}`)) return;
-  try {
-    const res = await fetch(`/api/keys/${encodeURIComponent(key)}`, { method: 'DELETE' });
-    if (res.ok) {
-      showToast('删除成功');
-      loadApiKeys();
-    } else {
-      showToast('删除失败');
-    }
-  } catch (err) {
-    showToast('删除失败');
+document.addEventListener('DOMContentLoaded', function() {
+  const storedKey = getStoredKey();
+  if (storedKey) {
+    document.getElementById('apiKeyInput').value = storedKey;
+    validateKey();
   }
-}
+  
+  const storedUrl = getStoredUrl();
+  document.getElementById('apiUrlInput').value = storedUrl;
+});
 
-async function copyKey(key) {
-  try {
-    await navigator.clipboard.writeText(key);
-    showToast('已复制到剪贴板');
-  } catch (err) {
-    const textarea = document.createElement('textarea');
-    textarea.value = key;
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textarea);
-    showToast('已复制到剪贴板');
+document.getElementById('apiKeyInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    navigateTo('/chat');
   }
-}
+});
 
-// 折叠面板
-function toggleCard(el) {
-  const body = el.nextElementSibling;
-  const icon = el.querySelector(".card-toggle");
-  body.classList.toggle("open");
-  icon.textContent = body.classList.contains("open") ? "−" : "+";
-}
-
-// 滑块数值同步
-const tempSlider = document.getElementById("tempSlider");
-const tempVal = document.getElementById("tempVal");
-tempSlider.oninput = () => tempVal.textContent = tempSlider.value;
-
-const topPSlider = document.getElementById("topPSlider");
-const topPVal = document.getElementById("topPVal");
-topPSlider.oninput = () => topPVal.textContent = topPSlider.value;
-
-const freqSlider = document.getElementById("freqSlider");
-const freqVal = document.getElementById("freqVal");
-freqSlider.oninput = () => freqVal.textContent = freqSlider.value;
-
-// Toast提示
-function showToast(text) {
-  const toast = document.getElementById("toast");
-  toast.textContent = text;
-  toast.classList.add("show");
-  setTimeout(() => toast.classList.remove("show"), 2200);
-}
-
-// 状态更新
-function setStatus(isThinking, text) {
-  const dot = document.getElementById("statusDot");
-  const t = document.getElementById("statusText");
-  dot.className = "dot" + (isThinking ? " thinking" : "");
-  t.textContent = text;
-}
-
-// 更新Token统计
-function updateTokenStat(prompt, comp) {
-  totalPromptTokens += prompt;
-  totalCompTokens += comp;
-  document.getElementById("tokenStat").textContent =
-    `Token：${totalPromptTokens} 输入 | ${totalCompTokens} 输出`;
-}
-
-// 添加消息块
-function addMessage(role, content, time = null, isError = false) {
-  const box = document.getElementById("msgBox");
-  const wrap = document.createElement("div");
-  wrap.className = `msg-block ${role === "user" ? "msg-user" : isError ? "msg-error" : "msg-assist"}`;
-  const now = time || new Date().toLocaleTimeString();
-
-  const head = document.createElement("div");
-  head.className = "msg-head";
-  head.innerHTML = `
-    <span class="msg-role">${role === "user" ? "You" : isError ? "错误" : "AI Assistant"}</span>
-    <div>
-      <span class="msg-time">${now}</span>
-      <span class="msg-del" onclick="delMsg(this)">删除</span>
-    </div>
-  `;
-
-  const bubble = document.createElement("div");
-  bubble.className = "bubble";
-  bubble.textContent = content;
-
-  wrap.appendChild(head);
-  wrap.appendChild(bubble);
-  box.appendChild(wrap);
-  box.scrollTop = box.scrollHeight;
-  return bubble;
-}
-
-// 删除单条消息
-function delMsg(el) {
-  const block = el.closest(".msg-block");
-  block.remove();
-  showToast("已删除单条消息");
-}
-
-// 清空全部对话
-function clearAllChat() {
-  document.getElementById("msgBox").innerHTML = "";
-  chatHistory = [];
-  totalPromptTokens = 0;
-  totalCompTokens = 0;
-  document.getElementById("tokenStat").textContent = "Token：0 输入 | 0 输出";
-  showToast("对话已全部清空");
-}
-
-// 导出对话文本
-function exportChat() {
-  let txt = "# AIManagePlatform 对话导出\n";
-  document.querySelectorAll(".msg-block").forEach(block => {
-    const role = block.querySelector(".msg-role").textContent;
-    const text = block.querySelector(".bubble").textContent;
-    txt += `\n【${role}】\n${text}\n`;
-  });
-  const blob = new Blob([txt], { type: "text/plain" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "chat_log.txt";
-  a.click();
-  showToast("对话日志已导出");
-}
-
-// 键盘发送
-document.getElementById("userInput").onkeydown = function(e) {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
+document.getElementById('apiKeyInput').addEventListener('blur', function() {
+  const apiKey = this.value.trim();
+  if (apiKey) {
+    saveKey(apiKey);
   }
-};
+});
 
-// 发送主逻辑
-async function sendMessage() {
-  const input = document.getElementById("userInput");
-  const text = input.value.trim();
-  if (!text) return showToast("请输入对话内容");
-
-  const apiKey = document.getElementById("apiKey").value.trim();
-  if (!apiKey) return showToast("请填写API Key");
-
-  // 追加用户消息
-  input.value = "";
-  const now = new Date().toLocaleTimeString();
-  addMessage("user", text, now);
-  chatHistory.push({ role: "user", content: text });
-
-  const sendBtn = document.getElementById("sendBtn");
-  sendBtn.disabled = true;
-  setStatus(true, "模型思考流式输出中...");
-
-  // 创建空AI消息，附带打字光标
-  const bubble = addMessage("assist", "", now);
-  const cursor = document.createElement("span");
-  cursor.className = "cursor";
-  bubble.appendChild(cursor);
-  let fullResp = "";
-
-  const reqBody = {
-    messages: [
-      { role: "system", content: document.getElementById("sysPrompt").value },
-      ...chatHistory
-    ],
-    api_key: apiKey,
-    api_url: document.getElementById("apiUrl").value,
-    model: document.getElementById("modelName").value,
-    max_tokens: Number(document.getElementById("maxTokens").value),
-    temperature: Number(tempSlider.value),
-    top_p: Number(topPSlider.value),
-    frequency_penalty: Number(freqSlider.value),
-    enable_think: document.getElementById("enableThink").checked
-  };
-
-  try {
-    const res = await fetch("/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(reqBody)
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder("utf-8");
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      const chunk = decoder.decode(value, { stream: true });
-      const lines = chunk.split("\n");
-      for (let line of lines) {
-        if (!line.startsWith("data: ")) continue;
-        const data = line.slice(6);
-        if (data === "[DONE]") continue;
-        try {
-          const obj = JSON.parse(data);
-          if (obj.content) {
-            fullResp += obj.content;
-            bubble.textContent = fullResp;
-            bubble.appendChild(cursor);
-            document.getElementById("msgBox").scrollTop = document.getElementById("msgBox").scrollHeight;
-          }
-          // 接收后端传回token消耗
-          if (obj.usage) {
-            updateTokenStat(obj.usage.prompt_tokens || 0, obj.usage.completion_tokens || 0);
-          }
-        } catch (err) {}
-      }
-    }
-    cursor.remove();
-    chatHistory.push({ role: "assistant", content: fullResp });
-    setStatus(false, "就绪空闲");
-  } catch (err) {
-    bubble.remove();
-    addMessage("assist", `请求异常：${err.message}`, now, true);
-    setStatus(false, "连接错误");
-    showToast("接口请求失败");
+document.getElementById('apiUrlInput').addEventListener('blur', function() {
+  const apiUrl = this.value.trim();
+  if (apiUrl) {
+    saveUrl(apiUrl);
   }
-  sendBtn.disabled = false;
-}
+});
 </script>
 </body>
 </html>

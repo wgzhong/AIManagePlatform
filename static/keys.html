@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API Key 管理 - AIManagePlatform</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg-gradient: linear-gradient(140deg, #0b0822 0%, #1c1648 48%, #121030 100%);
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.09);
+  --primary-gradient: linear-gradient(120deg, #72e0e0, #ffc8dd);
+  --text-main: #f4f4f7;
+  --text-sub: #a9a9b8;
+  --accent-cyan: #87e8e8;
+  --accent-pink: #ffc8dd;
+  --danger: #ff6b6b;
+  --success: #4ade80;
+}
+body {
+  font-family: "Segoe UI", PingFang SC, Microsoft YaHei, system-ui, sans-serif;
+  background: var(--bg-gradient);
+  min-height: 100vh;
+  color: var(--text-main);
+  padding: 16px;
+}
+.top-nav {
+  max-width: 1200px;
+  margin: 0 auto 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 24px;
+  border-radius: 16px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(24px);
+}
+.nav-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.nav-title h1 {
+  font-size: 22px;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  color: transparent;
+}
+.nav-tag {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(114, 224, 224, 0.12);
+  color: var(--accent-cyan);
+}
+.btn {
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 13px;
+}
+.btn-secondary {
+  background: rgba(255,255,255,0.08);
+  color: var(--text-main);
+}
+.btn-secondary:hover { background: rgba(255,255,255,0.14); }
+.btn-primary {
+  background: var(--primary-gradient);
+  color: #0a0a1a;
+}
+.btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(114,224,224,0.25); }
+.btn-danger {
+  background: rgba(255,107,107,0.15);
+  color: var(--danger);
+}
+.btn-danger:hover { background: rgba(255,107,107,0.25); }
+.btn-success {
+  background: rgba(74,222,128,0.15);
+  color: var(--success);
+}
+.btn-success:hover { background: rgba(74,222,128,0.25); }
+.wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.panel {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  backdrop-filter: blur(24px);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.panel-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.panel-header h3 {
+  font-size: 16px;
+}
+.panel-body {
+  padding: 24px;
+}
+.key-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.key-item {
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.2s;
+}
+.key-item:hover {
+  border-color: rgba(114,224,224,0.2);
+  background: rgba(114,224,224,0.03);
+}
+.key-index {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(114,224,224,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-cyan);
+}
+.key-content {
+  flex: 1;
+}
+.key-content .key-label {
+  font-size: 12px;
+  color: var(--text-sub);
+  margin-bottom: 4px;
+}
+.key-content .key-value {
+  font-family: "Consolas", monospace;
+  font-size: 14px;
+  color: var(--text-main);
+  word-break: break-all;
+}
+.key-actions {
+  display: flex;
+  gap: 8px;
+}
+.key-actions .btn {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+}
+.stat-card .stat-num {
+  font-size: 32px;
+  font-weight: 700;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  color: transparent;
+}
+.stat-card .stat-label {
+  font-size: 13px;
+  color: var(--text-sub);
+  margin-top: 6px;
+}
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+.empty-state .empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+.empty-state .empty-title {
+  font-size: 18px;
+  color: var(--text-main);
+  margin-bottom: 8px;
+}
+.empty-state .empty-desc {
+  font-size: 14px;
+  color: var(--text-sub);
+  margin-bottom: 20px;
+}
+.toast {
+  position: fixed;
+  bottom:24px; right:24px;
+  padding:12px 18px;
+  border-radius:10px;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(10px);
+  border:1px solid rgba(255,255,255,0.1);
+  z-index:999;
+  font-size:13px;
+  transform: translateY(120px);
+  opacity:0;
+  transition: all 0.3s;
+}
+.toast.show { transform: translateY(0); opacity:1; }
+.toast.success { border-color: rgba(74,222,128,0.3); }
+.toast.error { border-color: rgba(255,107,107,0.3); }
+@media(max-width: 768px) {
+  .stats-row {
+    grid-template-columns: 1fr;
+  }
+  .register-form {
+    flex-direction: column;
+  }
+  .device-stats {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+<body>
+<div class="top-nav">
+  <div class="nav-title">
+    <h1>AIManagePlatform</h1>
+    <span class="nav-tag">管理与设备</span>
+  </div>
+  <button class="btn btn-secondary" onclick="window.location.href='/'">返回首页</button>
+</div>
+
+<div class="wrapper">
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-num" id="keyCount">0</div>
+      <div class="stat-label">API Keys 总数</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="maxPerKey">50</div>
+      <div class="stat-label">每 Key 设备上限</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="totalUsage">0</div>
+      <div class="stat-label">总使用次数</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <h3>API 密钥列表</h3>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary" onclick="generateApiKey()">生成新密钥</button>
+        <button class="btn btn-secondary" onclick="exportKeys()">导出</button>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="key-list" id="keyList"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let keys = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+  const apiKey = localStorage.getItem('ai_platform_api_key') || '';
+  
+  if (!apiKey) {
+    alert('请先在首页输入 API Key！');
+    window.location.href = '/';
+    return;
+  }
+  
+  loadApiKeys();
+});
+
+async function loadApiKeys() {
+  try {
+    const res = await fetch('/api/keys');
+    const data = await res.json();
+    keys = data.keys || [];
+    renderKeyList();
+    updateKeyStats();
+  } catch (err) {
+    showToast('加载失败', 'error');
+  }
+}
+
+function updateKeyStats() {
+  document.getElementById('keyCount').textContent = keys.length;
+  document.getElementById('maxPerKey').textContent = '50';
+}
+
+function renderKeyList() {
+  const list = document.getElementById('keyList');
+  
+  if (keys.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🔑</div>
+        <div class="empty-title">暂无 API Keys</div>
+        <div class="empty-desc">点击上方按钮生成新的随机密钥</div>
+      </div>
+    `;
+    return;
+  }
+
+  list.innerHTML = keys.map((key, index) => `
+    <div class="key-item">
+      <div class="key-index">${index + 1}</div>
+      <div class="key-content">
+        <div class="key-label">API Key ${index + 1}</div>
+        <div class="key-value">${key}</div>
+      </div>
+      <div class="key-actions">
+        <button class="btn btn-secondary" onclick="copyKey('${key}')">复制</button>
+        <button class="btn btn-danger" onclick="deleteKey('${key}')">删除</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function generateApiKey() {
+  try {
+    const res = await fetch('/api/keys/generate', { method: 'POST' });
+    const data = await res.json();
+    if (data.key) {
+      keys.push(data.key);
+      renderKeyList();
+      updateKeyStats();
+      showToast('API Key 生成成功！', 'success');
+    }
+  } catch (err) {
+    showToast('生成失败', 'error');
+  }
+}
+
+async function deleteKey(key) {
+  if (!confirm(`确定删除这个 API Key 吗？\n${key}`)) return;
+  try {
+    const res = await fetch(`/api/keys/${encodeURIComponent(key)}`, { method: 'DELETE' });
+    if (res.ok) {
+      keys = keys.filter(k => k !== key);
+      renderKeyList();
+      updateKeyStats();
+      showToast('删除成功', 'success');
+    } else {
+      showToast('删除失败', 'error');
+    }
+  } catch (err) {
+    showToast('删除失败', 'error');
+  }
+}
+
+async function copyKey(key) {
+  try {
+    await navigator.clipboard.writeText(key);
+    showToast('API Key 已复制', 'success');
+  } catch (err) {
+    const textarea = document.createElement('textarea');
+    textarea.value = key;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    showToast('API Key 已复制', 'success');
+  }
+}
+
+function exportKeys() {
+  if (keys.length === 0) {
+    showToast('没有可导出的密钥', 'error');
+    return;
+  }
+  
+  const txt = `# AIManagePlatform API Keys\n# 导出时间: ${new Date().toLocaleString()}\n\n${keys.join('\n')}`;
+  const blob = new Blob([txt], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'api_keys.txt';
+  a.click();
+  showToast('密钥已导出', 'success');
+}
+
+function showToast(text, type = 'success') {
+  const toast = document.getElementById('toast');
+  toast.textContent = text;
+  toast.className = 'toast show ' + type;
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>

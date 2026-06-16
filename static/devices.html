@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>硬件设备管理 - AIManagePlatform</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg-gradient: linear-gradient(140deg, #0b0822 0%, #1c1648 48%, #121030 100%);
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.09);
+  --primary-gradient: linear-gradient(120deg, #72e0e0, #ffc8dd);
+  --text-main: #f4f4f7;
+  --text-sub: #a9a9b8;
+  --accent-cyan: #87e8e8;
+  --accent-green: #82d282;
+  --danger: #ff6b6b;
+  --success: #4ade80;
+}
+body {
+  font-family: "Segoe UI", PingFang SC, Microsoft YaHei, system-ui, sans-serif;
+  background: var(--bg-gradient);
+  min-height: 100vh;
+  color: var(--text-main);
+  padding: 16px;
+}
+.top-nav {
+  max-width: 1200px;
+  margin: 0 auto 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 24px;
+  border-radius: 16px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(24px);
+}
+.nav-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.nav-title h1 {
+  font-size: 22px;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  color: transparent;
+}
+.nav-tag {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(130, 210, 130, 0.12);
+  color: var(--accent-green);
+}
+.btn {
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 13px;
+}
+.btn-secondary {
+  background: rgba(255,255,255,0.08);
+  color: var(--text-main);
+}
+.btn-secondary:hover { background: rgba(255,255,255,0.14); }
+.btn-primary {
+  background: var(--primary-gradient);
+  color: #0a0a1a;
+}
+.btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(114,224,224,0.25); }
+.btn-danger {
+  background: rgba(255,107,107,0.15);
+  color: var(--danger);
+}
+.btn-danger:hover { background: rgba(255,107,107,0.25); }
+.btn-success {
+  background: rgba(130,210,130,0.15);
+  color: var(--accent-green);
+}
+.btn-success:hover { background: rgba(130,210,130,0.25); }
+.wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.panel {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  backdrop-filter: blur(24px);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.panel-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.panel-header h3 {
+  font-size: 16px;
+}
+.panel-body {
+  padding: 24px;
+}
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+}
+.stat-card .stat-num {
+  font-size: 32px;
+  font-weight: 700;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  color: transparent;
+}
+.stat-card .stat-label {
+  font-size: 13px;
+  color: var(--text-sub);
+  margin-top: 6px;
+}
+.register-section {
+  background: rgba(130,210,130,0.05);
+  border: 1px solid rgba(130,210,130,0.2);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+.register-section h4 {
+  font-size: 15px;
+  color: var(--accent-green);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.register-form {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.register-form input {
+  flex: 1;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #fff;
+  font-size: 13px;
+  outline: none;
+}
+.register-form input:focus {
+  border-color: var(--accent-green);
+  box-shadow: 0 0 0 3px rgba(130,210,130,0.12);
+}
+.device-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.device-item {
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  padding: 16px 20px;
+  transition: all 0.2s;
+}
+.device-item:hover {
+  border-color: rgba(130,210,130,0.2);
+}
+.device-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.device-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.device-code {
+  font-family: "Consolas", monospace;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--accent-green);
+  background: rgba(130,210,130,0.1);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+.device-name {
+  font-size: 14px;
+  color: var(--text-sub);
+}
+.device-actions {
+  display: flex;
+  gap: 8px;
+}
+.device-actions .btn {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+.device-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  font-size: 12px;
+}
+.device-stat {
+  background: rgba(0,0,0,0.2);
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+.device-stat-label {
+  color: var(--text-sub);
+  margin-bottom: 4px;
+}
+.device-stat-value {
+  color: var(--text-main);
+  font-weight: 600;
+  font-family: "Consolas", monospace;
+  word-break: break-all;
+}
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+.empty-state .empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+.empty-state .empty-title {
+  font-size: 18px;
+  color: var(--text-main);
+  margin-bottom: 8px;
+}
+.empty-state .empty-desc {
+  font-size: 14px;
+  color: var(--text-sub);
+  margin-bottom: 20px;
+}
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 12px 18px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+  z-index: 999;
+  font-size: 13px;
+  transform: translateY(120px);
+  opacity: 0;
+  transition: all 0.3s;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { border-color: rgba(130,210,130,0.3); }
+.toast.error { border-color: rgba(255,107,107,0.3); }
+@media(max-width: 768px) {
+  .stats-row { grid-template-columns: 1fr; }
+  .register-form { flex-direction: column; }
+  .device-stats { grid-template-columns: 1fr; }
+  .device-header { flex-direction: column; gap: 12px; align-items: flex-start; }
+}
+</style>
+</head>
+<body>
+<div class="top-nav">
+  <div class="nav-title">
+    <h1>AIManagePlatform</h1>
+    <span class="nav-tag">硬件设备管理</span>
+  </div>
+  <button class="btn btn-secondary" onclick="window.location.href='/'">返回首页</button>
+</div>
+
+<div class="wrapper">
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-num" id="deviceCount">0</div>
+      <div class="stat-label">已注册设备</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="apiKeyCount">0</div>
+      <div class="stat-label">可用 API Keys</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="totalUsage">0</div>
+      <div class="stat-label">总使用次数</div>
+    </div>
+  </div>
+
+  <div class="register-section">
+    <h4>📱 注册新硬件设备</h4>
+    <div class="register-form">
+      <input type="text" id="deviceNameInput" placeholder="输入设备名称（如：ESP32-客厅）" onkeydown="if(event.key==='Enter')registerDevice()">
+      <button class="btn btn-success" onclick="registerDevice()">注册设备</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <h3>已注册的设备列表</h3>
+      <button class="btn btn-secondary" onclick="loadDevices()">刷新列表</button>
+    </div>
+    <div class="panel-body">
+      <div id="deviceList"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let devices = [];
+let adminApiKey = '';
+
+document.addEventListener('DOMContentLoaded', function() {
+  adminApiKey = localStorage.getItem('ai_platform_api_key') || '';
+  
+  if (!adminApiKey) {
+    alert('请先在首页输入 API Key！');
+    window.location.href = '/';
+    return;
+  }
+  
+  loadDevices();
+});
+
+async function loadDevices() {
+  try {
+    const res = await fetch('/api/devices');
+    const data = await res.json();
+    devices = data.devices || [];
+    
+    document.getElementById('deviceCount').textContent = data.total || 0;
+    document.getElementById('apiKeyCount').textContent = data.api_keys_total || 0;
+    
+    let totalUsage = 0;
+    devices.forEach(d => {
+      totalUsage += d.usage_count || 0;
+    });
+    document.getElementById('totalUsage').textContent = totalUsage;
+    
+    renderDeviceList();
+  } catch (err) {
+    showToast('加载设备失败', 'error');
+  }
+}
+
+function renderDeviceList() {
+  const list = document.getElementById('deviceList');
+  
+  if (devices.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📱</div>
+        <div class="empty-title">暂无注册的设备</div>
+        <div class="empty-desc">在上方输入设备名称并点击"注册设备"来添加 ESP32 等硬件设备</div>
+      </div>
+    `;
+    return;
+  }
+
+  list.innerHTML = devices.map(device => `
+    <div class="device-item">
+      <div class="device-header">
+        <div class="device-info">
+          <span class="device-code">${device.device_code}</span>
+          <span class="device-name">${device.name || '未命名设备'}</span>
+        </div>
+        <div class="device-actions">
+          <button class="btn btn-secondary" onclick="copyDeviceCode('${device.device_code}')">复制设备码</button>
+          <button class="btn btn-danger" onclick="deleteDevice('${device.device_code}')">删除</button>
+        </div>
+      </div>
+      <div class="device-stats">
+        <div class="device-stat">
+          <div class="device-stat-label">管理员 API Key</div>
+          <div class="device-stat-value">${device.admin_api_key_short || '未分配'}</div>
+        </div>
+        <div class="device-stat">
+          <div class="device-stat-label">使用次数</div>
+          <div class="device-stat-value">${device.usage_count || 0}</div>
+        </div>
+        <div class="device-stat">
+          <div class="device-stat-label">最后使用</div>
+          <div class="device-stat-value">${device.last_used ? device.last_used.substring(0, 19) : '从未使用'}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function registerDevice() {
+  const deviceName = document.getElementById('deviceNameInput').value.trim();
+  
+  if (!deviceName) {
+    showToast('请输入设备名称', 'error');
+    return;
+  }
+  
+  try {
+    const res = await fetch('/api/devices/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `device_name=${encodeURIComponent(deviceName)}&admin_api_key=${encodeURIComponent(adminApiKey)}`
+    });
+    const data = await res.json();
+    
+    if (data.success) {
+      showToast(`设备注册成功！设备码：${data.device_code}`, 'success');
+      document.getElementById('deviceNameInput').value = '';
+      loadDevices();
+    } else {
+      showToast(data.error || '注册失败', 'error');
+    }
+  } catch (err) {
+    showToast('注册失败', 'error');
+  }
+}
+
+async function deleteDevice(deviceCode) {
+  if (!confirm(`确定删除设备 ${deviceCode} 吗？`)) return;
+  
+  try {
+    const res = await fetch(`/api/devices/${encodeURIComponent(deviceCode)}`, { method: 'DELETE' });
+    if (res.ok) {
+      showToast('设备已删除', 'success');
+      loadDevices();
+    } else {
+      showToast('删除失败', 'error');
+    }
+  } catch (err) {
+    showToast('删除失败', 'error');
+  }
+}
+
+async function copyDeviceCode(code) {
+  try {
+    await navigator.clipboard.writeText(code);
+    showToast('设备码已复制', 'success');
+  } catch (err) {
+    const textarea = document.createElement('textarea');
+    textarea.value = code;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    showToast('设备码已复制', 'success');
+  }
+}
+
+function showToast(text, type = 'success') {
+  const toast = document.getElementById('toast');
+  toast.textContent = text;
+  toast.className = 'toast show ' + type;
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>

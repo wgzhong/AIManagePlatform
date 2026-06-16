@@ -4,12 +4,13 @@ MCP Client + FastAPI 后端
 - 通过 STDIO transport 连接 MCP Server
 - 发送 JSON-RPC 2.0 消息进行生命周期握手和工具调用
 - 不依赖 MCP SDK ClientSession，直接用 subprocess 实现
+- 支持 ESP32 设备码验证和 API Key 自动分配
 """
 
 import asyncio
 import json
 import httpx
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Form
 from fastapi.responses import StreamingResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -20,12 +21,15 @@ import subprocess
 import uuid
 import secrets
 from datetime import datetime
+import threading
 
 app = FastAPI()
 
 API_KEYS_FILE = os.path.join(os.path.dirname(__file__), "api_keys.json")
+DEVICES_FILE = os.path.join(os.path.dirname(__file__), "devices.json")
 API_KEYS = ["your_api_key_1"]
 DEFAULT_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
+MAX_USERS_PER_KEY = 50  # 每个 API Key 最多支持的用户数
 
 
 def load_api_keys():
@@ -53,12 +57,55 @@ def generate_api_key() -> str:
     return key
 
 
-# 初始化加载 keys
+def load_devices():
+    """从文件加载设备信息"""
+    if os.path.exists(DEVICES_FILE):
+        try:
+            with open(DEVICES_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except:
+            pass
+    return {}
+
+
+def save_devices(devices: Dict):
+    """保存设备信息到文件"""
+    with open(DEVICES_FILE, "w", encoding="utf-8") as f:
+        json.dump(devices, f, ensure_ascii=False, indent=2)
+
+
+def get_available_api_key() -> Optional[str]:
+    """获取可用（有剩余配额）的 API Key"""
+    devices = load_devices()
+    
+    # 统计每个 API Key 已分配的用户数
+    key_usage = {}
+    for device_code, info in devices.items():
+        api_key = info.get("api_key", "")
+        if api_key and api_key in API_KEYS:
+            key_usage[api_key] = key_usage.get(api_key, 0) + 1
+    
+    # 找到一个还有余量的 API Key
+    for key in API_KEYS:
+        used = key_usage.get(key, 0)
+        if used < MAX_USERS_PER_KEY:
+            return key
+    
+    return None
+
+
+def generate_device_code() -> str:
+    """生成随机设备码（8位十六进制）"""
+    return secrets.token_hex(4).upper()
+
+
+# 初始化加载
 load_api_keys()
 
 _http_client = None
 _mcp_process: Optional[subprocess.Popen] = None
 _mcp_tools_cache: Optional[List[Dict]] = None
+_devices_lock = threading.Lock()
 
 
 async def get_http_client():
@@ -81,6 +128,7 @@ class ChatRequest(BaseModel):
     top_k: int = 50
     frequency_penalty: float = 0.5
     enable_think: bool = False
+    device_code: Optional[str] = None  # ESP32 设备码
 
 
 # ============================================================
@@ -346,12 +394,40 @@ async def llm_tool_decision(request: ChatRequest, api_key: str, api_url: str) ->
 
 
 # ============================================================
-#  /chat 端点
+#  /chat 端点（支持 ESP32 设备码验证）
 # ============================================================
 @app.post("/chat")
 async def chat(request: ChatRequest):
-    api_key = request.api_key or API_KEYS[0]
     api_url = request.api_url or DEFAULT_URL
+    
+    # ESP32 设备码验证模式
+    if request.device_code:
+        with _devices_lock:
+            devices = load_devices()
+            
+            if request.device_code not in devices:
+                return StreamingResponse(
+                    iter([f"data: {json.dumps({'error': '设备码未注册，请先在网页端注册设备'}, ensure_ascii=False)}\n\n", "data: [DONE]\n\n"]),
+                    media_type="text/event-stream"
+                )
+            
+            device_info = devices[request.device_code]
+            api_key = device_info.get("admin_api_key", "")
+            
+            if not api_key or api_key not in API_KEYS:
+                return StreamingResponse(
+                    iter([f"data: {json.dumps({'error': '设备的管理员 API Key 无效，请检查'}, ensure_ascii=False)}\n\n", "data: [DONE]\n\n"]),
+                    media_type="text/event-stream"
+                )
+            
+            # 更新设备最后使用时间
+            device_info["last_used"] = datetime.now().isoformat()
+            device_info["usage_count"] = device_info.get("usage_count", 0) + 1
+            devices[request.device_code] = device_info
+            save_devices(devices)
+    else:
+        # 普通模式（网页端）
+        api_key = request.api_key or API_KEYS[0]
 
     user_message = request.messages[-1]["content"] if request.messages else ""
 
@@ -452,6 +528,15 @@ async def chat(request: ChatRequest):
 
 
 # ============================================================
+#  页面路由
+# ============================================================
+@app.get("/devices")
+async def devices_page():
+    """硬件设备管理页面"""
+    return FileResponse("static/devices.html")
+
+
+# ============================================================
 #  API Key 管理 API
 # ============================================================
 @app.post("/api/keys/generate")
@@ -488,6 +573,116 @@ async def validate_api_key(key: str = None):
 
 
 # ============================================================
+#  设备管理 API（ESP32 设备码）
+# ============================================================
+@app.post("/api/devices/register")
+async def register_device(
+    device_name: str = Form(default="Hardware Device"),
+    admin_api_key: str = Form(default=None)
+):
+    """注册新设备，使用管理员的 API Key"""
+    with _devices_lock:
+        # 验证管理员 API Key
+        if not admin_api_key or admin_api_key not in API_KEYS:
+            return {
+                "success": False,
+                "error": "无效的管理员 API Key",
+                "message": "请在主页输入有效的 API Key"
+            }
+        
+        devices = load_devices()
+        
+        # 生成新设备码
+        device_code = generate_device_code()
+        
+        # 确保设备码唯一
+        while device_code in devices:
+            device_code = generate_device_code()
+        
+        # 注册设备（使用管理员的 API Key）
+        devices[device_code] = {
+            "name": device_name,
+            "admin_api_key": admin_api_key,  # 存储管理员的 API Key
+            "created_at": datetime.now().isoformat(),
+            "last_used": None,
+            "usage_count": 0
+        }
+        
+        save_devices(devices)
+        
+        return {
+            "success": True,
+            "device_code": device_code,
+            "device_name": device_name,
+            "message": f"设备注册成功！设备码：{device_code}"
+        }
+
+
+@app.get("/api/devices")
+async def list_devices():
+    """列出所有已注册的设备"""
+    devices = load_devices()
+    
+    device_list = []
+    for device_code, info in devices.items():
+        admin_key = info.get("admin_api_key", "")
+        device_list.append({
+            "device_code": device_code,
+            "name": info.get("name", ""),
+            "admin_api_key_short": admin_key[:20] + "..." if admin_key else "",
+            "created_at": info.get("created_at", ""),
+            "last_used": info.get("last_used", ""),
+            "usage_count": info.get("usage_count", 0)
+        })
+    
+    return {
+        "devices": device_list,
+        "total": len(device_list),
+        "api_keys_total": len(API_KEYS)
+    }
+
+
+@app.delete("/api/devices/{device_code}")
+async def delete_device(device_code: str):
+    """删除指定设备"""
+    with _devices_lock:
+        devices = load_devices()
+        
+        if device_code not in devices:
+            raise HTTPException(status_code=404, detail="设备不存在")
+        
+        device_info = devices.pop(device_code)
+        save_devices(devices)
+        
+        return {
+            "success": True,
+            "message": f"设备 {device_code} 已删除",
+            "freed_api_key": device_info.get("api_key", "")[:20] + "..." if device_info.get("api_key") else ""
+        }
+
+
+@app.get("/api/devices/{device_code}")
+async def get_device(device_code: str):
+    """获取指定设备信息"""
+    devices = load_devices()
+    
+    if device_code not in devices:
+        raise HTTPException(status_code=404, detail="设备不存在")
+    
+    info = devices[device_code]
+    admin_key = info.get("admin_api_key", "")
+    return {
+        "device_code": device_code,
+        "name": info.get("name", ""),
+        "admin_api_key": admin_key,
+        "admin_api_key_short": admin_key[:20] + "..." if admin_key else "",
+        "created_at": info.get("created_at", ""),
+        "last_used": info.get("last_used", ""),
+        "usage_count": info.get("usage_count", 0)
+    }
+
+
+# ============================================================
 #  MCP 工具列表 API
 # ============================================================
 @app.get("/mcp/tools")
@@ -509,6 +704,16 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 @app.get("/")
 async def index():
     return FileResponse(os.path.join(STATIC_DIR, "index.html"))
+
+
+@app.get("/chat")
+async def chat_page():
+    return FileResponse(os.path.join(STATIC_DIR, "chat.html"))
+
+
+@app.get("/keys")
+async def keys_page():
+    return FileResponse(os.path.join(STATIC_DIR, "keys.html"))
 
 
 if __name__ == "__main__":

@@ -20,6 +20,7 @@ import sys
 import subprocess
 import uuid
 import secrets
+import gzip
 from datetime import datetime
 import threading
 
@@ -27,9 +28,130 @@ app = FastAPI()
 
 API_KEYS_FILE = os.path.join(os.path.dirname(__file__), "api_keys.json")
 DEVICES_FILE = os.path.join(os.path.dirname(__file__), "devices.json")
+STATS_FILE = os.path.join(os.path.dirname(__file__), "stats.json")
+CHAT_HISTORY_FILE = os.path.join(os.path.dirname(__file__), "chat_history.jsonl.gz")
+MAX_CHAT_HISTORY_SIZE = 10 * 1024 * 1024  # 10MB
 API_KEYS = ["your_api_key_1"]
 DEFAULT_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
 MAX_USERS_PER_KEY = 50  # 每个 API Key 最多支持的用户数
+
+# 系统统计数据
+STATS_LOCK = threading.Lock()
+SYSTEM_START_TIME = datetime.now()
+
+
+def load_stats():
+    """从文件加载统计数据"""
+    if os.path.exists(STATS_FILE):
+        try:
+            with open(STATS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except:
+            pass
+    return {
+        "daily_requests": 0,
+        "total_requests": 0,
+        "today_output_tokens": 0,
+        "total_output_tokens": 0,
+        "tool_calls": {"get_time": 0, "calculate": 0, "read_file": 0, "total": 0},
+        "daily_records": [],
+        "last_reset": datetime.now().isoformat()
+    }
+
+
+def save_stats(stats):
+    """保存统计数据到文件"""
+    with open(STATS_FILE, "w", encoding="utf-8") as f:
+        json.dump(stats, f, ensure_ascii=False, indent=2)
+
+
+def load_chat_history():
+    """从JSON Lines gzip文件加载对话历史"""
+    if os.path.exists(CHAT_HISTORY_FILE):
+        try:
+            with gzip.open(CHAT_HISTORY_FILE, "rt", encoding="utf-8") as f:
+                history = []
+                for line in f:
+                    line = line.strip()
+                    if line:
+                        history.append(json.loads(line))
+                return history
+        except:
+            pass
+    return []
+
+
+def save_chat_history(history: list):
+    """保存对话历史到JSON Lines gzip文件，超过10M自动清理旧记录"""
+    with gzip.open(CHAT_HISTORY_FILE, "wt", encoding="utf-8") as f:
+        for item in history:
+            f.write(json.dumps(item, ensure_ascii=False) + "\n")
+    
+    # 检查文件大小，超过限制则清理旧记录
+    file_size = os.path.getsize(CHAT_HISTORY_FILE)
+    if file_size > MAX_CHAT_HISTORY_SIZE:
+        # 保留最近的对话，逐步删除直到大小合适
+        while file_size > MAX_CHAT_HISTORY_SIZE and len(history) > 1:
+            history.pop(0)  # 删除最早的记录
+            with gzip.open(CHAT_HISTORY_FILE, "wt", encoding="utf-8") as f:
+                for item in history:
+                    f.write(json.dumps(item, ensure_ascii=False) + "\n")
+            file_size = os.path.getsize(CHAT_HISTORY_FILE)
+
+
+def increment_request_count():
+    """增加请求计数"""
+    with STATS_LOCK:
+        stats = load_stats()
+        today = datetime.now().date().isoformat()
+        
+        # 检查是否需要重置日统计
+        if not stats.get("last_reset") or stats["last_reset"] != today:
+            stats["daily_requests"] = 0
+            stats["today_input_tokens"] = 0
+            stats["today_output_tokens"] = 0
+            stats["last_reset"] = today
+        
+        stats["daily_requests"] += 1
+        stats["total_requests"] += 1
+        
+        # 更新日记录（保留最近7天）
+        daily_records = stats.get("daily_records", [])
+        today_record = next((r for r in daily_records if r["date"] == today), None)
+        if today_record:
+            today_record["count"] += 1
+        else:
+            daily_records.append({"date": today, "count": 1})
+            if len(daily_records) > 7:
+                daily_records.pop(0)
+        stats["daily_records"] = daily_records
+        
+        save_stats(stats)
+
+
+def update_token_usage(input_tokens, output_tokens):
+    """更新 Token 使用统计（只统计输出token）"""
+    with STATS_LOCK:
+        stats = load_stats()
+        today = datetime.now().date().isoformat()
+        
+        if stats.get("last_reset") != today:
+            stats["today_output_tokens"] = 0
+            stats["last_reset"] = today
+        
+        stats["today_output_tokens"] += output_tokens
+        stats["total_output_tokens"] += output_tokens
+        save_stats(stats)
+
+
+def increment_tool_call(tool_name):
+    """增加工具调用计数"""
+    with STATS_LOCK:
+        stats = load_stats()
+        if tool_name in stats["tool_calls"]:
+            stats["tool_calls"][tool_name] += 1
+        stats["tool_calls"]["total"] += 1
+        save_stats(stats)
 
 
 def load_api_keys():
@@ -129,6 +251,7 @@ class ChatRequest(BaseModel):
     frequency_penalty: float = 0.5
     enable_think: bool = False
     device_code: Optional[str] = None  # ESP32 设备码
+    enabled_tools: Optional[List[str]] = None  # 启用的工具列表
 
 
 # ============================================================
@@ -244,24 +367,27 @@ def call_mcp_tool(name: str, arguments: Dict[str, Any]) -> str:
 
 
 # 快速工具调用匹配（跳过 LLM 决策，减少延迟）
-def quick_tool_match(message: str) -> Optional[Dict]:
+def quick_tool_match(message: str, enabled_tools: Optional[List[str]] = None) -> Optional[Dict]:
     """快速匹配常见工具调用场景，仅匹配明确的工具调用意图"""
     message = message.strip()
     
+    if enabled_tools is None:
+        enabled_tools = ["get_time", "calculate", "read_file"]
+    
     # 时间查询：必须包含"几点"或"时间"，且不是简单问候
     time_keywords = ["几点", "时间", "时刻", "几点钟", "现在几点", "现在是几点"]
-    if any(keyword in message for keyword in time_keywords):
+    if "get_time" in enabled_tools and any(keyword in message for keyword in time_keywords):
         return {"tool": "get_time", "arguments": {}}
     
     # 数学计算：必须包含数字和运算符
     import re
     calc_pattern = r'([\d\.]+)\s*[+\-*/×÷]\s*([\d\.]+)'
-    if re.search(calc_pattern, message):
+    if "calculate" in enabled_tools and re.search(calc_pattern, message):
         expr = re.search(calc_pattern, message).group(0).replace('×', '*').replace('÷', '/')
         return {"tool": "calculate", "arguments": {"expression": expr}}
     
     # 文件读取：必须包含"读取"或"查看"和路径
-    if any(keyword in message for keyword in ["读取", "查看", "打开文件"]):
+    if "read_file" in enabled_tools and any(keyword in message for keyword in ["读取", "查看", "打开文件"]):
         path_match = re.search(r'([A-Za-z]:\\[^"\'\s]+)', message)
         if path_match:
             return {"tool": "read_file", "arguments": {"path": path_match.group(1)}}
@@ -374,7 +500,7 @@ async def llm_tool_decision(request: ChatRequest, api_key: str, api_url: str) ->
     payload = {
         "model": request.model,
         "messages": decision_messages,
-        "stream": False,
+        "stream": True,
         "max_tokens": 50,
         "temperature": 0.1,
         "top_p": 0.3,
@@ -388,6 +514,8 @@ async def llm_tool_decision(request: ChatRequest, api_key: str, api_url: str) ->
             return None
         data = resp.json()
         reply = data.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+        if "usage" in data:
+            update_token_usage(data["usage"].get("prompt_tokens", 0), data["usage"].get("completion_tokens", 0))
         return parse_json_tool_call(reply)
     except Exception:
         return None
@@ -414,9 +542,9 @@ async def chat(request: ChatRequest):
             device_info = devices[request.device_code]
             api_key = device_info.get("admin_api_key", "")
             
-            if not api_key or api_key not in API_KEYS:
+            if not api_key:
                 return StreamingResponse(
-                    iter([f"data: {json.dumps({'error': '设备的管理员 API Key 无效，请检查'}, ensure_ascii=False)}\n\n", "data: [DONE]\n\n"]),
+                    iter([f"data: {json.dumps({'error': '设备未配置 API Key，请重新注册'}, ensure_ascii=False)}\n\n", "data: [DONE]\n\n"]),
                     media_type="text/event-stream"
                 )
             
@@ -430,14 +558,18 @@ async def chat(request: ChatRequest):
         api_key = request.api_key or API_KEYS[0]
 
     user_message = request.messages[-1]["content"] if request.messages else ""
+    
+    # 增加请求计数
+    increment_request_count()
 
     # 方案1：明确的工具调用，直接返回工具结果（最快，不经过 LLM）
-    tool_decision = quick_tool_match(user_message)
+    tool_decision = quick_tool_match(user_message, request.enabled_tools)
     if tool_decision:
         tool_name = tool_decision["tool"]
         tool_arguments = tool_decision.get("arguments") or {}
         try:
             raw_result = call_mcp_tool(tool_name, tool_arguments)
+            increment_tool_call(tool_name)
         except Exception as e:
             raw_result = f"工具调用失败: {str(e)}"
 
@@ -514,6 +646,11 @@ async def chat(request: ChatRequest):
                             break
                         try:
                             data = json.loads(data_str)
+                            
+                            if "usage" in data:
+                                update_token_usage(data["usage"].get("prompt_tokens", 0), data["usage"].get("completion_tokens", 0))
+                                yield "data: " + json.dumps({"usage": data["usage"]}, ensure_ascii=False) + "\n\n"
+                            
                             if "choices" in data and len(data["choices"]) > 0:
                                 delta = data["choices"][0].get("delta", {})
                                 content = delta.get("content") or delta.get("reasoning_content", "")
@@ -580,14 +717,14 @@ async def register_device(
     device_name: str = Form(default="Hardware Device"),
     admin_api_key: str = Form(default=None)
 ):
-    """注册新设备，使用管理员的 API Key"""
+    """注册新设备，使用用户提供的 API Key（首页输入的 key）"""
     with _devices_lock:
-        # 验证管理员 API Key
-        if not admin_api_key or admin_api_key not in API_KEYS:
+        # 验证管理员 API Key 是否提供
+        if not admin_api_key or len(admin_api_key) < 10:
             return {
                 "success": False,
-                "error": "无效的管理员 API Key",
-                "message": "请在主页输入有效的 API Key"
+                "error": "请提供有效的 API Key",
+                "message": "请在首页输入您的 API Key 后再注册设备"
             }
         
         devices = load_devices()
@@ -595,14 +732,14 @@ async def register_device(
         # 生成新设备码
         device_code = generate_device_code()
         
-        # 确保设备码唯一
+        # 保设备码唯一
         while device_code in devices:
             device_code = generate_device_code()
         
-        # 注册设备（使用管理员的 API Key）
+        # 注册设备（直接使用用户提供的 API Key，无需在系统中预先生成）
         devices[device_code] = {
             "name": device_name,
-            "admin_api_key": admin_api_key,  # 存储管理员的 API Key
+            "admin_api_key": admin_api_key,  # 存储用户的 API Key
             "created_at": datetime.now().isoformat(),
             "last_used": None,
             "usage_count": 0
@@ -656,8 +793,8 @@ async def delete_device(device_code: str):
         
         return {
             "success": True,
-            "message": f"设备 {device_code} 已删除",
-            "freed_api_key": device_info.get("api_key", "")[:20] + "..." if device_info.get("api_key") else ""
+            "message": f"Device {device_code} deleted",
+            "freed_api_key": device_info.get("admin_api_key", "")[:20] + "..." if device_info.get("admin_api_key") else ""
         }
 
 
@@ -679,6 +816,115 @@ async def get_device(device_code: str):
         "created_at": info.get("created_at", ""),
         "last_used": info.get("last_used", ""),
         "usage_count": info.get("usage_count", 0)
+    }
+
+
+# ============================================================
+#  系统统计 API
+# ============================================================
+@app.get("/api/stats")
+async def get_stats():
+    """获取系统统计数据"""
+    stats = load_stats()
+    devices = load_devices()
+    
+    # 计算在线设备数（最近5分钟内使用过的）
+    online_count = 0
+    now = datetime.now()
+    for info in devices.values():
+        last_used = info.get("last_used")
+        if last_used:
+            last_time = datetime.fromisoformat(last_used.replace("Z", "+00:00"))
+            if (now - last_time).total_seconds() < 300:  # 5分钟内
+                online_count += 1
+    
+    # 计算运行时长
+    uptime = now - SYSTEM_START_TIME
+    uptime_str = f"{uptime.days}天 {uptime.seconds//3600}时 {(uptime.seconds//60)%60}分"
+    
+    # 计算日环比（假设昨天的数据）
+    daily_records = stats.get("daily_records", [])
+    today_count = stats.get("daily_requests", 0)
+    yesterday_count = 0
+    if len(daily_records) >= 2:
+        yesterday_count = daily_records[-2].get("count", 0)
+    
+    growth_rate = 0
+    if yesterday_count > 0:
+        growth_rate = ((today_count - yesterday_count) / yesterday_count * 100)
+    
+    return {
+        "daily_requests": today_count,
+        "total_requests": stats.get("total_requests", 0),
+        "growth_rate": round(growth_rate, 1),
+        "online_devices": online_count,
+        "total_devices": len(devices),
+        "today_output_tokens": stats.get("today_output_tokens", 0),
+        "total_output_tokens": stats.get("total_output_tokens", 0),
+        "tool_calls": stats.get("tool_calls", {}),
+        "daily_records": daily_records,
+        "uptime": uptime_str,
+        "version": "1.0.0",
+        "mcp_version": "2025-06-18"
+    }
+
+
+# ============================================================
+#  对话历史 API
+# ============================================================
+@app.get("/api/chat/history")
+async def get_chat_history():
+    """获取对话历史"""
+    history = load_chat_history()
+    return {"history": history}
+
+
+class ChatHistoryRequest(BaseModel):
+    history: List[dict]
+
+
+@app.post("/api/chat/history")
+async def api_save_chat_history(request: ChatHistoryRequest):
+    """保存对话历史"""
+    save_chat_history(request.history)
+    return {"success": True}
+
+
+@app.delete("/api/chat/history")
+async def clear_chat_history():
+    """清空对话历史"""
+    save_chat_history([])
+    return {"success": True}
+
+
+@app.get("/api/health")
+async def health_check():
+    """健康检查接口"""
+    try:
+        # 测试 API 连接
+        client = await get_http_client()
+        response = await client.head(DEFAULT_URL, timeout=5)
+        latency = response.elapsed.total_seconds() * 1000
+        
+        if response.status_code == 200:
+            status = "online"
+            status_color = "green"
+        elif 400 <= response.status_code < 500:
+            status = "rate_limited"
+            status_color = "orange"
+        else:
+            status = "error"
+            status_color = "red"
+    except Exception:
+        status = "offline"
+        status_color = "red"
+        latency = -1
+    
+    return {
+        "status": status,
+        "status_color": status_color,
+        "latency": round(latency, 1) if latency >= 0 else None,
+        "timestamp": datetime.now().isoformat()
     }
 
 
@@ -711,9 +957,9 @@ async def chat_page():
     return FileResponse(os.path.join(STATIC_DIR, "chat.html"))
 
 
-@app.get("/keys")
-async def keys_page():
-    return FileResponse(os.path.join(STATIC_DIR, "keys.html"))
+@app.get("/mcp")
+async def mcp_page():
+    return FileResponse(os.path.join(STATIC_DIR, "mcp.html"))
 
 
 if __name__ == "__main__":

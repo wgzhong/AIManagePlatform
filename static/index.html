@@ -15,28 +15,44 @@
   --text-sub: #a9a9b8;
   --accent-cyan: #87e8e8;
   --accent-pink: #ffc8dd;
+  --accent-green: #82d282;
   --danger: #ff6b6b;
+  --warn: #facc15;
+  --success: #4ade80;
+  --orange: #fb923c;
 }
 body {
   font-family: "Segoe UI", PingFang SC, Microsoft YaHei, system-ui, sans-serif;
   background: var(--bg-gradient);
   min-height: 100vh;
   color: var(--text-main);
-  padding: 16px;
+  padding-bottom: 120px;
 }
 .top-nav {
-  max-width: 1500px;
-  margin: 0 auto 32px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  max-width: 1600px;
+  margin: 0 auto 24px;
+  padding: 12px 24px;
+  border-radius: 0 0 20px 20px;
+  background: rgba(11, 8, 34, 0.95);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(24px);
+  box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+}
+.nav-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 24px;
-  border-radius: 16px;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: blur(24px);
   flex-wrap: wrap;
   gap: 16px;
+}
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
 }
 .nav-title {
   display: flex;
@@ -44,7 +60,7 @@ body {
   gap: 12px;
 }
 .nav-title h1 {
-  font-size: 24px;
+  font-size: 22px;
   background: var(--primary-gradient);
   -webkit-background-clip: text;
   color: transparent;
@@ -56,24 +72,161 @@ body {
   background: rgba(114, 224, 224, 0.12);
   color: var(--accent-cyan);
 }
-.nav-config {
+.nav-center {
   display: flex;
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
 }
-.config-item {
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.model-select-wrapper {
+  position: relative;
+}
+.model-select {
+  appearance: none;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  padding: 8px 32px 8px 14px;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s;
+  min-width: 160px;
+}
+.model-select:focus {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 0 3px rgba(114, 224, 224, 0.12);
+}
+.model-select-wrapper::after {
+  content: '▼';
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  color: var(--text-sub);
+  pointer-events: none;
+}
+.status-indicator {
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: rgba(74, 222, 128, 0.1);
+  cursor: pointer;
+  transition: all 0.2s;
 }
-.config-label {
+.status-indicator:hover {
+  background: rgba(74, 222, 128, 0.15);
+}
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--success);
+  animation: pulse 2s infinite;
+}
+.status-dot.orange { background: var(--orange); }
+.status-dot.red { background: var(--danger); }
+.status-text {
+  font-size: 12px;
+  color: var(--text-main);
+}
+.status-tooltip {
+  position: absolute;
+  right: 20px;
+  top: 60px;
+  background: rgba(0,0,0,0.9);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 16px;
+  min-width: 220px;
+  display: none;
+  z-index: 1000;
+}
+.status-tooltip.show { display: block; }
+.tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--glass-border);
+}
+.tooltip-row:last-child { border-bottom: none; }
+.tooltip-label { color: var(--text-sub); font-size: 12px; }
+.tooltip-value { color: var(--text-main); font-size: 13px; font-weight: 600; }
+.btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-secondary {
+  background: rgba(255,255,255,0.08);
+  color: var(--text-main);
+}
+.btn-secondary:hover { background: rgba(255,255,255,0.14); }
+.btn-primary {
+  background: var(--primary-gradient);
+  color: #0a0a1a;
+}
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: rgba(114, 224, 224, 0.08);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.user-info:hover {
+  background: rgba(114, 224, 224, 0.12);
+}
+.user-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--primary-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0a0a1a;
+}
+.user-name {
   font-size: 13px;
-  color: var(--text-sub);
+  color: var(--text-main);
 }
-.config-input {
-  background: rgba(0,0,0,0.25);
-  border: 1px solid rgba(255,255,255,0.08);
+.user-role {
+  font-size: 11px;
+  color: var(--accent-cyan);
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(114, 224, 224, 0.12);
+}
+.key-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.key-input {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--glass-border);
   border-radius: 8px;
   padding: 8px 12px;
   color: #fff;
@@ -81,51 +234,131 @@ body {
   font-family: "Consolas", monospace;
   outline: none;
   transition: all 0.2s;
-  min-width: 200px;
+  min-width: 220px;
 }
-.config-input:focus {
+.key-input:focus {
   border-color: var(--accent-cyan);
-  box-shadow: 0 0 0 2px rgba(114, 224, 224, 0.12);
 }
-.config-input.error {
-  border-color: var(--danger);
-  box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.1);
-}
-.config-input.success {
-  border-color: rgba(74, 222, 128, 0.4);
+.key-input.error { border-color: var(--danger); }
+.key-input.success { border-color: var(--success); }
+.key-url {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #fff;
+  font-size: 13px;
+  outline: none;
+  min-width: 300px;
 }
 .wrapper {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
+  padding: 0 24px;
+}
+.dashboard-section {
+  margin-bottom: 32px;
+}
+.dashboard-title {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  min-height: calc(100vh - 120px);
+  gap: 10px;
+  margin-bottom: 20px;
 }
-.hero-section {
-  text-align: center;
-  margin-bottom: 40px;
+.dashboard-title h2 {
+  font-size: 18px;
+  color: var(--text-main);
 }
-.hero-section h2 {
-  font-size: 36px;
-  margin-bottom: 16px;
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+.stat-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
   background: var(--primary-gradient);
-  -webkit-background-clip: text;
-  color: transparent;
 }
-.hero-section p {
-  font-size: 16px;
+.stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+.stat-icon {
+  font-size: 24px;
+}
+.stat-trend {
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.stat-trend.up {
+  background: rgba(74, 222, 128, 0.15);
+  color: var(--success);
+}
+.stat-trend.down {
+  background: rgba(255, 107, 107, 0.15);
+  color: var(--danger);
+}
+.stat-value {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: var(--text-main);
+}
+.stat-label {
+  font-size: 13px;
   color: var(--text-sub);
-  max-width: 600px;
-  line-height: 1.8;
+  margin-bottom: 12px;
 }
-.cards-container {
+.mini-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 30px;
+}
+.mini-bar {
+  flex: 1;
+  background: rgba(114, 224, 224, 0.3);
+  border-radius: 2px 2px 0 0;
+  transition: height 0.3s;
+}
+.mini-bar.highlight {
+  background: rgba(114, 224, 224, 0.6);
+}
+.progress-bar {
+  height: 6px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--primary-gradient);
+  border-radius: 3px;
+  transition: width 0.5s;
+}
+.cards-section {
+  margin-bottom: 32px;
+}
+.cards-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 24px;
-  width: 100%;
-  max-width: 800px;
 }
 .card {
   background: var(--glass-bg);
@@ -133,7 +366,6 @@ body {
   border-radius: 24px;
   backdrop-filter: blur(24px);
   padding: 32px;
-  text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
@@ -160,26 +392,23 @@ body {
   opacity: 0.05;
 }
 .card-icon {
-  width: 64px;
-  height: 64px;
-  margin: 0 auto 20px;
-  border-radius: 16px;
+  width: 72px;
+  height: 72px;
+  margin-bottom: 20px;
+  border-radius: 20px;
   background: rgba(114, 224, 224, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
+  font-size: 32px;
   position: relative;
   z-index: 1;
 }
-.card:nth-child(2) .card-icon {
-  background: rgba(255, 200, 221, 0.1);
-}
-.card:nth-child(3) .card-icon {
-  background: rgba(130, 210, 130, 0.1);
-}
+.card:nth-child(2) .card-icon { background: rgba(255, 200, 221, 0.1); }
+.card:nth-child(3) .card-icon { background: rgba(130, 210, 130, 0.1); }
+.card:nth-child(4) .card-icon { background: rgba(250, 204, 21, 0.1); }
 .card h3 {
-  font-size: 20px;
+  font-size: 22px;
   margin-bottom: 12px;
   position: relative;
   z-index: 1;
@@ -208,120 +437,612 @@ body {
 .card:hover h3 {
   color: var(--accent-cyan);
 }
-.card:nth-child(2):hover h3 {
+.card:nth-child(2):hover h3 { color: var(--accent-pink); }
+.card:nth-child(2) .card-arrow { color: var(--accent-pink); }
+.card:nth-child(3):hover h3 { color: var(--accent-green); }
+.card:nth-child(3) .card-arrow { color: var(--accent-green); }
+.card:nth-child(4):hover h3 { color: var(--warn); }
+.card:nth-child(4) .card-arrow { color: var(--warn); }
+.card-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: rgba(255, 200, 221, 0.15);
   color: var(--accent-pink);
+  z-index: 1;
 }
-.card:nth-child(2) .card-arrow {
-  color: var(--accent-pink);
+.recent-section {
+  margin-bottom: 32px;
 }
-.card:nth-child(3):hover h3 {
-  color: #82d282;
+.recent-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
 }
-.card:nth-child(3) .card-arrow {
-  color: #82d282;
+.recent-title h3 {
+  font-size: 16px;
+  color: var(--text-main);
 }
-.footer-info {
-  margin-top: 60px;
-  text-align: center;
+.recent-list {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+}
+.recent-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.recent-item:hover {
+  border-color: var(--accent-cyan);
+  background: rgba(114, 224, 224, 0.08);
+}
+.recent-icon {
+  font-size: 16px;
+}
+.recent-text {
+  font-size: 13px;
+  color: var(--text-main);
+}
+.notification-panel {
+  position: fixed;
+  right: 24px;
+  top: 100px;
+  width: 320px;
+  z-index: 1000;
+}
+.notification-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 48px;
+  height: 48px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.notification-toggle:hover {
+  background: rgba(114, 224, 224, 0.1);
+}
+.notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 18px;
+  height: 18px;
+  background: var(--danger);
+  border-radius: 50%;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+.notification-content {
+  position: absolute;
+  top: 56px;
+  right: 0;
+  width: 100%;
+  background: rgba(11, 8, 34, 0.95);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  backdrop-filter: blur(24px);
+  padding: 16px;
+  display: none;
+}
+.notification-content.show {
+  display: block;
+}
+.notification-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--glass-border);
+}
+.notification-header h4 {
+  font-size: 14px;
+  color: var(--text-main);
+}
+.notification-clear {
   font-size: 12px;
+  color: var(--text-sub);
+  cursor: pointer;
+}
+.notification-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+.notification-item {
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  background: rgba(0,0,0,0.2);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.notification-item:hover {
+  background: rgba(0,0,0,0.3);
+}
+.notification-item.warning {
+  border-left: 3px solid var(--orange);
+}
+.notification-item.error {
+  border-left: 3px solid var(--danger);
+}
+.notification-item.info {
+  border-left: 3px solid var(--accent-cyan);
+}
+.notification-title {
+  font-size: 13px;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+.notification-desc {
+  font-size: 12px;
+  color: var(--text-sub);
+}
+.notification-time {
+  font-size: 10px;
+  color: #666;
+  margin-top: 6px;
+}
+.footer-section {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(11, 8, 34, 0.95);
+  border-top: 1px solid var(--glass-border);
+  backdrop-filter: blur(24px);
+  padding: 16px 24px;
+}
+.footer-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.footer-left {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.footer-stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.footer-stat-icon {
+  font-size: 14px;
+}
+.footer-stat-text {
+  font-size: 12px;
+  color: var(--text-sub);
+}
+.footer-stat-value {
+  font-size: 13px;
+  color: var(--text-main);
+  font-weight: 600;
+}
+.footer-center {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.footer-link {
+  font-size: 12px;
+  color: var(--text-sub);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.footer-link:hover {
+  color: var(--accent-cyan);
+}
+.footer-right {
+  font-size: 11px;
   color: var(--text-sub);
   opacity: 0.6;
 }
-.footer-info span {
-  margin: 0 12px;
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(8px);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+.modal-overlay.show {
+  display: flex;
+}
+.modal-content {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 24px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.modal-header h3 {
+  font-size: 18px;
+  color: var(--text-main);
+}
+.modal-close {
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--text-sub);
+}
+.modal-body {
+  font-size: 14px;
+  color: var(--text-sub);
+  line-height: 1.8;
+}
+.modal-body code {
+  background: rgba(0,0,0,0.3);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: "Consolas";
+  font-size: 12px;
+  color: var(--accent-cyan);
+}
+.modal-body pre {
+  background: rgba(0,0,0,0.3);
+  padding: 12px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 12px 0;
+}
+.modal-footer {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+@media(max-width: 1200px) {
+  .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media(max-width: 768px) {
-  .cards-container {
-    grid-template-columns: 1fr;
-  }
-  .hero-section h2 {
-    font-size: 28px;
-  }
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .cards-grid { grid-template-columns: 1fr; }
+  .nav-content { flex-direction: column; align-items: stretch; }
+  .nav-left, .nav-center, .nav-right { justify-content: center; }
+  .key-input, .key-url { width: 100%; }
+  .notification-panel { display: none; }
 }
 </style>
 </head>
 <body>
 <div class="top-nav">
-  <div class="nav-title">
-    <h1>AIManagePlatform</h1>
-    <span class="nav-tag">总控制台</span>
-  </div>
-  <div class="nav-config">
-    <div class="config-item">
-      <span class="config-label">🔑 API Key <span style="color: var(--danger);">*</span></span>
-      <input type="text" class="config-input" id="apiKeyInput" placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxxxx" onkeyup="validateKey()">
+  <div class="nav-content">
+    <div class="nav-left">
+      <div class="nav-title">
+        <h1>AIManagePlatform</h1>
+        <span class="nav-tag">v1.0.0</span>
+      </div>
+      <div class="key-input-wrapper">
+        <input type="text" class="key-input" id="apiKeyInput" placeholder="🔑 API Key" onkeyup="validateKey()">
+        <input type="text" class="key-url" id="apiUrlInput" placeholder="🌐 API 地址" onkeyup="validateUrl()">
+      </div>
     </div>
-    <div class="config-item">
-      <span class="config-label">🌐 API 地址</span>
-      <input type="text" class="config-input" id="apiUrlInput" placeholder="https://open.bigmodel.cn/api/paas/v4/chat/completions" onkeyup="validateUrl()">
+    <div class="nav-center">
+      <div class="model-select-wrapper">
+        <select class="model-select" id="modelSelect" onchange="saveModel()">
+          <option value="glm-5.1">GLM-5.1</option>
+          <option value="deepseek-chat">DeepSeek-Chat</option>
+          <option value="qwen3-turbo">Qwen3-Turbo</option>
+        </select>
+      </div>
+      <div class="status-indicator" id="statusIndicator" onclick="toggleStatusTooltip()">
+        <span class="status-dot" id="statusDot"></span>
+        <span class="status-text" id="statusText">连接正常</span>
+      </div>
+      <div class="status-tooltip" id="statusTooltip">
+        <div class="tooltip-row">
+          <span class="tooltip-label">服务状态</span>
+          <span class="tooltip-value" id="tooltipStatus">在线</span>
+        </div>
+        <div class="tooltip-row">
+          <span class="tooltip-label">延迟</span>
+          <span class="tooltip-value" id="tooltipLatency">-</span>
+        </div>
+        <div class="tooltip-row">
+          <span class="tooltip-label">成功率</span>
+          <span class="tooltip-value">99.9%</span>
+        </div>
+      </div>
+    </div>
+    <div class="nav-right">
+      <button class="btn btn-secondary" onclick="exportConfig()">📥 导出配置</button>
+      <button class="btn btn-secondary" onclick="resetKey()">🔄 重置密钥</button>
+      <button class="btn btn-secondary" onclick="showLogs()">📋 系统日志</button>
+      <div class="user-info">
+        <div class="user-avatar">A</div>
+        <div>
+          <div class="user-name">管理员</div>
+          <div class="user-role">超级管理员</div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
 <div class="wrapper">
-  <div class="hero-section">
-    <h2>AI 管理平台</h2>
-    <p>选择您需要的功能模块，开始使用 AI 服务</p>
+  <div class="dashboard-section">
+    <div class="dashboard-title">
+      <h2>📊 数据概览</h2>
+      <span style="font-size: 12px; color: var(--text-sub);">实时统计</span>
+    </div>
+    <div class="dashboard-grid">
+      <div class="stat-card">
+        <div class="stat-header">
+          <span class="stat-icon">💬</span>
+          <span class="stat-trend" id="reqTrend">0%</span>
+        </div>
+        <div class="stat-value" id="dailyRequests">0</div>
+        <div class="stat-label">今日对话请求</div>
+        <div class="mini-chart" id="reqChart">
+          <div class="mini-bar" style="height: 40%"></div>
+          <div class="mini-bar" style="height: 60%"></div>
+          <div class="mini-bar" style="height: 80%"></div>
+          <div class="mini-bar" style="height: 50%"></div>
+          <div class="mini-bar" style="height: 90%"></div>
+          <div class="mini-bar" style="height: 70%"></div>
+          <div class="mini-bar highlight" style="height: 100%"></div>
+        </div>
+      </div>
+      <div class="stat-card" onclick="navigateTo('/devices')" style="cursor: pointer;">
+        <div class="stat-header">
+          <span class="stat-icon">📱</span>
+        </div>
+        <div class="stat-value" id="onlineDevices">
+          <span id="onlineCount">0</span>
+          <span style="font-size: 16px; color: var(--text-sub);">/</span>
+          <span style="font-size: 20px; color: var(--text-sub);" id="totalDevices">0</span>
+        </div>
+        <div class="stat-label">在线设备 / 总注册</div>
+        <div class="mini-chart" id="deviceChart">
+          <div class="mini-bar" style="height: 30%"></div>
+          <div class="mini-bar" style="height: 50%"></div>
+          <div class="mini-bar" style="height: 40%"></div>
+          <div class="mini-bar" style="height: 60%"></div>
+          <div class="mini-bar" style="height: 45%"></div>
+          <div class="mini-bar" style="height: 55%"></div>
+          <div class="mini-bar highlight" style="height: 50%"></div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header">
+          <span class="stat-icon">⚡</span>
+        </div>
+        <div class="stat-value" id="tokenUsage">
+          <span id="todayTokens">0</span>
+          <span style="font-size: 14px; color: var(--text-sub);"> tokens</span>
+        </div>
+        <div class="stat-label">今日 Token 消耗</div>
+        <div style="font-size: 11px; color: var(--text-sub); margin-bottom: 8px;">
+          输出: <span id="outputTokens">0</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="tokenProgress" style="width: 35%"></div>
+        </div>
+        <div style="font-size: 11px; color: var(--text-sub); margin-top: 6px;">本月累计: <span id="monthlyTokens">0</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header">
+          <span class="stat-icon">🛠️</span>
+        </div>
+        <div class="stat-value" id="toolCalls">0</div>
+        <div class="stat-label">MCP 工具调用</div>
+        <div style="font-size: 11px; color: var(--text-sub); margin-bottom: 12px;">
+          时间查询: <span id="toolTime">0</span> | 计算: <span id="toolCalc">0</span> | 文件: <span id="toolFile">0</span>
+        </div>
+        <div class="mini-chart" id="toolChart">
+          <div class="mini-bar" style="height: 20%"></div>
+          <div class="mini-bar" style="height: 40%"></div>
+          <div class="mini-bar" style="height: 30%"></div>
+          <div class="mini-bar" style="height: 50%"></div>
+          <div class="mini-bar" style="height: 35%"></div>
+          <div class="mini-bar" style="height: 45%"></div>
+          <div class="mini-bar highlight" style="height: 60%"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="cards-container">
-    <div class="card" onclick="navigateTo('/chat')">
-      <div class="card-icon">🤖</div>
-      <h3>AI 推理对话</h3>
-      <p>与 AI 模型进行实时对话，支持 MCP 工具调用（时间查询、数学计算、文件读取），体验流式响应效果</p>
-      <div class="card-arrow">→</div>
-    </div>
-
-    <div class="card" onclick="navigateTo('/keys')">
-      <div class="card-icon">🔑</div>
-      <h3>API Key 管理</h3>
-      <p>生成、查看、删除 API 密钥，管理访问凭证，支持导出和复制操作</p>
-      <div class="card-arrow">→</div>
-    </div>
-
-    <div class="card" onclick="navigateTo('/devices')">
-      <div class="card-icon">📱</div>
-      <h3>硬件设备管理</h3>
-      <p>管理 ESP32 等硬件设备的设备码，分配管理员 API Key，支持设备使用记录查询</p>
-      <div class="card-arrow">→</div>
+  <div class="cards-section">
+    <div class="cards-grid">
+      <div class="card" onclick="navigateTo('/chat')">
+        <div class="card-icon">🤖</div>
+        <h3>AI 推理对话</h3>
+        <p>与 AI 模型进行实时对话，支持 MCP 工具调用（时间查询、数学计算、文件读取），体验流式响应效果</p>
+        <div class="card-arrow">→</div>
+      </div>
+      <div class="card" onclick="navigateTo('/devices')">
+        <div class="card-icon">📱</div>
+        <h3>硬件设备管理</h3>
+        <p>管理 ESP32 等硬件设备的设备码，分配管理员 API Key，支持设备使用记录查询和状态监控</p>
+        <span class="card-badge">设备管理</span>
+        <div class="card-arrow">→</div>
+      </div>
+      <div class="card" onclick="navigateTo('/mcp')">
+        <div class="card-icon">🛠️</div>
+        <h3>MCP 工具配置</h3>
+        <p>管理 MCP Server 连接、工具启用状态、文件读取白名单、工具调用日志</p>
+        <div class="card-arrow">→</div>
+      </div>
+      <div class="card" onclick="showLogs()">
+        <div class="card-icon">📊</div>
+        <h3>日志记录中心</h3>
+        <p>AI 对话日志、硬件设备上下线日志、API 调用报错日志，支持关键词检索和导出</p>
+        <div class="card-arrow">→</div>
+      </div>
     </div>
   </div>
 
-  <div class="footer-info">
-    <span>MCP 协议 · JSON-RPC 2.0</span>
-    <span>|</span>
-    <span>OpenAI 兼容 API</span>
+  <div class="recent-section">
+    <div class="recent-title">
+      <h3>🔗 最近使用</h3>
+      <span style="font-size: 12px; color: var(--text-sub);">快速访问</span>
+    </div>
+    <div class="recent-list" id="recentList">
+      <div class="recent-item" onclick="navigateTo('/chat')">
+        <span class="recent-icon">🤖</span>
+        <span class="recent-text">AI 对话</span>
+      </div>
+      <div class="recent-item" onclick="navigateTo('/devices')">
+        <span class="recent-icon">📱</span>
+        <span class="recent-text">设备管理</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="notification-panel">
+  <div class="notification-toggle" onclick="toggleNotifications()">
+    🔔
+    <span class="notification-badge" id="notificationBadge">3</span>
+  </div>
+  <div class="notification-content" id="notificationContent">
+    <div class="notification-header">
+      <h4>📢 通知中心</h4>
+      <span class="notification-clear" onclick="clearNotifications()">清空</span>
+    </div>
+    <div class="notification-list">
+      <div class="notification-item warning">
+        <div class="notification-title">API 额度预警</div>
+        <div class="notification-desc">本月 Token 用量已达 85%，请注意控制使用</div>
+        <div class="notification-time">5 分钟前</div>
+      </div>
+      <div class="notification-item error">
+        <div class="notification-title">设备离线告警</div>
+        <div class="notification-desc">ESP32-客厅设备已断开连接</div>
+        <div class="notification-time">10 分钟前</div>
+      </div>
+      <div class="notification-item info">
+        <div class="notification-title">系统更新</div>
+        <div class="notification-desc">MCP 协议版本已更新至 2025-06-18</div>
+        <div class="notification-time">1 小时前</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer-section">
+  <div class="footer-content">
+    <div class="footer-left">
+      <div class="footer-stat">
+        <span class="footer-stat-icon">⏱️</span>
+        <span class="footer-stat-text">运行时长:</span>
+        <span class="footer-stat-value" id="uptime">-</span>
+      </div>
+      <div class="footer-stat">
+        <span class="footer-stat-icon">🔗</span>
+        <span class="footer-stat-text">并发连接:</span>
+        <span class="footer-stat-value" id="connections">0</span>
+      </div>
+      <div class="footer-stat">
+        <span class="footer-stat-icon">📦</span>
+        <span class="footer-stat-text">版本:</span>
+        <span class="footer-stat-value">v1.0.0</span>
+      </div>
+    </div>
+    <div class="footer-center">
+      <a class="footer-link" onclick="showDoc('esp32')">📱 ESP32 接入教程</a>
+      <a class="footer-link" onclick="showDoc('mcp')">🧰 MCP 工具说明</a>
+      <a class="footer-link" onclick="showDoc('api')">📡 API 接口文档</a>
+    </div>
+    <div class="footer-right">
+      © 2026 AIManagePlatform | MCP-2025-06-18
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="modalTitle">标题</h3>
+      <span class="modal-close" onclick="closeModal()">×</span>
+    </div>
+    <div class="modal-body" id="modalBody">内容</div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">关闭</button>
+    </div>
   </div>
 </div>
 
 <script>
 const API_KEY_STORAGE = 'ai_platform_api_key';
 const API_URL_STORAGE = 'ai_platform_api_url';
+const MODEL_STORAGE = 'ai_platform_model';
 const DEFAULT_API_URL = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
 
-function getStoredKey() {
-  return localStorage.getItem(API_KEY_STORAGE) || '';
-}
+document.addEventListener('DOMContentLoaded', function() {
+  loadStoredConfig();
+  loadStats();
+  checkHealth();
+  setInterval(loadStats, 30000);
+  setInterval(checkHealth, 10000);
+});
 
-function getStoredUrl() {
-  return localStorage.getItem(API_URL_STORAGE) || DEFAULT_API_URL;
-}
-
-function saveKey(apiKey) {
-  localStorage.setItem(API_KEY_STORAGE, apiKey);
-}
-
-function saveUrl(apiUrl) {
-  localStorage.setItem(API_URL_STORAGE, apiUrl);
+function loadStoredConfig() {
+  const storedKey = localStorage.getItem(API_KEY_STORAGE) || '';
+  const storedUrl = localStorage.getItem(API_URL_STORAGE) || DEFAULT_API_URL;
+  const storedModel = localStorage.getItem(MODEL_STORAGE) || 'glm-5.1';
+  
+  document.getElementById('apiKeyInput').value = storedKey;
+  document.getElementById('apiUrlInput').value = storedUrl;
+  document.getElementById('modelSelect').value = storedModel;
+  
+  if (storedKey) {
+    document.getElementById('apiKeyInput').classList.add('success');
+  }
 }
 
 function validateKey() {
   const input = document.getElementById('apiKeyInput');
-  
   if (input.value.trim()) {
     input.classList.remove('error');
     input.classList.add('success');
-    saveKey(input.value.trim());
+    localStorage.setItem(API_KEY_STORAGE, input.value.trim());
   } else {
     input.classList.remove('error', 'success');
   }
@@ -329,63 +1050,286 @@ function validateKey() {
 
 function validateUrl() {
   const input = document.getElementById('apiUrlInput');
-  
   if (input.value.trim()) {
-    saveUrl(input.value.trim());
+    localStorage.setItem(API_URL_STORAGE, input.value.trim());
   }
+}
+
+function saveModel() {
+  const model = document.getElementById('modelSelect').value;
+  localStorage.setItem(MODEL_STORAGE, model);
 }
 
 function navigateTo(path) {
   const apiKey = document.getElementById('apiKeyInput').value.trim();
-  
   if (!apiKey) {
-    const input = document.getElementById('apiKeyInput');
-    input.classList.add('error');
-    input.classList.remove('success');
-    input.focus();
+    document.getElementById('apiKeyInput').classList.add('error');
+    document.getElementById('apiKeyInput').focus();
     return;
   }
   
-  saveKey(apiKey);
-  
-  const apiUrl = document.getElementById('apiUrlInput').value.trim();
-  if (apiUrl) {
-    saveUrl(apiUrl);
-  }
+  const chatConfig = {
+    mode: 'custom',
+    url: document.getElementById('apiUrlInput').value.trim() || DEFAULT_API_URL,
+    key: apiKey,
+    model: document.getElementById('modelSelect').value,
+    timestamp: Date.now()
+  };
+  localStorage.setItem('ai_chat_config', JSON.stringify(chatConfig));
   
   window.location.href = path;
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-  const storedKey = getStoredKey();
-  if (storedKey) {
-    document.getElementById('apiKeyInput').value = storedKey;
-    validateKey();
+async function loadStats() {
+  try {
+    const res = await fetch('/api/stats');
+    const data = await res.json();
+    
+    document.getElementById('dailyRequests').textContent = data.daily_requests;
+    document.getElementById('onlineCount').textContent = data.online_devices;
+    document.getElementById('totalDevices').textContent = data.total_devices;
+    document.getElementById('todayTokens').textContent = data.today_output_tokens;
+    document.getElementById('outputTokens').textContent = data.today_output_tokens;
+    document.getElementById('monthlyTokens').textContent = data.total_output_tokens;
+    document.getElementById('toolCalls').textContent = data.tool_calls.total;
+    document.getElementById('toolTime').textContent = data.tool_calls.get_time || 0;
+    document.getElementById('toolCalc').textContent = data.tool_calls.calculate || 0;
+    document.getElementById('toolFile').textContent = data.tool_calls.read_file || 0;
+    document.getElementById('uptime').textContent = data.uptime;
+    
+    const trend = document.getElementById('reqTrend');
+    if (data.growth_rate > 0) {
+      trend.textContent = '+' + data.growth_rate + '%';
+      trend.className = 'stat-trend up';
+    } else if (data.growth_rate < 0) {
+      trend.textContent = data.growth_rate + '%';
+      trend.className = 'stat-trend down';
+    }
+    
+    const totalTokens = data.total_input_tokens + data.total_output_tokens;
+    const maxMonthly = 1000000;
+    const progress = Math.min((totalTokens / maxMonthly) * 100, 100);
+    document.getElementById('tokenProgress').style.width = progress + '%';
+    
+    updateMiniChart(data.daily_records);
+    
+  } catch (err) {
+    console.error('加载统计数据失败:', err);
   }
+}
+
+function updateMiniChart(records) {
+  if (!records || records.length === 0) return;
   
-  const storedUrl = getStoredUrl();
-  document.getElementById('apiUrlInput').value = storedUrl;
-});
+  const maxCount = Math.max(...records.map(r => r.count), 1);
+  const bars = document.querySelectorAll('#reqChart .mini-bar');
+  
+  records.forEach((record, index) => {
+    if (bars[index]) {
+      bars[index].style.height = (record.count / maxCount * 100) + '%';
+      bars[index].className = index === records.length - 1 ? 'mini-bar highlight' : 'mini-bar';
+    }
+  });
+}
 
-document.getElementById('apiKeyInput').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') {
-    navigateTo('/chat');
+async function checkHealth() {
+  try {
+    const res = await fetch('/api/health');
+    const data = await res.json();
+    
+    const dot = document.getElementById('statusDot');
+    const text = document.getElementById('statusText');
+    const tooltipStatus = document.getElementById('tooltipStatus');
+    const tooltipLatency = document.getElementById('tooltipLatency');
+    
+    switch (data.status_color) {
+      case 'green':
+        dot.className = 'status-dot';
+        text.textContent = '连接正常';
+        tooltipStatus.textContent = '在线';
+        break;
+      case 'orange':
+        dot.className = 'status-dot orange';
+        text.textContent = '限流警告';
+        tooltipStatus.textContent = '限流';
+        break;
+      case 'red':
+        dot.className = 'status-dot red';
+        text.textContent = '连接断开';
+        tooltipStatus.textContent = '离线';
+        break;
+    }
+    
+    tooltipLatency.textContent = data.latency ? data.latency + 'ms' : '-';
+    
+  } catch (err) {
+    document.getElementById('statusDot').className = 'status-dot red';
+    document.getElementById('statusText').textContent = '连接断开';
   }
-});
+}
 
-document.getElementById('apiKeyInput').addEventListener('blur', function() {
-  const apiKey = this.value.trim();
-  if (apiKey) {
-    saveKey(apiKey);
-  }
-});
+function toggleStatusTooltip() {
+  document.getElementById('statusTooltip').classList.toggle('show');
+}
 
-document.getElementById('apiUrlInput').addEventListener('blur', function() {
-  const apiUrl = this.value.trim();
-  if (apiUrl) {
-    saveUrl(apiUrl);
+function toggleNotifications() {
+  document.getElementById('notificationContent').classList.toggle('show');
+}
+
+function clearNotifications() {
+  document.getElementById('notificationBadge').textContent = '0';
+  document.querySelector('.notification-list').innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-sub);font-size:13px;">暂无通知</div>';
+}
+
+function exportConfig() {
+  const config = {
+    apiKey: document.getElementById('apiKeyInput').value,
+    apiUrl: document.getElementById('apiUrlInput').value,
+    model: document.getElementById('modelSelect').value,
+    exportedAt: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'ai_config.json';
+  a.click();
+}
+
+function resetKey() {
+  if (!confirm('确定要重置 API Key 吗？')) return;
+  document.getElementById('apiKeyInput').value = '';
+  document.getElementById('apiKeyInput').classList.remove('success', 'error');
+  localStorage.removeItem(API_KEY_STORAGE);
+}
+
+function showLogs() {
+  document.getElementById('modalTitle').textContent = '📋 系统日志';
+  document.getElementById('modalBody').innerHTML = `
+    <h4 style="color: var(--text-main); margin-bottom: 12px;">AI 对话日志</h4>
+    <p>所有会话记录、Token 消耗统计已记录在服务器端。</p>
+    <h4 style="color: var(--text-main); margin-bottom: 12px; margin-top: 16px;">硬件设备日志</h4>
+    <p>设备上下线事件、连接状态变更已记录。</p>
+    <h4 style="color: var(--text-main); margin-bottom: 12px; margin-top: 16px;">API 调用日志</h4>
+    <p>所有 API 请求、错误信息已记录，支持关键词检索。</p>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function showModelConfig() {
+  document.getElementById('modalTitle').textContent = '⚙️ 模型参数配置';
+  document.getElementById('modalBody').innerHTML = `
+    <div style="margin-bottom: 16px;">
+      <label style="display:block;font-size:13px;color:var(--text-sub);margin-bottom:8px;">Temperature (随机性)</label>
+      <input type="range" min="0" max="2" step="0.1" value="0.7" style="width:100%;margin-bottom:4px;">
+      <span style="font-size:12px;color:var(--accent-cyan);">0.7</span>
+    </div>
+    <div style="margin-bottom: 16px;">
+      <label style="display:block;font-size:13px;color:var(--text-sub);margin-bottom:8px;">Max Tokens (输出上限)</label>
+      <input type="number" value="1024" style="width:100%;padding:8px;border-radius:8px;background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);color:#fff;">
+    </div>
+    <div style="margin-bottom: 16px;">
+      <label style="display:block;font-size:13px;color:var(--text-sub);margin-bottom:8px;">Top P</label>
+      <input type="range" min="0" max="1" step="0.1" value="0.7" style="width:100%;margin-bottom:4px;">
+      <span style="font-size:12px;color:var(--accent-cyan);">0.7</span>
+    </div>
+    <div style="display:flex;gap:12px;margin-bottom:16px;">
+      <label class="switch" style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" checked>
+        <span style="font-size:13px;">启用思考模式</span>
+      </label>
+    </div>
+    <div style="border-top:1px solid var(--glass-border);padding-top:16px;">
+      <label style="display:block;font-size:13px;color:var(--text-sub);margin-bottom:12px;">参数模板</label>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-secondary" style="padding:6px 12px;font-size:12px;">🎨 创作</button>
+        <button class="btn btn-secondary" style="padding:6px 12px;font-size:12px;">💻 代码</button>
+        <button class="btn btn-secondary" style="padding:6px 12px;font-size:12px;">🎯 精准问答</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function showDoc(type) {
+  const docs = {
+    esp32: {
+      title: '📱 ESP32 设备接入教程',
+      content: `<h4 style="color: var(--text-main); margin-bottom: 12px;">1. 注册设备</h4>
+        <p>在「硬件设备管理」页面注册设备，获取设备码。</p>
+        <h4 style="color: var(--text-main); margin-bottom: 12px;">2. ESP32 代码示例</h4>
+        <pre><code>#include &lt;HTTPClient.h&gt;
+
+void sendChat(String deviceCode, String message) {
+  HTTPClient http;
+  http.begin("http://your-server:8002/chat");
+  http.addHeader("Content-Type", "application/json");
+  
+  String payload = "{\"device_code\":\"" + deviceCode + "\",\"messages\":[{\"role\":\"user\",\"content\":\"" + message + "\"}]}";
+  int httpCode = http.POST(payload);
+  
+  if (httpCode == HTTP_CODE_OK) {
+    String response = http.getString();
+    Serial.println(response);
   }
-});
+  http.end();
+}</code></pre>
+        <h4 style="color: var(--text-main); margin-bottom: 12px;">3. 设备码格式</h4>
+        <p>设备码为 8 位十六进制字符串，如：<code>FF0958EC</code></p>`
+    },
+    mcp: {
+      title: '🧰 MCP 工具调用说明',
+      content: `<h4 style="color: var(--text-main); margin-bottom: 12px;">可用工具</h4>
+        <ul style="margin-left:20px;color:var(--text-sub);margin-bottom:16px;">
+          <li><code>get_time</code> - 获取当前时间</li>
+          <li><code>calculate</code> - 数学计算</li>
+          <li><code>read_file</code> - 读取文件内容</li>
+        </ul>
+        <h4 style="color: var(--text-main); margin-bottom: 12px;">工具调用格式</h4>
+        <pre><code>{
+  "tool": "工具名称",
+  "arguments": {
+    "参数名": "参数值"
+  }
+}</code></pre>
+        <h4 style="color: var(--text-main); margin-bottom: 12px;">示例</h4>
+        <pre><code>// 获取时间
+{"tool": "get_time", "arguments": {}}
+
+// 计算
+{"tool": "calculate", "arguments": {"expression": "128*256"}}
+
+// 读取文件
+{"tool": "read_file", "arguments": {"path": "D:\\config.txt"}}</code></pre>`
+    },
+    api: {
+      title: '📡 OpenAI 兼容接口文档',
+      content: `<h4 style="color: var(--text-main); margin-bottom: 12px;">POST /chat</h4>
+        <p>流式聊天接口，兼容 OpenAI API 格式。</p>
+        <pre><code>{
+  "messages": [{"role": "user", "content": "你好"}],
+  "api_key": "your-api-key",
+  "api_url": "https://open.bigmodel.cn/api/paas/v4/chat/completions",
+  "model": "glm-5.1",
+  "device_code": "可选的设备码"
+}</code></pre>
+        <h4 style="color: var(--text-main); margin-bottom: 12px;">GET /api/stats</h4>
+        <p>获取系统统计数据。</p>
+        <h4 style="color: var(--text-main); margin-bottom: 12px;">GET /api/health</h4>
+        <p>健康检查接口。</p>
+        <h4 style="color: var(--text-main); margin-bottom: 12px;">POST /api/devices/register</h4>
+        <p>注册新设备。</p>`
+    }
+  };
+  
+  const doc = docs[type];
+  document.getElementById('modalTitle').textContent = doc.title;
+  document.getElementById('modalBody').innerHTML = doc.content;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+}
 </script>
 </body>
 </html>

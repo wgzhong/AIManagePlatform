@@ -372,10 +372,6 @@ button:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important
           <span class="card-toggle">−</span>
         </div>
         <div class="card-body open">
-          <div class="field">
-            <label>模型名称</label>
-            <input type="text" id="modelName" value="glm-5.1">
-          </div>
           <div class="row-two">
             <div class="field">
               <label>Temperature 随机性</label>
@@ -421,32 +417,6 @@ button:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important
 
       <div class="collapse-card">
         <div class="card-header" onclick="toggleCard(this)">
-          <h2>🧰 MCP 工具调用</h2>
-          <span class="card-toggle">−</span>
-        </div>
-        <div class="card-body open">
-          <div class="mcp-list">
-            <div class="mcp-item">
-              <div class="mcp-name">get_time</div>
-              <div class="mcp-desc">获取当前系统日期、星期、时间</div>
-            </div>
-            <div class="mcp-item">
-              <div class="mcp-name">calculate</div>
-              <div class="mcp-desc">复杂四则、括号数学表达式计算</div>
-            </div>
-            <div class="mcp-item">
-              <div class="mcp-name">read_file</div>
-              <div class="mcp-desc">读取本地指定路径文本文件内容</div>
-            </div>
-          </div>
-          <div style="margin-top:10px;font-size:11px;color:#888;">
-            传输协议：JSON-RPC 2.0 | STDIO 通道
-          </div>
-        </div>
-      </div>
-
-      <div class="collapse-card">
-        <div class="card-header" onclick="toggleCard(this)">
           <h2>📝 系统角色提示词</h2>
           <span class="card-toggle">−</span>
         </div>
@@ -465,7 +435,7 @@ button:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important
     <div class="chat-header-bar">
       <div>
         <h2>实时对话控制台</h2>
-        <div class="chat-stat" id="tokenStat">Token：0 输入 | 0 输出</div>
+        <div class="chat-stat" id="tokenStat">本次输出 Token：0</div>
       </div>
       <div class="status-row">
         <span class="dot" id="statusDot"></span>
@@ -479,10 +449,7 @@ button:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important
           <span class="msg-time">刚刚</span>
         </div>
         <div class="bubble">你好，欢迎使用 AIManagePlatform 对话控制台！
-支持 MCP 工具调用，你可以问我：
-1. 现在几点
-2. 计算 128 * (256 + 72)
-3. 读取本地配置文件</div>
+开始与 AI 进行智能对话吧。</div>
       </div>
     </div>
     <div class="input-footer">
@@ -498,8 +465,6 @@ button:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important
 
 <script>
 let chatHistory = [];
-let totalPromptTokens = 0;
-let totalCompTokens = 0;
 let currentApiKey = '';
 let currentApiUrl = '';
 const DEFAULT_API_URL = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
@@ -513,7 +478,57 @@ document.addEventListener('DOMContentLoaded', function() {
     window.location.href = '/';
     return;
   }
+  
+  loadChatHistory();
+  fetchTokenStats();
 });
+
+async function loadChatHistory() {
+  try {
+    const res = await fetch('/api/chat/history');
+    const data = await res.json();
+    if (data.history && data.history.length > 0) {
+      chatHistory = data.history;
+      const msgBox = document.getElementById('msgBox');
+      msgBox.innerHTML = '';
+      chatHistory.forEach(msg => {
+        if (msg.role !== 'system') {
+          const time = new Date().toLocaleTimeString();
+          addMessage(msg.role, msg.content, time, false);
+        }
+      });
+    } else {
+      // 没有历史记录，添加默认欢迎消息到 chatHistory
+      chatHistory.push({ role: 'assistant', content: '你好，欢迎使用 AIManagePlatform 对话控制台！\n开始与 AI 进行智能对话吧。' });
+    }
+  } catch (err) {
+    console.error('Failed to load chat history:', err);
+  }
+}
+
+async function saveChatHistory() {
+  try {
+    await fetch('/api/chat/history', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ history: chatHistory })
+    });
+  } catch (err) {
+    console.error('Failed to save chat history:', err);
+  }
+}
+
+async function clearAllChat() {
+  if (!confirm('确定要清空所有对话历史吗？')) return;
+  chatHistory = [];
+  document.getElementById('msgBox').innerHTML = '';
+  try {
+    await fetch('/api/chat/history', { method: 'DELETE' });
+  } catch (err) {
+    console.error('Failed to clear chat history:', err);
+  }
+  location.reload();
+}
 
 function toggleCard(el) {
   const body = el.nextElementSibling;
@@ -549,10 +564,8 @@ function setStatus(isThinking, text) {
 }
 
 function updateTokenStat(prompt, comp) {
-  totalPromptTokens += prompt;
-  totalCompTokens += comp;
   document.getElementById("tokenStat").textContent =
-    `Token：${totalPromptTokens} 输入 | ${totalCompTokens} 输出`;
+    `本次输出 Token：${comp}`;
 }
 
 function addMessage(role, content, time = null, isError = false) {
@@ -586,15 +599,6 @@ function delMsg(el) {
   const block = el.closest(".msg-block");
   block.remove();
   showToast("已删除单条消息");
-}
-
-function clearAllChat() {
-  document.getElementById("msgBox").innerHTML = "";
-  chatHistory = [];
-  totalPromptTokens = 0;
-  totalCompTokens = 0;
-  document.getElementById("tokenStat").textContent = "Token：0 输入 | 0 输出";
-  showToast("对话已全部清空");
 }
 
 function exportChat() {
@@ -634,6 +638,9 @@ async function sendMessage() {
   const now = new Date().toLocaleTimeString();
   addMessage("user", text, now);
   chatHistory.push({ role: "user", content: text });
+  saveChatHistory();
+
+  document.getElementById("tokenStat").textContent = "本次输出 Token：0";
 
   const sendBtn = document.getElementById("sendBtn");
   sendBtn.disabled = true;
@@ -645,6 +652,10 @@ async function sendMessage() {
   bubble.appendChild(cursor);
   let fullResp = "";
 
+  const toolsConfig = JSON.parse(localStorage.getItem('mcp_tools_config') || '{}');
+  const enabledTools = ['get_time', 'calculate', 'read_file'].filter(tool => toolsConfig[tool] !== false);
+  console.log('Enabled tools:', enabledTools);
+  
   const reqBody = {
     messages: [
       { role: "system", content: document.getElementById("sysPrompt").value },
@@ -652,12 +663,13 @@ async function sendMessage() {
     ],
     api_key: currentApiKey,
     api_url: currentApiUrl,
-    model: document.getElementById("modelName").value,
+    model: "glm-5.1",
     max_tokens: Number(document.getElementById("maxTokens").value),
     temperature: Number(tempSlider.value),
     top_p: Number(topPSlider.value),
     frequency_penalty: Number(freqSlider.value),
-    enable_think: document.getElementById("enableThink").checked
+    enable_think: document.getElementById("enableThink").checked,
+    enabled_tools: enabledTools
   };
 
   try {
@@ -695,6 +707,7 @@ async function sendMessage() {
     }
     cursor.remove();
     chatHistory.push({ role: "assistant", content: fullResp });
+    saveChatHistory();
     setStatus(false, "就绪空闲");
   } catch (err) {
     bubble.remove();

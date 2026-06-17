@@ -332,7 +332,23 @@ let devices = [];
 let adminApiKey = '';
 
 document.addEventListener('DOMContentLoaded', function() {
-  adminApiKey = localStorage.getItem('ai_platform_api_key') || '';
+  // 从首页保存的配置中获取 API Key
+  const savedConfig = localStorage.getItem('ai_chat_config');
+  
+  if (!savedConfig) {
+    alert('请先在首页配置 API Key！');
+    window.location.href = '/';
+    return;
+  }
+  
+  try {
+    const config = JSON.parse(savedConfig);
+    adminApiKey = config.key || '';
+  } catch (e) {
+    alert('配置解析失败，请重新配置！');
+    window.location.href = '/';
+    return;
+  }
   
   if (!adminApiKey) {
     alert('请先在首页输入 API Key！');

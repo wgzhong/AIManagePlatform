@@ -1,0 +1,21 @@
+{
+  "daily_requests": 46,
+  "total_requests": 46,
+  "today_input_tokens": 3329,
+  "today_output_tokens": 854,
+  "total_input_tokens": 3329,
+  "total_output_tokens": 854,
+  "tool_calls": {
+    "get_time": 6,
+    "calculate": 1,
+    "read_file": 0,
+    "total": 7
+  },
+  "daily_records": [
+    {
+      "date": "2026-06-17",
+      "count": 46
+    }
+  ],
+  "last_reset": "2026-06-17"
+}

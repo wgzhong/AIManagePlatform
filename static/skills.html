@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skills 配置 - AIManagePlatform</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg-gradient: linear-gradient(140deg, #0b0822 0%, #1c1648 48%, #121030 100%);
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.09);
+  --primary-gradient: linear-gradient(120deg, #72e0e0, #ffc8dd);
+  --text-main: #f4f4f7;
+  --text-sub: #a9a9b8;
+  --accent-cyan: #87e8e8;
+  --accent-pink: #ffc8dd;
+  --danger: #ff6b6b;
+  --success: #4ade80;
+}
+body {
+  font-family: "Segoe UI", PingFang SC, Microsoft YaHei, system-ui, sans-serif;
+  background: var(--bg-gradient);
+  min-height: 100vh;
+  color: var(--text-main);
+}
+.top-nav {
+  max-width: 1400px;
+  margin: 0 auto 24px;
+  padding: 12px 24px;
+  border-radius: 16px;
+  background: rgba(11, 8, 34, 0.95);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(24px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.nav-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.nav-title h1 {
+  font-size: 22px;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  color: transparent;
+}
+.nav-links {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.nav-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 20px;
+  background: var(--glass-bg);
+  color: var(--text-sub);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+.nav-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-main);
+}
+.nav-btn.active {
+  background: var(--primary-gradient);
+  color: #0b0822;
+}
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+.section {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-desc {
+  font-size: 13px;
+  color: var(--text-sub);
+  margin-top: 4px;
+}
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+.skill-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s;
+}
+.skill-card:hover {
+  border-color: rgba(135, 232, 232, 0.3);
+}
+.skill-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+.skill-info {
+  flex: 1;
+}
+.skill-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--accent-cyan);
+}
+.skill-category {
+  font-size: 12px;
+  color: var(--text-sub);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 8px;
+  border-radius: 10px;
+  display: inline-block;
+  margin-top: 4px;
+}
+.skill-desc {
+  font-size: 13px;
+  color: var(--text-sub);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+.skill-switch {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 13px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.skill-switch.active {
+  background: var(--accent-cyan);
+}
+.skill-switch::after {
+  content: '';
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  background: white;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.3s;
+}
+.skill-switch.active::after {
+  transform: translateX(22px);
+}
+.advanced-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--glass-border);
+}
+.advanced-toggle {
+  background: none;
+  border: none;
+  color: var(--accent-cyan);
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.advanced-content {
+  margin-top: 12px;
+  display: none;
+}
+.advanced-content.show {
+  display: block;
+}
+.form-group {
+  margin-bottom: 12px;
+}
+.form-label {
+  font-size: 13px;
+  color: var(--text-sub);
+  margin-bottom: 6px;
+  display: block;
+}
+.form-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-main);
+  font-size: 13px;
+}
+.form-input:focus {
+  outline: none;
+  border-color: var(--accent-cyan);
+}
+.form-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.form-switch-label {
+  font-size: 13px;
+  color: var(--text-sub);
+}
+.keywords-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.keyword-tag {
+  background: rgba(135, 232, 232, 0.15);
+  color: var(--accent-cyan);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.btn-primary {
+  background: var(--primary-gradient);
+  color: #0b0822;
+  font-weight: 500;
+}
+.btn-primary:hover {
+  opacity: 0.9;
+}
+.btn-secondary {
+  background: var(--glass-bg);
+  color: var(--text-main);
+}
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+.status-enabled {
+  background: rgba(74, 222, 128, 0.15);
+  color: var(--success);
+}
+.status-disabled {
+  background: rgba(255, 107, 107, 0.15);
+  color: var(--danger);
+}
+.parameters-list {
+  margin-top: 8px;
+}
+.param-item {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+.param-name {
+  color: var(--accent-cyan);
+  font-weight: 500;
+}
+.param-type {
+  color: var(--text-sub);
+  margin-left: 8px;
+}
+.param-desc {
+  color: var(--text-sub);
+  margin-left: 8px;
+}
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-sub);
+}
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  z-index: 1000;
+  animation: slideIn 0.3s ease;
+}
+.toast-success {
+  background: rgba(74, 222, 128, 0.9);
+  color: white;
+}
+.toast-error {
+  background: rgba(255, 107, 107, 0.9);
+  color: white;
+}
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+</style>
+</head>
+<body>
+  <nav class="top-nav">
+    <div class="nav-title">
+      <span>🧠</span>
+      <h1>AI Manage Platform</h1>
+    </div>
+    <div class="nav-links">
+      <button class="nav-btn" onclick="navigateTo('/')">首页</button>
+      <button class="nav-btn" onclick="navigateTo('/chat')">聊天</button>
+      <button class="nav-btn" onclick="navigateTo('/devices')">设备管理</button>
+      <button class="nav-btn active">Skills 配置</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">⚙️ Skills 技能配置</h2>
+          <p class="section-desc">管理所有技能的启用状态、自动触发设置和触发关键词</p>
+        </div>
+        <button class="btn btn-primary" onclick="refreshSkills()">刷新技能列表</button>
+      </div>
+      
+      <div id="skillsContainer" class="skills-grid">
+        <div class="loading">加载中...</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">📋 技能执行流程说明</h2>
+      <div style="font-size: 14px; color: var(--text-sub); line-height: 1.8;">
+        <p><strong>1. 技能触发阶段：</strong>当用户发送消息时，系统会检查消息内容是否匹配技能的触发关键词。</p>
+        <p><strong>2. 自动触发判断：</strong>如果技能启用了"自动触发"，系统会自动调用该技能；否则需要用户明确指令。</p>
+        <p><strong>3. 参数验证：</strong>系统会验证技能所需的参数是否齐全。</p>
+        <p><strong>4. 技能执行：</strong>调用技能的 run() 方法执行具体逻辑。</p>
+        <p><strong>5. 结果返回：</strong>技能执行完成后，结果会返回给用户。</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let skillsData = [];
+
+    async function loadSkills() {
+      try {
+        const response = await fetch('/api/skills');
+        const data = await response.json();
+        skillsData = data.skills;
+        renderSkills();
+      } catch (error) {
+        console.error('加载技能失败:', error);
+        document.getElementById('skillsContainer').innerHTML = '<div class="loading">加载失败，请刷新重试</div>';
+      }
+    }
+
+    function renderSkills() {
+      const container = document.getElementById('skillsContainer');
+      container.innerHTML = skillsData.map(skill => `
+        <div class="skill-card">
+          <div class="skill-header">
+            <div class="skill-info">
+              <div class="skill-name">${skill.name}</div>
+              <div class="skill-category">${skill.category}</div>
+            </div>
+            <div class="skill-switch ${skill.enabled ? 'active' : ''}" onclick="toggleSkill('${skill.name}')"></div>
+          </div>
+          <div class="skill-desc">${skill.description}</div>
+          
+          <div class="status-badge ${skill.enabled ? 'status-enabled' : 'status-disabled'}">
+            ${skill.enabled ? '已启用' : '已禁用'}
+          </div>
+
+          <div class="advanced-section">
+            <button class="advanced-toggle" onclick="toggleAdvanced('${skill.name}')">
+              ▼ 高级配置
+            </button>
+            <div id="advanced-${skill.name}" class="advanced-content">
+              <div class="form-group">
+                <label class="form-label">自动触发</label>
+                <div class="form-switch" onclick="toggleAutoTrigger('${skill.name}')">
+                  <div class="skill-switch ${skill.auto_trigger ? 'active' : ''}"></div>
+                  <span class="form-switch-label">${skill.auto_trigger ? '开启' : '关闭'}</span>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">触发关键词</label>
+                <div class="keywords-list">
+                  ${skill.trigger_keywords.map(k => `<span class="keyword-tag">${k}</span>`).join('')}
+                </div>
+                <input type="text" class="form-input" placeholder="添加新关键词" id="keywords-${skill.name}" onkeyup="addKeyword(event, '${skill.name}')">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">参数配置</label>
+                <div class="parameters-list">
+                  ${skill.parameters.required?.map(p => {
+                    const prop = skill.parameters.properties?.[p];
+                    return `<div class="param-item">
+                      <span class="param-name">${p}</span>
+                      <span class="param-type">${prop?.type || 'string'}</span>
+                      <span class="param-desc">${prop?.description || ''}</span>
+                    </div>`;
+                  }).join('') || '<div class="param-item" style="color: var(--text-sub)">无必填参数</div>'}
+                </div>
+              </div>
+
+              <button class="btn btn-primary" style="width: 100%;" onclick="saveSkillConfig('${skill.name}')">保存配置</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleAdvanced(skillName) {
+      const el = document.getElementById(`advanced-${skillName}`);
+      el.classList.toggle('show');
+    }
+
+    async function toggleSkill(skillName) {
+      const skill = skillsData.find(s => s.name === skillName);
+      if (skill) {
+        skill.enabled = !skill.enabled;
+        updateSkillSwitchUI(skillName, skill.enabled);
+        await saveSkillConfig(skillName);
+      }
+    }
+
+    function updateSkillSwitchUI(skillName, enabled) {
+      const switches = document.querySelectorAll('.skill-switch');
+      switches.forEach(sw => {
+        if (sw.getAttribute('onclick') === `toggleSkill('${skillName}')`) {
+          sw.classList.toggle('active', enabled);
+        }
+      });
+      const cards = document.querySelectorAll('.skill-card');
+      cards.forEach(card => {
+        const sw = card.querySelector('.skill-switch');
+        if (sw && sw.getAttribute('onclick') === `toggleSkill('${skillName}')`) {
+          const badge = card.querySelector('.status-badge');
+          if (badge) {
+            badge.className = `status-badge ${enabled ? 'status-enabled' : 'status-disabled'}`;
+            badge.textContent = enabled ? '已启用' : '已禁用';
+          }
+        }
+      });
+    }
+
+    async function toggleAutoTrigger(skillName) {
+      const skill = skillsData.find(s => s.name === skillName);
+      if (skill) {
+        skill.auto_trigger = !skill.auto_trigger;
+        updateAutoTriggerUI(skillName, skill.auto_trigger);
+      }
+    }
+
+    function updateAutoTriggerUI(skillName, enabled) {
+      const switchEl = document.querySelector(`#advanced-${skillName} .skill-switch`);
+      const labelEl = document.querySelector(`#advanced-${skillName} .form-switch-label`);
+      if (switchEl) {
+        switchEl.classList.toggle('active', enabled);
+      }
+      if (labelEl) {
+        labelEl.textContent = enabled ? '开启' : '关闭';
+      }
+    }
+
+    function addKeyword(event, skillName) {
+      if (event.key === 'Enter') {
+        const input = document.getElementById(`keywords-${skillName}`);
+        const keyword = input.value.trim();
+        if (keyword) {
+          const skill = skillsData.find(s => s.name === skillName);
+          if (skill && !skill.trigger_keywords.includes(keyword)) {
+            skill.trigger_keywords.push(keyword);
+            input.value = '';
+            renderSkills();
+          }
+        }
+      }
+    }
+
+    async function saveSkillConfig(skillName) {
+      const skill = skillsData.find(s => s.name === skillName);
+      if (!skill) return;
+
+      try {
+        const response = await fetch(`/api/skills/${skillName}/config`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            enabled: skill.enabled,
+            auto_trigger: skill.auto_trigger,
+            trigger_keywords: skill.trigger_keywords
+          })
+        });
+
+        if (response.ok) {
+          showToast('配置保存成功', 'success');
+        } else {
+          showToast('保存失败', 'error');
+        }
+      } catch (error) {
+        console.error('保存失败:', error);
+        showToast('保存失败', 'error');
+      }
+    }
+
+    function showToast(message, type) {
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    function refreshSkills() {
+      loadSkills();
+      showToast('技能列表已刷新', 'success');
+    }
+
+    function navigateTo(path) {
+      window.location.href = path;
+    }
+
+    document.addEventListener('DOMContentLoaded', loadSkills);
+  </script>
+</body>
+</html>

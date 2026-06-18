@@ -9,6 +9,7 @@ import httpx
 from fastapi import FastAPI, HTTPException, Form
 from fastapi.responses import StreamingResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import os
@@ -24,8 +25,8 @@ from core.stats import stats_manager
 from core.chat_history import chat_history_manager
 from core.api_keys import api_key_manager
 from core.devices import device_manager
-from core.skills import get_all_tool_definitions, get_skill_by_name, ALL_SKILLS
-from core.llm_infer import stream_chat_request
+from skills import get_all_tool_definitions, get_skill_by_name, ALL_SKILLS, get_all_skill_configs
+from core.llm_infer import stream_chat_request, llm_infer
 
 # 创建 FastAPI 应用实例
 app = FastAPI(
@@ -34,9 +35,25 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# CORS 配置
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # 全局变量
 _http_client = None
 _devices_lock = threading.Lock()
+
+
+@app.on_event("startup")
+async def startup_event():
+    """应用启动时执行的初始化操作"""
+    print("[APP] 正在预热LLM连接...")
+    await llm_infer.warmup(config.DEFAULT_URL)
 
 
 async def get_http_client():
@@ -101,7 +118,8 @@ async def chat(request: ChatRequest):
     
     stats_manager.increment_request_count()
 
-    tools = get_all_tool_definitions()
+    enabled_skills = [skill for skill in ALL_SKILLS if skill.enabled]
+    tools = [skill.get_tool_schema() for skill in enabled_skills]
 
     original_user_system = None
     non_system_messages: List[dict] = []
@@ -126,48 +144,7 @@ async def chat(request: ChatRequest):
         final_usage = None
         tool_call_buffer = {}
 
-        async for text, tool_calls, usage in stream_chat_request(final_messages, api_key, api_url, tools):
-            if usage is not None:
-                final_usage = usage
-                continue
-            
-            if text:
-                yield "data: " + json.dumps({"content": text}, ensure_ascii=False) + "\n\n"
-            
-            if tool_calls:
-                for call_item in tool_calls:
-                    idx = call_item["index"]
-                    if idx not in tool_call_buffer:
-                        tool_call_buffer[idx] = {"name": "", "arguments": ""}
-                    func = call_item.get("function", {})
-                    if "name" in func:
-                        tool_call_buffer[idx]["name"] += func["name"]
-                    if "arguments" in func:
-                        tool_call_buffer[idx]["arguments"] += func["arguments"]
-
-        if tool_call_buffer:
-            for call_info in tool_call_buffer.values():
-                skill_name = call_info["name"]
-                args_json = call_info["arguments"]
-                
-                try:
-                    args = json.loads(args_json)
-                except json.JSONDecodeError:
-                    args = {}
-                
-                skill = get_skill_by_name(skill_name)
-                if skill:
-                    skill_result = skill.run(args)
-                    stats_manager.increment_tool_call(skill_name)
-                    
-                    yield "data: " + json.dumps({"tool_result": {"name": skill_name, "result": skill_result}}, ensure_ascii=False) + "\n\n"
-                    
-                    final_messages.append({
-                        "role": "tool",
-                        "name": skill_name,
-                        "content": skill_result
-                    })
-
+        try:
             async for text, tool_calls, usage in stream_chat_request(final_messages, api_key, api_url, tools):
                 if usage is not None:
                     final_usage = usage
@@ -175,12 +152,61 @@ async def chat(request: ChatRequest):
                 
                 if text:
                     yield "data: " + json.dumps({"content": text}, ensure_ascii=False) + "\n\n"
+                
+                if tool_calls:
+                    for call_item in tool_calls:
+                        idx = call_item["index"]
+                        if idx not in tool_call_buffer:
+                            tool_call_buffer[idx] = {"name": "", "arguments": ""}
+                        func = call_item.get("function", {})
+                        if "name" in func:
+                            tool_call_buffer[idx]["name"] += func["name"]
+                        if "arguments" in func:
+                            tool_call_buffer[idx]["arguments"] += func["arguments"]
 
-        if final_usage:
-            stats_manager.update_token_usage(final_usage.get("completion_tokens", 0))
-            yield "data: " + json.dumps({"usage": final_usage}, ensure_ascii=False) + "\n\n"
+            if tool_call_buffer:
+                for call_info in tool_call_buffer.values():
+                    skill_name = call_info["name"]
+                    args_json = call_info["arguments"]
+                    
+                    try:
+                        args = json.loads(args_json)
+                    except json.JSONDecodeError:
+                        args = {}
+                    
+                    skill = get_skill_by_name(skill_name)
+                    if skill:
+                        skill_result = skill.run(args)
+                        stats_manager.increment_tool_call(skill_name)
+                        
+                        yield "data: " + json.dumps({"tool_result": {"name": skill_name, "result": skill_result}}, ensure_ascii=False) + "\n\n"
+                        
+                        final_messages.append({
+                            "role": "tool",
+                            "name": skill_name,
+                            "content": skill_result
+                        })
+
+                async for text, tool_calls, usage in stream_chat_request(final_messages, api_key, api_url, tools):
+                    if usage is not None:
+                        final_usage = usage
+                        continue
+                    
+                    if text:
+                        yield "data: " + json.dumps({"content": text}, ensure_ascii=False) + "\n\n"
+
+            if final_usage:
+                stats_manager.update_token_usage(final_usage.get("completion_tokens", 0))
+                yield "data: " + json.dumps({"usage": final_usage}, ensure_ascii=False) + "\n\n"
+            
+            yield "data: [DONE]\n\n"
         
-        yield "data: [DONE]\n\n"
+        except Exception as e:
+            error_msg = f"请求异常: {str(e)}"
+            if "network" in str(e).lower() or "connection" in str(e).lower():
+                error_msg = "请求异常: network error"
+            yield f"data: {json.dumps({'error': error_msg}, ensure_ascii=False)}\n\n"
+            yield "data: [DONE]\n\n"
 
     return StreamingResponse(generate(), media_type="text/event-stream")
 
@@ -436,9 +462,31 @@ async def health_check():
 # ============================================================
 @app.get("/api/skills")
 async def get_skills():
-    """返回所有注册的 Skill 工具列表"""
-    tools = get_all_tool_definitions()
-    return {"skills": tools, "protocol": "Skill-2025-06-18"}
+    """返回所有注册的 Skill 工具列表（包含高级配置）"""
+    configs = get_all_skill_configs()
+    return {"skills": configs, "protocol": "Skill-2025-06-18"}
+
+@app.get("/api/skills/config")
+async def get_skills_config():
+    """返回所有技能的完整配置信息"""
+    configs = get_all_skill_configs()
+    return {"configs": configs}
+
+@app.post("/api/skills/{skill_name}/config")
+async def update_skill_config(skill_name: str, config: Dict[str, Any]):
+    """更新指定技能的配置"""
+    skill = get_skill_by_name(skill_name)
+    if not skill:
+        raise HTTPException(status_code=404, detail="技能不存在")
+    
+    if "enabled" in config:
+        skill.enabled = config["enabled"]
+    if "auto_trigger" in config:
+        skill.auto_trigger = config["auto_trigger"]
+    if "trigger_keywords" in config:
+        skill.trigger_keywords = config["trigger_keywords"]
+    
+    return {"success": True, "message": f"技能 {skill_name} 配置已更新"}
 
 
 # ============================================================
@@ -467,10 +515,10 @@ async def devices_page():
     return FileResponse(os.path.join(STATIC_DIR, "devices.html"))
 
 
-@app.get("/mcp")
-async def mcp_page():
-    """MCP 配置页面"""
-    return FileResponse(os.path.join(STATIC_DIR, "mcp.html"))
+@app.get("/skills")
+async def skills_page():
+    """Skills 配置页面"""
+    return FileResponse(os.path.join(STATIC_DIR, "skills.html"))
 
 
 if __name__ == "__main__":

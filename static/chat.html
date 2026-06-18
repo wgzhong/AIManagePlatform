@@ -204,20 +204,20 @@ input:focus, textarea:focus, select:focus {
 }
 input:checked + .slider-switch { background: var(--accent-cyan); }
 input:checked + .slider-switch:before { transform: translateX(20px); }
-.mcp-list {
+.skill-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
   margin-top: 8px;
 }
-.mcp-item {
+.skill-item {
   padding: 10px;
   border-radius: 10px;
   background: rgba(114,224,224,0.08);
   border: 1px solid rgba(114,224,224,0.15);
 }
-.mcp-name { font-weight: 600; font-size: 13px; color: var(--accent-cyan); }
-.mcp-desc { font-size: 11px; color: var(--text-sub); margin-top:3px; }
+.skill-name { font-weight: 600; font-size: 13px; color: var(--accent-cyan); }
+.skill-desc { font-size: 11px; color: var(--text-sub); margin-top:3px; }
 .btn-primary {
   background: var(--primary-gradient);
   color: #0a0a1a;
@@ -417,11 +417,22 @@ button:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important
 
       <div class="collapse-card">
         <div class="card-header" onclick="toggleCard(this)">
-          <h2>📝 系统角色提示词</h2>
+          <h2>💭 小福宝的心情</h2>
           <span class="card-toggle">−</span>
         </div>
         <div class="card-body open">
-          <textarea id="sysPrompt" rows="5" placeholder="设定AI角色、回答规则、输出格式">你是专业AI助手，回答简洁清晰，复杂问题分步说明，可自动调用工具获取实时信息。</textarea>
+          <div class="field">
+            <label>选择小福宝的心情</label>
+            <select id="moodSelect">
+              <option value="happy" selected>😊 开心</option>
+              <option value="cheerful">😄 愉快</option>
+              <option value="sad">😢 难过</option>
+              <option value="anger">😠 生气</option>
+              <option value="fear">😨 害怕</option>
+              <option value="disgust">😒 厌恶</option>
+              <option value="surprise">😲 惊讶</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -468,6 +479,7 @@ let chatHistory = [];
 let currentApiKey = '';
 let currentApiUrl = '';
 const DEFAULT_API_URL = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+const BASE_URL = window.location.origin;
 
 document.addEventListener('DOMContentLoaded', function() {
   currentApiKey = localStorage.getItem('ai_platform_api_key') || '';
@@ -652,13 +664,27 @@ async function sendMessage() {
   bubble.appendChild(cursor);
   let fullResp = "";
 
-  const toolsConfig = JSON.parse(localStorage.getItem('mcp_tools_config') || '{}');
-  const enabledTools = ['get_time', 'calculate', 'read_file'].filter(tool => toolsConfig[tool] !== false);
-  console.log('Enabled tools:', enabledTools);
+  const skillsConfig = JSON.parse(localStorage.getItem('skills_config') || '{}');
+  const enabledTools = ['get_time', 'calculate', 'get_weather'].filter(tool => skillsConfig[tool] !== false);
+  console.log('Enabled skills:', enabledTools);
   
+  const moodSelect = document.getElementById("moodSelect");
+  const currentMood = moodSelect.value;
+  const moodLabels = {
+    happy: "开心",
+    cheerful: "愉快",
+    sad: "难过",
+    anger: "生气",
+    fear: "害怕",
+    disgust: "厌恶",
+    surprise: "惊讶"
+  };
+  
+  const systemPrompt = `你是小福宝，一个可爱的AI助手。你当前的心情是：${moodLabels[currentMood]}。请根据这个心情调整你的回复语气和表达方式。`;
+
   const reqBody = {
     messages: [
-      { role: "system", content: document.getElementById("sysPrompt").value },
+      { role: "system", content: systemPrompt },
       ...chatHistory
     ],
     api_key: currentApiKey,
@@ -669,11 +695,12 @@ async function sendMessage() {
     top_p: Number(topPSlider.value),
     frequency_penalty: Number(freqSlider.value),
     enable_think: document.getElementById("enableThink").checked,
-    enabled_tools: enabledTools
+    enabled_tools: enabledTools,
+    mood: currentMood
   };
 
   try {
-    const res = await fetch("/chat", {
+    const res = await fetch(`${BASE_URL}/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(reqBody)

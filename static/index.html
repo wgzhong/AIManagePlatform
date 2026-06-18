@@ -868,12 +868,12 @@ body {
       </div>
       <div class="stat-card">
         <div class="stat-header">
-          <span class="stat-icon">🛠️</span>
+          <span class="stat-icon">🧠</span>
         </div>
         <div class="stat-value" id="toolCalls">0</div>
-        <div class="stat-label">MCP 工具调用</div>
+        <div class="stat-label">技能调用</div>
         <div style="font-size: 11px; color: var(--text-sub); margin-bottom: 12px;">
-          时间查询: <span id="toolTime">0</span> | 计算: <span id="toolCalc">0</span> | 文件: <span id="toolFile">0</span>
+          时间查询: <span id="toolTime">0</span> | 计算: <span id="toolCalc">0</span> | 天气: <span id="toolFile">0</span>
         </div>
         <div class="mini-chart" id="toolChart">
           <div class="mini-bar" style="height: 20%"></div>
@@ -893,7 +893,7 @@ body {
       <div class="card" onclick="navigateTo('/chat')">
         <div class="card-icon">🤖</div>
         <h3>AI 推理对话</h3>
-        <p>与 AI 模型进行实时对话，支持 MCP 工具调用（时间查询、数学计算、文件读取），体验流式响应效果</p>
+        <p>与 AI 模型进行实时对话，支持技能调用（时间查询、数学计算、天气查询），体验流式响应效果</p>
         <div class="card-arrow">→</div>
       </div>
       <div class="card" onclick="navigateTo('/devices')">
@@ -903,10 +903,10 @@ body {
         <span class="card-badge">设备管理</span>
         <div class="card-arrow">→</div>
       </div>
-      <div class="card" onclick="navigateTo('/mcp')">
-        <div class="card-icon">🛠️</div>
-        <h3>MCP 工具配置</h3>
-        <p>管理 MCP Server 连接、工具启用状态、文件读取白名单、工具调用日志</p>
+      <div class="card" onclick="navigateTo('/skills')">
+        <div class="card-icon">🧠</div>
+        <h3>技能管理</h3>
+        <p>管理所有技能的启用状态、自动触发设置、触发关键词配置、技能执行流程</p>
         <div class="card-arrow">→</div>
       </div>
       <div class="card" onclick="showLogs()">
@@ -959,7 +959,7 @@ body {
       </div>
       <div class="notification-item info">
         <div class="notification-title">系统更新</div>
-        <div class="notification-desc">MCP 协议版本已更新至 2025-06-18</div>
+        <div class="notification-desc">技能系统版本已更新至 2025-06-18</div>
         <div class="notification-time">1 小时前</div>
       </div>
     </div>
@@ -987,11 +987,11 @@ body {
     </div>
     <div class="footer-center">
       <a class="footer-link" onclick="showDoc('esp32')">📱 ESP32 接入教程</a>
-      <a class="footer-link" onclick="showDoc('mcp')">🧰 MCP 工具说明</a>
+      <a class="footer-link" onclick="showDoc('skills')">🧠 技能说明</a>
       <a class="footer-link" onclick="showDoc('api')">📡 API 接口文档</a>
     </div>
     <div class="footer-right">
-      © 2026 AIManagePlatform | MCP-2025-06-18
+      © 2026 AIManagePlatform | Skill-2025-06-18
     </div>
   </div>
 </div>
@@ -1276,30 +1276,26 @@ void sendChat(String deviceCode, String message) {
         <h4 style="color: var(--text-main); margin-bottom: 12px;">3. 设备码格式</h4>
         <p>设备码为 8 位十六进制字符串，如：<code>FF0958EC</code></p>`
     },
-    mcp: {
-      title: '🧰 MCP 工具调用说明',
-      content: `<h4 style="color: var(--text-main); margin-bottom: 12px;">可用工具</h4>
+    skills: {
+      title: '🧠 技能说明',
+      content: `<h4 style="color: var(--text-main); margin-bottom: 12px;">工具类技能</h4>
         <ul style="margin-left:20px;color:var(--text-sub);margin-bottom:16px;">
-          <li><code>get_time</code> - 获取当前时间</li>
+          <li><code>get_time</code> - 获取当前系统时间</li>
           <li><code>calculate</code> - 数学计算</li>
-          <li><code>read_file</code> - 读取文件内容</li>
+          <li><code>get_weather</code> - 获取城市天气信息</li>
         </ul>
-        <h4 style="color: var(--text-main); margin-bottom: 12px;">工具调用格式</h4>
-        <pre><code>{
-  "tool": "工具名称",
-  "arguments": {
-    "参数名": "参数值"
-  }
-}</code></pre>
-        <h4 style="color: var(--text-main); margin-bottom: 12px;">示例</h4>
-        <pre><code>// 获取时间
-{"tool": "get_time", "arguments": {}}
-
-// 计算
-{"tool": "calculate", "arguments": {"expression": "128*256"}}
-
-// 读取文件
-{"tool": "read_file", "arguments": {"path": "D:\\config.txt"}}</code></pre>`
+        <h4 style="color: var(--text-main); margin-bottom: 12px;">情感响应技能</h4>
+        <ul style="margin-left:20px;color:var(--text-sub);margin-bottom:16px;">
+          <li><code>anger_response</code> - 愤怒情绪响应</li>
+          <li><code>cheerful_response</code> - 开心情绪响应</li>
+          <li><code>disgust_response</code> - 厌恶情绪响应</li>
+          <li><code>fear_response</code> - 恐惧情绪响应</li>
+          <li><code>happy_response</code> - 快乐情绪响应</li>
+          <li><code>sad_response</code> - 悲伤情绪响应</li>
+          <li><code>surprise_response</code> - 惊讶情绪响应</li>
+        </ul>
+        <h4 style="color: var(--text-main); margin-bottom: 12px;">技能配置</h4>
+        <p>每个技能支持配置：启用状态、自动触发、触发关键词等。</p>`
     },
     api: {
       title: '📡 OpenAI 兼容接口文档',

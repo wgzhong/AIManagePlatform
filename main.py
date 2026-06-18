@@ -6,6 +6,7 @@ AI Manage Platform - 主入口文件
 import asyncio
 import json
 import httpx
+import logging
 from fastapi import FastAPI, HTTPException, Form
 from fastapi.responses import StreamingResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -13,6 +14,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import os
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+
+logger = logging.getLogger("APP")
 import sys
 import uuid
 import secrets
@@ -52,7 +61,7 @@ _devices_lock = threading.Lock()
 @app.on_event("startup")
 async def startup_event():
     """应用启动时执行的初始化操作"""
-    print("[APP] 正在预热LLM连接...")
+    logger.info("正在预热LLM连接...")
     await llm_infer.warmup(config.DEFAULT_URL)
 
 

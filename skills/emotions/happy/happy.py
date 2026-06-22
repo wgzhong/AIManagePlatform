@@ -2,7 +2,7 @@ from ...base_skill import BaseSkill
 
 class HappySkill(BaseSkill):
     name = "happy_response"
-    description = "当用户表达快乐情绪时，给予热情回应"
+    description = "小福宝表达快乐情绪"
     category = "情感响应"
     enabled = True
     auto_trigger = True
@@ -12,18 +12,18 @@ class HappySkill(BaseSkill):
         "type": "object",
         "required": ["text"],
         "properties": {
-            "text": {"type": "string", "description": "用户表达快乐的文本"}
+            "text": {"type": "string", "description": "小福宝表达快乐的触发文本"}
         }
     }
     
     def run(self, args):
         text = args.get("text", "")
         responses = [
-            "哇，真为你开心！希望这份快乐能一直延续！",
-            "太棒了！听到你这么幸福我也很满足！",
-            "快乐是最好的礼物，愿你每天都这么开心！",
-            "看到你这么快乐，我的心情也变好了！",
-            "愿这份美好的感觉永远伴随着你！"
+            "哇！我好开心呀！",
+            "哈哈哈哈，太开心啦！",
+            "今天真是美好的一天！",
+            "耶！太棒了！",
+            "我好幸福呀！"
         ]
         import random
         return random.choice(responses)

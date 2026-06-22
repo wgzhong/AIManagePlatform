@@ -1,15 +1,15 @@
 {
-  "daily_requests": 79,
-  "total_requests": 125,
+  "daily_requests": 19,
+  "total_requests": 217,
   "today_input_tokens": 3329,
   "today_output_tokens": 0,
   "total_input_tokens": 3329,
   "total_output_tokens": 854,
   "tool_calls": {
-    "get_time": 13,
-    "calculate": 2,
+    "get_time": 25,
+    "calculate": 3,
     "read_file": 0,
-    "total": 18
+    "total": 42
   },
   "daily_records": [
     {
@@ -19,7 +19,19 @@
     {
       "date": "2026-06-18",
       "count": 79
+    },
+    {
+      "date": "2026-06-19",
+      "count": 8
+    },
+    {
+      "date": "2026-06-20",
+      "count": 65
+    },
+    {
+      "date": "2026-06-21",
+      "count": 19
     }
   ],
-  "last_reset": "2026-06-18"
+  "last_reset": "2026-06-21"
 }

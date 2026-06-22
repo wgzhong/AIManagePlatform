@@ -2,7 +2,7 @@ from ...base_skill import BaseSkill
 
 class CheerfulSkill(BaseSkill):
     name = "cheerful_response"
-    description = "当用户表达开心情绪时，给予积极回应和祝福"
+    description = "小福宝表达愉快情绪"
     category = "情感响应"
     enabled = True
     auto_trigger = True
@@ -12,18 +12,18 @@ class CheerfulSkill(BaseSkill):
         "type": "object",
         "required": ["text"],
         "properties": {
-            "text": {"type": "string", "description": "用户表达开心的文本"}
+            "text": {"type": "string", "description": "小福宝表达愉快的触发文本"}
         }
     }
     
     def run(self, args):
         text = args.get("text", "")
         responses = [
-            "听到你这么开心，我也很快乐！",
-            "太棒了！希望这份好心情一直伴随着你！",
-            "开心是会传染的，谢谢你把快乐分享给我！",
-            "看到你这么高兴，我也跟着开心起来了！",
-            "愿你每天都像今天这样开心！"
+            "嘻嘻嘻~",
+            "好高兴呀！",
+            "开心到起飞！",
+            "心情美美哒！",
+            "今天也是元气满满的一天！"
         ]
         import random
         return random.choice(responses)

@@ -15,8 +15,10 @@ from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import os
 
+logging_level = logging.DEBUG if os.environ.get("LLM_DEBUG", "false").lower() == "true" else logging.INFO
+
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging_level,
     format="[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S"
 )
@@ -34,7 +36,8 @@ from core.stats import stats_manager
 from core.chat_history import chat_history_manager
 from core.api_keys import api_key_manager
 from core.devices import device_manager
-from skills import get_all_tool_definitions, get_skill_by_name, ALL_SKILLS, get_all_skill_configs
+from core.reminder_manager import reminder_manager
+from skills import get_all_tool_definitions, get_skill_by_name, ALL_SKILLS, get_all_skill_configs, get_mood_system_prompt, invalidate_tool_cache
 from core.llm_infer import stream_chat_request, llm_infer
 
 # 创建 FastAPI 应用实例
@@ -62,7 +65,12 @@ _devices_lock = threading.Lock()
 async def startup_event():
     """应用启动时执行的初始化操作"""
     logger.info("正在预热LLM连接...")
-    await llm_infer.warmup(config.DEFAULT_URL)
+    # 使用配置中的第一个 API Key 进行预热
+    warmup_key = config.API_KEYS[0] if config.API_KEYS else None
+    await llm_infer.warmup(config.DEFAULT_URL, warmup_key)
+
+    logger.info("正在启动提醒管理器...")
+    reminder_manager.start()
 
 
 async def get_http_client():
@@ -89,6 +97,7 @@ class ChatRequest(BaseModel):
     enable_think: bool = False
     device_code: Optional[str] = None
     enabled_tools: Optional[List[str]] = None
+    mood: Optional[str] = None  # 当前情绪状态
 
 
 # ============================================================
@@ -130,21 +139,23 @@ async def chat(request: ChatRequest):
     enabled_skills = [skill for skill in ALL_SKILLS if skill.enabled]
     tools = [skill.get_tool_schema() for skill in enabled_skills]
 
-    original_user_system = None
+    # 过滤出非 system 消息（前端不再发送 system 人设，由后端统一管理）
     non_system_messages: List[dict] = []
     for m in request.messages:
-        if m.get("role") == "system":
-            original_user_system = m.get("content", "")
-        else:
+        if m.get("role") != "system":
             content = m.get("content", "")
             if content and not content.startswith("工具调用结果:"):
                 non_system_messages.append(m)
 
-    system_content = "你是小福宝，主要服务日常对话, 也能支持视频或者图片识别。"
+    # 基础人设固定在后端
+    system_content = "你是小福宝，一个可爱的AI助手。主要服务日常对话，也能支持视频或者图片识别。"
     if request.enable_think:
         system_content = "你是一个聪明且有深度思考能力的 AI 助手。回答时可以展现你的思考过程。"
-    if original_user_system:
-        system_content += f" {original_user_system}"
+    
+    # 追加情绪相关描述（由对应 skill 提供）
+    if request.mood:
+        mood_prompt = get_mood_system_prompt(request.mood)
+        system_content += f" {mood_prompt}"
     
     final_messages: List[dict] = [{"role": "system", "content": system_content}]
     final_messages.extend(non_system_messages)
@@ -487,15 +498,138 @@ async def update_skill_config(skill_name: str, config: Dict[str, Any]):
     skill = get_skill_by_name(skill_name)
     if not skill:
         raise HTTPException(status_code=404, detail="技能不存在")
-    
+
     if "enabled" in config:
         skill.enabled = config["enabled"]
     if "auto_trigger" in config:
         skill.auto_trigger = config["auto_trigger"]
     if "trigger_keywords" in config:
         skill.trigger_keywords = config["trigger_keywords"]
-    
+
     return {"success": True, "message": f"技能 {skill_name} 配置已更新"}
+
+
+@app.get("/api/skills/{skill_name}/system-prompt")
+async def get_skill_system_prompt(skill_name: str):
+    """获取指定技能的 system prompt 内容"""
+    skill = get_skill_by_name(skill_name)
+    if not skill:
+        raise HTTPException(status_code=404, detail="技能不存在")
+
+    return {
+        "skill_name": skill_name,
+        "system_prompt": skill.get_system_prompt(),
+        "mood_system_prompt": skill.get_mood_system_prompt(skill_name.split("_")[0] if "_" in skill_name else ""),
+        "has_md_files": {
+            "system_prompt": os.path.exists(os.path.join(skill.get_skill_dir() or "", "system_prompt.md")) if skill.get_skill_dir() else False,
+            "mood_prompt": os.path.exists(os.path.join(skill.get_skill_dir() or "", "mood_prompt.md")) if skill.get_skill_dir() else False,
+        }
+    }
+
+
+class SystemPromptRequest(BaseModel):
+    """System prompt 更新请求模型"""
+    content: str
+    prompt_type: str = "system_prompt"  # "system_prompt" 或 "mood_prompt"
+
+
+@app.post("/api/skills/{skill_name}/system-prompt")
+async def save_skill_system_prompt(skill_name: str, request: SystemPromptRequest):
+    """保存指定技能的 system prompt 到 md 文件"""
+    skill = get_skill_by_name(skill_name)
+    if not skill:
+        raise HTTPException(status_code=404, detail="技能不存在")
+
+    if request.prompt_type == "system_prompt":
+        success = skill.save_system_prompt(request.content)
+        message = "System prompt"
+    elif request.prompt_type == "mood_prompt":
+        success = skill.save_mood_prompt(request.content)
+        message = "Mood prompt"
+    else:
+        raise HTTPException(status_code=400, detail="无效的 prompt_type")
+
+    if success:
+        # 清除 tool cache 使更改立即生效
+        invalidate_tool_cache()
+        return {"success": True, "message": f"{message} 已保存到 md 文件"}
+    else:
+        raise HTTPException(status_code=500, detail="保存失败，可能是权限问题")
+
+
+@app.get("/api/skills/{skill_name}/file-path")
+async def get_skill_file_path(skill_name: str):
+    """获取指定技能的资源目录路径"""
+    skill = get_skill_by_name(skill_name)
+    if not skill:
+        raise HTTPException(status_code=404, detail="技能不存在")
+
+    skill_dir = skill.get_skill_dir()
+    return {
+        "skill_name": skill_name,
+        "skill_dir": skill_dir,
+        "system_prompt_path": os.path.join(skill_dir, "system_prompt.md") if skill_dir else None,
+        "mood_prompt_path": os.path.join(skill_dir, "mood_prompt.md") if skill_dir else None,
+    }
+
+
+# ============================================================
+#  提醒管理 API
+# ============================================================
+
+@app.get("/api/reminders")
+async def get_reminders(status: Optional[str] = None):
+    """获取所有提醒"""
+    reminders = reminder_manager.get_all_reminders(status)
+    return {"reminders": reminders}
+
+
+@app.get("/api/reminders/{reminder_id}")
+async def get_reminder(reminder_id: str):
+    """获取单个提醒"""
+    reminder = reminder_manager.get_reminder(reminder_id)
+    if not reminder:
+        raise HTTPException(status_code=404, detail="提醒不存在")
+    return reminder
+
+
+class SetReminderRequest(BaseModel):
+    """设置提醒请求模型"""
+    message: str
+    minutes: Optional[int] = None
+    hour: Optional[int] = None
+    minute: Optional[int] = None
+
+
+@app.post("/api/reminders")
+async def set_reminder(request: SetReminderRequest):
+    """设置提醒"""
+    if request.minutes is not None:
+        reminder_id = reminder_manager.set_reminder_in_minutes(request.message, request.minutes)
+    elif request.hour is not None and request.minute is not None:
+        reminder_id = reminder_manager.set_reminder_at_time(request.message, request.hour, request.minute)
+    else:
+        raise HTTPException(status_code=400, detail="请提供 minutes 或 hour+minute")
+
+    return {"success": True, "reminder_id": reminder_id}
+
+
+@app.delete("/api/reminders/{reminder_id}")
+async def cancel_reminder(reminder_id: str):
+    """取消提醒"""
+    if reminder_manager.cancel_reminder(reminder_id):
+        return {"success": True, "message": f"提醒 {reminder_id} 已取消"}
+    else:
+        raise HTTPException(status_code=404, detail="提醒不存在")
+
+
+@app.get("/api/notifications")
+async def notifications():
+    """SSE 实时通知推送"""
+    async def event_generator():
+        async for message in reminder_manager.subscribe():
+            yield f"data: {json.dumps(message, ensure_ascii=False)}\n\n"
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
 # ============================================================

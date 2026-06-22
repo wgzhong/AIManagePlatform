@@ -25,7 +25,7 @@ body {
   color: var(--text-main);
 }
 .top-nav {
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto 24px;
   padding: 12px 24px;
   border-radius: 16px;
@@ -73,9 +73,17 @@ body {
   color: #0b0822;
 }
 .container {
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 0 24px;
+  display: flex;
+  gap: 24px;
+}
+.left-panel {
+  flex: 0 0 380px;
+}
+.right-panel {
+  flex: 1;
 }
 .section {
   background: var(--glass-bg);
@@ -102,37 +110,38 @@ body {
   color: var(--text-sub);
   margin-top: 4px;
 }
-.skills-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 16px;
+.skills-list {
+  max-height: calc(100vh - 250px);
+  overflow-y: auto;
 }
-.skill-card {
+.skill-item {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--glass-border);
   border-radius: 12px;
-  padding: 20px;
+  padding: 16px;
+  margin-bottom: 12px;
+  cursor: pointer;
   transition: all 0.3s;
 }
-.skill-card:hover {
+.skill-item:hover {
   border-color: rgba(135, 232, 232, 0.3);
+  background: rgba(255, 255, 255, 0.05);
 }
-.skill-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 12px;
+.skill-item.active {
+  border-color: var(--accent-cyan);
+  background: rgba(135, 232, 232, 0.1);
 }
-.skill-info {
-  flex: 1;
+.skill-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
 }
 .skill-name {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--accent-cyan);
 }
 .skill-category {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-sub);
   background: rgba(255, 255, 255, 0.05);
   padding: 2px 8px;
@@ -140,104 +149,95 @@ body {
   display: inline-block;
   margin-top: 4px;
 }
-.skill-desc {
-  font-size: 13px;
-  color: var(--text-sub);
-  margin-bottom: 12px;
-  line-height: 1.5;
+.skill-status {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-top: 6px;
+  display: inline-block;
 }
-.skill-switch {
-  position: relative;
-  width: 48px;
-  height: 26px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 13px;
-  cursor: pointer;
-  transition: background 0.3s;
+.skill-status.enabled {
+  background: rgba(74, 222, 128, 0.15);
+  color: var(--success);
 }
-.skill-switch.active {
-  background: var(--accent-cyan);
+.skill-status.disabled {
+  background: rgba(255, 107, 107, 0.15);
+  color: var(--danger);
 }
-.skill-switch::after {
-  content: '';
-  position: absolute;
-  width: 22px;
-  height: 22px;
-  background: white;
-  border-radius: 50%;
-  top: 2px;
-  left: 2px;
-  transition: transform 0.3s;
+.prompt-editor {
+  margin-bottom: 20px;
 }
-.skill-switch.active::after {
-  transform: translateX(22px);
-}
-.advanced-section {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--glass-border);
-}
-.advanced-toggle {
-  background: none;
-  border: none;
-  color: var(--accent-cyan);
-  font-size: 13px;
-  cursor: pointer;
+.prompt-tabs {
   display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.advanced-content {
-  margin-top: 12px;
-  display: none;
-}
-.advanced-content.show {
-  display: block;
-}
-.form-group {
+  gap: 8px;
   margin-bottom: 12px;
 }
-.form-label {
-  font-size: 13px;
-  color: var(--text-sub);
-  margin-bottom: 6px;
-  display: block;
-}
-.form-input {
-  width: 100%;
-  padding: 10px 12px;
+.prompt-tab {
+  padding: 8px 16px;
   border: 1px solid var(--glass-border);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--text-main);
+  background: transparent;
+  color: var(--text-sub);
+  cursor: pointer;
   font-size: 13px;
+  transition: all 0.2s;
 }
-.form-input:focus {
+.prompt-tab.active {
+  background: rgba(135, 232, 232, 0.15);
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+}
+.prompt-textarea {
+  width: 100%;
+  min-height: 300px;
+  padding: 16px;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text-main);
+  font-size: 14px;
+  font-family: "Consolas", "Fira Code", monospace;
+  line-height: 1.6;
+  resize: vertical;
+}
+.prompt-textarea:focus {
   outline: none;
   border-color: var(--accent-cyan);
+  box-shadow: 0 0 0 3px rgba(135, 232, 232, 0.1);
 }
-.form-switch {
+.prompt-info {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 8px;
-  cursor: pointer;
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  font-size: 12px;
 }
-.form-switch-label {
-  font-size: 13px;
+.prompt-path {
   color: var(--text-sub);
+  font-family: monospace;
+  word-break: break-all;
 }
-.keywords-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 8px;
-}
-.keyword-tag {
-  background: rgba(135, 232, 232, 0.15);
-  color: var(--accent-cyan);
+.prompt-badge {
   padding: 4px 10px;
   border-radius: 12px;
-  font-size: 12px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.prompt-badge.md-file {
+  background: rgba(74, 222, 128, 0.15);
+  color: var(--success);
+}
+.prompt-badge.default {
+  background: rgba(255, 200, 221, 0.15);
+  color: var(--accent-pink);
+}
+.prompt-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
 }
 .btn {
   padding: 10px 20px;
@@ -254,48 +254,128 @@ body {
 }
 .btn-primary:hover {
   opacity: 0.9;
+  transform: translateY(-1px);
 }
 .btn-secondary {
   background: var(--glass-bg);
   color: var(--text-main);
+  border: 1px solid var(--glass-border);
 }
 .btn-secondary:hover {
   background: rgba(255, 255, 255, 0.1);
 }
-.status-badge {
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.config-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--glass-border);
+}
+.config-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--text-main);
+}
+.config-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+.config-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.config-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.3s;
+  flex-shrink: 0;
+}
+.config-switch.active {
+  background: var(--accent-cyan);
+}
+.config-switch::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.3s;
+}
+.config-switch.active::after {
+  transform: translateX(20px);
+}
+.config-label {
+  font-size: 13px;
+  color: var(--text-sub);
+}
+.keywords-section {
+  margin-top: 20px;
+}
+.keywords-title {
+  font-size: 13px;
+  color: var(--text-sub);
+  margin-bottom: 8px;
+}
+.keywords-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.keyword-tag {
+  background: rgba(135, 232, 232, 0.15);
+  color: var(--accent-cyan);
   padding: 4px 10px;
   border-radius: 12px;
   font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
-.status-enabled {
-  background: rgba(74, 222, 128, 0.15);
-  color: var(--success);
+.keyword-remove {
+  cursor: pointer;
+  opacity: 0.6;
+  font-size: 14px;
 }
-.status-disabled {
-  background: rgba(255, 107, 107, 0.15);
-  color: var(--danger);
+.keyword-remove:hover {
+  opacity: 1;
 }
-.parameters-list {
-  margin-top: 8px;
-}
-.param-item {
-  background: rgba(255, 255, 255, 0.03);
+.keyword-input {
+  width: 100%;
   padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  margin-bottom: 4px;
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text-main);
+  font-size: 13px;
 }
-.param-name {
-  color: var(--accent-cyan);
-  font-weight: 500;
+.keyword-input:focus {
+  outline: none;
+  border-color: var(--accent-cyan);
 }
-.param-type {
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
   color: var(--text-sub);
-  margin-left: 8px;
 }
-.param-desc {
-  color: var(--text-sub);
-  margin-left: 8px;
+.empty-state-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+.empty-state-text {
+  font-size: 14px;
 }
 .loading {
   text-align: center;
@@ -341,191 +421,337 @@ body {
   </nav>
 
   <div class="container">
-    <div class="section">
-      <div class="section-header">
-        <div>
-          <h2 class="section-title">⚙️ Skills 技能配置</h2>
-          <p class="section-desc">管理所有技能的启用状态、自动触发设置和触发关键词</p>
+    <div class="left-panel">
+      <div class="section">
+        <div class="section-header">
+          <h2 class="section-title">📋 技能列表</h2>
         </div>
-        <button class="btn btn-primary" onclick="refreshSkills()">刷新技能列表</button>
-      </div>
-      
-      <div id="skillsContainer" class="skills-grid">
-        <div class="loading">加载中...</div>
+        <div id="skillsList" class="skills-list">
+          <div class="loading">加载中...</div>
+        </div>
       </div>
     </div>
 
-    <div class="section">
-      <h2 class="section-title">📋 技能执行流程说明</h2>
-      <div style="font-size: 14px; color: var(--text-sub); line-height: 1.8;">
-        <p><strong>1. 技能触发阶段：</strong>当用户发送消息时，系统会检查消息内容是否匹配技能的触发关键词。</p>
-        <p><strong>2. 自动触发判断：</strong>如果技能启用了"自动触发"，系统会自动调用该技能；否则需要用户明确指令。</p>
-        <p><strong>3. 参数验证：</strong>系统会验证技能所需的参数是否齐全。</p>
-        <p><strong>4. 技能执行：</strong>调用技能的 run() 方法执行具体逻辑。</p>
-        <p><strong>5. 结果返回：</strong>技能执行完成后，结果会返回给用户。</p>
+    <div class="right-panel">
+      <div class="section" id="editorSection" style="display: none;">
+        <div class="section-header">
+          <div>
+            <h2 class="section-title" id="skillTitle">技能配置</h2>
+            <p class="section-desc" id="skillDesc"></p>
+          </div>
+        </div>
+
+        <div id="promptEditor" class="prompt-editor">
+          <div class="prompt-tabs">
+            <button class="prompt-tab active" data-type="system_prompt" onclick="switchPromptTab('system_prompt')">System Prompt</button>
+            <button class="prompt-tab" data-type="mood_prompt" onclick="switchPromptTab('mood_prompt')">Mood Prompt</button>
+          </div>
+          <textarea id="promptTextarea" class="prompt-textarea" placeholder="在此编辑 System Prompt..."></textarea>
+          <div class="prompt-info">
+            <span class="prompt-path" id="promptPath">路径：未选择</span>
+            <span class="prompt-badge default" id="promptBadge">默认值</span>
+          </div>
+        </div>
+
+        <div class="prompt-actions">
+          <button class="btn btn-primary" id="saveBtn" onclick="savePrompt()">保存到 MD 文件</button>
+          <button class="btn btn-secondary" onclick="resetPrompt()">重置</button>
+        </div>
+
+        <div class="config-section">
+          <h3 class="config-title">⚙️ 基础配置</h3>
+          <div class="config-grid">
+            <div class="config-item">
+              <div class="config-switch" id="enabledSwitch" onclick="toggleEnabled()"></div>
+              <span class="config-label">启用技能</span>
+            </div>
+            <div class="config-item">
+              <div class="config-switch" id="autoTriggerSwitch" onclick="toggleAutoTrigger()"></div>
+              <span class="config-label">自动触发</span>
+            </div>
+          </div>
+
+          <div class="keywords-section">
+            <div class="keywords-title">触发关键词</div>
+            <div class="keywords-list" id="keywordsList"></div>
+            <input type="text" class="keyword-input" id="keywordInput" placeholder="输入关键词后按 Enter 添加" onkeyup="addKeyword(event)">
+          </div>
+        </div>
+
+        <div class="prompt-actions" style="margin-top: 24px;">
+          <button class="btn btn-primary" onclick="saveAllConfig()">保存所有配置</button>
+        </div>
+      </div>
+
+      <div class="section" id="emptySection">
+        <div class="empty-state">
+          <div class="empty-state-icon">👈</div>
+          <p class="empty-state-text">请从左侧选择一个技能进行配置</p>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
     let skillsData = [];
+    let currentSkill = null;
+    let currentPromptType = 'system_prompt';
+    let originalPrompts = {};
 
     async function loadSkills() {
       try {
         const response = await fetch('/api/skills');
         const data = await response.json();
         skillsData = data.skills;
-        renderSkills();
+        renderSkillsList();
       } catch (error) {
         console.error('加载技能失败:', error);
-        document.getElementById('skillsContainer').innerHTML = '<div class="loading">加载失败，请刷新重试</div>';
+        document.getElementById('skillsList').innerHTML = '<div class="loading">加载失败</div>';
       }
     }
 
-    function renderSkills() {
-      const container = document.getElementById('skillsContainer');
+    function renderSkillsList() {
+      const container = document.getElementById('skillsList');
       container.innerHTML = skillsData.map(skill => `
-        <div class="skill-card">
-          <div class="skill-header">
-            <div class="skill-info">
-              <div class="skill-name">${skill.name}</div>
-              <div class="skill-category">${skill.category}</div>
-            </div>
-            <div class="skill-switch ${skill.enabled ? 'active' : ''}" onclick="toggleSkill('${skill.name}')"></div>
-          </div>
-          <div class="skill-desc">${skill.description}</div>
-          
-          <div class="status-badge ${skill.enabled ? 'status-enabled' : 'status-disabled'}">
+        <div class="skill-item ${currentSkill?.name === skill.name ? 'active' : ''}" onclick="selectSkill('${skill.name}')">
+          <div class="skill-icon">${skill.icon}</div>
+          <div class="skill-name">${skill.name}</div>
+          <div class="skill-category">${skill.category}</div>
+          <div class="skill-status ${skill.enabled ? 'enabled' : 'disabled'}">
             ${skill.enabled ? '已启用' : '已禁用'}
-          </div>
-
-          <div class="advanced-section">
-            <button class="advanced-toggle" onclick="toggleAdvanced('${skill.name}')">
-              ▼ 高级配置
-            </button>
-            <div id="advanced-${skill.name}" class="advanced-content">
-              <div class="form-group">
-                <label class="form-label">自动触发</label>
-                <div class="form-switch" onclick="toggleAutoTrigger('${skill.name}')">
-                  <div class="skill-switch ${skill.auto_trigger ? 'active' : ''}"></div>
-                  <span class="form-switch-label">${skill.auto_trigger ? '开启' : '关闭'}</span>
-                </div>
-              </div>
-              
-              <div class="form-group">
-                <label class="form-label">触发关键词</label>
-                <div class="keywords-list">
-                  ${skill.trigger_keywords.map(k => `<span class="keyword-tag">${k}</span>`).join('')}
-                </div>
-                <input type="text" class="form-input" placeholder="添加新关键词" id="keywords-${skill.name}" onkeyup="addKeyword(event, '${skill.name}')">
-              </div>
-
-              <div class="form-group">
-                <label class="form-label">参数配置</label>
-                <div class="parameters-list">
-                  ${skill.parameters.required?.map(p => {
-                    const prop = skill.parameters.properties?.[p];
-                    return `<div class="param-item">
-                      <span class="param-name">${p}</span>
-                      <span class="param-type">${prop?.type || 'string'}</span>
-                      <span class="param-desc">${prop?.description || ''}</span>
-                    </div>`;
-                  }).join('') || '<div class="param-item" style="color: var(--text-sub)">无必填参数</div>'}
-                </div>
-              </div>
-
-              <button class="btn btn-primary" style="width: 100%;" onclick="saveSkillConfig('${skill.name}')">保存配置</button>
-            </div>
           </div>
         </div>
       `).join('');
     }
 
-    function toggleAdvanced(skillName) {
-      const el = document.getElementById(`advanced-${skillName}`);
-      el.classList.toggle('show');
-    }
-
-    async function toggleSkill(skillName) {
-      const skill = skillsData.find(s => s.name === skillName);
-      if (skill) {
-        skill.enabled = !skill.enabled;
-        updateSkillSwitchUI(skillName, skill.enabled);
-        await saveSkillConfig(skillName);
-      }
-    }
-
-    function updateSkillSwitchUI(skillName, enabled) {
-      const switches = document.querySelectorAll('.skill-switch');
-      switches.forEach(sw => {
-        if (sw.getAttribute('onclick') === `toggleSkill('${skillName}')`) {
-          sw.classList.toggle('active', enabled);
-        }
-      });
-      const cards = document.querySelectorAll('.skill-card');
-      cards.forEach(card => {
-        const sw = card.querySelector('.skill-switch');
-        if (sw && sw.getAttribute('onclick') === `toggleSkill('${skillName}')`) {
-          const badge = card.querySelector('.status-badge');
-          if (badge) {
-            badge.className = `status-badge ${enabled ? 'status-enabled' : 'status-disabled'}`;
-            badge.textContent = enabled ? '已启用' : '已禁用';
-          }
-        }
-      });
-    }
-
-    async function toggleAutoTrigger(skillName) {
-      const skill = skillsData.find(s => s.name === skillName);
-      if (skill) {
-        skill.auto_trigger = !skill.auto_trigger;
-        updateAutoTriggerUI(skillName, skill.auto_trigger);
-      }
-    }
-
-    function updateAutoTriggerUI(skillName, enabled) {
-      const switchEl = document.querySelector(`#advanced-${skillName} .skill-switch`);
-      const labelEl = document.querySelector(`#advanced-${skillName} .form-switch-label`);
-      if (switchEl) {
-        switchEl.classList.toggle('active', enabled);
-      }
-      if (labelEl) {
-        labelEl.textContent = enabled ? '开启' : '关闭';
-      }
-    }
-
-    function addKeyword(event, skillName) {
-      if (event.key === 'Enter') {
-        const input = document.getElementById(`keywords-${skillName}`);
-        const keyword = input.value.trim();
-        if (keyword) {
-          const skill = skillsData.find(s => s.name === skillName);
-          if (skill && !skill.trigger_keywords.includes(keyword)) {
-            skill.trigger_keywords.push(keyword);
-            input.value = '';
-            renderSkills();
-          }
-        }
-      }
-    }
-
-    async function saveSkillConfig(skillName) {
+    async function selectSkill(skillName) {
       const skill = skillsData.find(s => s.name === skillName);
       if (!skill) return;
 
+      currentSkill = skill;
+
+      // 加载详细的 prompt 信息
       try {
-        const response = await fetch(`/api/skills/${skillName}/config`, {
+        const response = await fetch(`/api/skills/${skillName}/system-prompt`);
+        const promptData = await response.json();
+
+        // 保存原始值
+        originalPrompts = {
+          system_prompt: promptData.system_prompt || '',
+          mood_prompt: promptData.mood_system_prompt || ''
+        };
+
+        // 更新 UI
+        document.getElementById('skillTitle').textContent = skill.icon + ' ' + skill.name;
+        document.getElementById('skillDesc').textContent = skill.description;
+        document.getElementById('editorSection').style.display = 'block';
+        document.getElementById('emptySection').style.display = 'none';
+
+        // 更新配置开关
+        updateSwitchUI('enabledSwitch', skill.enabled);
+        updateSwitchUI('autoTriggerSwitch', skill.auto_trigger);
+
+        // 更新关键词
+        renderKeywords(skill.trigger_keywords || []);
+
+        // 根据是否有 mood_prompt 显示/隐藏 tab
+        const moodTab = document.querySelector('[data-type="mood_prompt"]');
+        if (promptData.mood_system_prompt !== null && promptData.mood_system_prompt !== undefined) {
+          moodTab.style.display = 'block';
+        } else {
+          moodTab.style.display = 'none';
+          if (currentPromptType === 'mood_prompt') {
+            switchPromptTab('system_prompt');
+          }
+        }
+
+        // 加载当前 tab 的 prompt
+        loadPromptContent(currentPromptType, promptData);
+
+        // 保存路径信息
+        try {
+          const filePathRes = await fetch(`/api/skills/${skillName}/file-path`);
+          if (filePathRes.ok) {
+            const filePathData = await filePathRes.json();
+            currentSkill._skill_dir = filePathData.skill_dir;
+          }
+        } catch (e) {
+          console.log('获取文件路径失败', e);
+        }
+
+      } catch (error) {
+        console.error('加载 prompt 失败:', error);
+        showToast('加载失败', 'error');
+      }
+
+      renderSkillsList();
+    }
+
+    function loadPromptContent(type, promptData) {
+      const textarea = document.getElementById('promptTextarea');
+      const pathEl = document.getElementById('promptPath');
+      const badgeEl = document.getElementById('promptBadge');
+
+      const content = type === 'system_prompt' ? promptData.system_prompt : promptData.mood_system_prompt;
+      const hasMd = type === 'system_prompt' ? promptData.has_md_files.system_prompt : promptData.has_md_files.mood_prompt;
+
+      textarea.value = (content || '').replace(/  \n/g, '\n');
+      textarea.placeholder = type === 'system_prompt'
+        ? '# System Prompt\n\n在此编辑技能的 System Prompt...\n\n## 使用场景\n- 描述技能的功能\n- 说明调用方式'
+        : '# Mood Prompt\n\n在此编辑情绪提示...\n\n## 语气特征\n- 描述当前情绪的特点\n\n## 典型表达\n- 列出典型的回复语句';
+
+      // 获取文件路径
+      const pathSuffix = type === 'system_prompt' ? 'system_prompt.md' : 'mood_prompt.md';
+      if (skill._skill_dir) {
+        pathEl.textContent = '路径：' + skill._skill_dir + '/' + pathSuffix;
+      } else {
+        pathEl.textContent = '路径：skills/类别/技能名/' + pathSuffix;
+      }
+
+      // 更新 badge
+      badgeEl.className = 'prompt-badge ' + (hasMd ? 'md-file' : 'default');
+      badgeEl.textContent = hasMd ? 'MD 文件' : '默认值';
+    }
+
+    function switchPromptTab(type) {
+      // 保存当前编辑的内容
+      const textarea = document.getElementById('promptTextarea');
+      if (currentPromptType === 'system_prompt') {
+        originalPrompts.system_prompt = textarea.value;
+      } else {
+        originalPrompts.mood_prompt = textarea.value;
+      }
+
+      currentPromptType = type;
+
+      // 更新 tab 样式
+      document.querySelectorAll('.prompt-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.type === type);
+      });
+
+      // 加载新 tab 的内容
+      loadPromptContent(type, {
+        system_prompt: originalPrompts.system_prompt,
+        mood_system_prompt: originalPrompts.mood_prompt,
+        has_md_files: {
+          system_prompt: currentSkill.system_prompt !== '',
+          mood_prompt: currentSkill.mood_system_prompt !== ''
+        }
+      });
+    }
+
+    function updateSwitchUI(switchId, enabled) {
+      document.getElementById(switchId).classList.toggle('active', enabled);
+    }
+
+    function toggleEnabled() {
+      if (currentSkill) {
+        currentSkill.enabled = !currentSkill.enabled;
+        updateSwitchUI('enabledSwitch', currentSkill.enabled);
+      }
+    }
+
+    function toggleAutoTrigger() {
+      if (currentSkill) {
+        currentSkill.auto_trigger = !currentSkill.auto_trigger;
+        updateSwitchUI('autoTriggerSwitch', currentSkill.auto_trigger);
+      }
+    }
+
+    function renderKeywords(keywords) {
+      const container = document.getElementById('keywordsList');
+      container.innerHTML = keywords.map((kw, idx) => `
+        <span class="keyword-tag">
+          ${kw}
+          <span class="keyword-remove" onclick="removeKeyword(${idx})">×</span>
+        </span>
+      `).join('');
+    }
+
+    function addKeyword(event) {
+      if (event.key === 'Enter') {
+        const input = document.getElementById('keywordInput');
+        const keyword = input.value.trim();
+        if (keyword && currentSkill) {
+          if (!currentSkill.trigger_keywords) {
+            currentSkill.trigger_keywords = [];
+          }
+          if (!currentSkill.trigger_keywords.includes(keyword)) {
+            currentSkill.trigger_keywords.push(keyword);
+            renderKeywords(currentSkill.trigger_keywords);
+          }
+          input.value = '';
+        }
+      }
+    }
+
+    function removeKeyword(index) {
+      if (currentSkill && currentSkill.trigger_keywords) {
+        currentSkill.trigger_keywords.splice(index, 1);
+        renderKeywords(currentSkill.trigger_keywords);
+      }
+    }
+
+    async function savePrompt() {
+      if (!currentSkill) return;
+
+      const textarea = document.getElementById('promptTextarea');
+      const content = textarea.value;
+
+      try {
+        const response = await fetch(`/api/skills/${currentSkill.name}/system-prompt`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            enabled: skill.enabled,
-            auto_trigger: skill.auto_trigger,
-            trigger_keywords: skill.trigger_keywords
+            content: content,
+            prompt_type: currentPromptType
           })
         });
 
         if (response.ok) {
-          showToast('配置保存成功', 'success');
+          const result = await response.json();
+          showToast(result.message, 'success');
+
+          // 更新 badge
+          document.getElementById('promptBadge').className = 'prompt-badge md-file';
+          document.getElementById('promptBadge').textContent = '已保存';
+        } else {
+          showToast('保存失败', 'error');
+        }
+      } catch (error) {
+        console.error('保存失败:', error);
+        showToast('保存失败', 'error');
+      }
+    }
+
+    function resetPrompt() {
+      const textarea = document.getElementById('promptTextarea');
+      textarea.value = currentPromptType === 'system_prompt'
+        ? originalPrompts.system_prompt
+        : originalPrompts.mood_prompt;
+    }
+
+    async function saveAllConfig() {
+      if (!currentSkill) return;
+
+      try {
+        // 先保存 prompt
+        await savePrompt();
+
+        // 保存基础配置
+        const response = await fetch(`/api/skills/${currentSkill.name}/config`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            enabled: currentSkill.enabled,
+            auto_trigger: currentSkill.auto_trigger,
+            trigger_keywords: currentSkill.trigger_keywords
+          })
+        });
+
+        if (response.ok) {
+          showToast('所有配置已保存', 'success');
+          loadSkills(); // 刷新列表
         } else {
           showToast('保存失败', 'error');
         }
@@ -541,11 +767,6 @@ body {
       toast.textContent = message;
       document.body.appendChild(toast);
       setTimeout(() => toast.remove(), 3000);
-    }
-
-    function refreshSkills() {
-      loadSkills();
-      showToast('技能列表已刷新', 'success');
     }
 
     function navigateTo(path) {

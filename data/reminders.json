@@ -1,0 +1,68 @@
+{
+  "bce7230b": {
+    "id": "bce7230b",
+    "message": "lupa！时间到啦！🔔 起床啦！快醒醒！⏰",
+    "trigger_time": "2026-06-21T00:14:01.564922",
+    "repeat_type": "once",
+    "repeat_interval": 0,
+    "repeat_count": 0,
+    "status": "triggered",
+    "created_at": "2026-06-21T00:13:01.564922",
+    "triggered_count": 0
+  },
+  "a19c0828": {
+    "id": "a19c0828",
+    "message": "lupa！30秒到啦！醒醒！🔔⏰ 虽然你可能听不到小福宝的声音...😭",
+    "trigger_time": "2026-06-21T00:20:28.034920",
+    "repeat_type": "once",
+    "repeat_interval": 0,
+    "repeat_count": 0,
+    "status": "triggered",
+    "created_at": "2026-06-21T00:19:28.034920",
+    "triggered_count": 1
+  },
+  "55e4e109": {
+    "id": "55e4e109",
+    "message": "lupa！时间到啦！🔔 起床啦！快醒醒！⏰",
+    "trigger_time": "2026-06-21T00:21:02.580192",
+    "repeat_type": "once",
+    "repeat_interval": 0,
+    "repeat_count": 0,
+    "status": "triggered",
+    "created_at": "2026-06-21T00:20:02.580192",
+    "triggered_count": 1
+  },
+  "7ae3b659": {
+    "id": "7ae3b659",
+    "message": "lupa！！！醒醒！！！时间到啦！！！🔔🔔🔔",
+    "trigger_time": "2026-06-21T00:24:46.622018",
+    "repeat_type": "once",
+    "repeat_interval": 0,
+    "repeat_count": 0,
+    "status": "triggered",
+    "created_at": "2026-06-21T00:23:46.622018",
+    "triggered_count": 1
+  },
+  "37846536": {
+    "id": "37846536",
+    "message": "lupa！！！醒醒！！！时间到啦！！！🔔🔔🔔",
+    "trigger_time": "2026-06-21T00:29:01.298096",
+    "repeat_type": "once",
+    "repeat_interval": 0,
+    "repeat_count": 0,
+    "status": "triggered",
+    "created_at": "2026-06-21T00:28:01.298096",
+    "triggered_count": 1
+  },
+  "9793769e": {
+    "id": "9793769e",
+    "message": "lupa！！！醒醒！！！时间到啦！！！🔔🔔🔔 起床起床起床！！！⏰⏰⏰",
+    "trigger_time": "2026-06-21T00:34:03.424295",
+    "repeat_type": "once",
+    "repeat_interval": 0,
+    "repeat_count": 0,
+    "status": "triggered",
+    "created_at": "2026-06-21T00:33:03.424295",
+    "triggered_count": 1
+  }
+}

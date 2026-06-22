@@ -130,6 +130,62 @@ body {
   display: none;
 }
 .card-body.open { display: block; }
+
+/* 心情卡片网格 */
+.mood-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 4px;
+}
+.mood-card {
+  background: rgba(0,0,0,0.2);
+  border: 1.5px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 10px 6px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.mood-card:hover {
+  background: rgba(255,255,255,0.06);
+  transform: translateY(-1px);
+  border-color: rgba(255,255,255,0.18);
+}
+.mood-card.active {
+  background: linear-gradient(135deg, rgba(114, 224, 224, 0.18), rgba(255, 200, 221, 0.18));
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 12px rgba(114, 224, 224, 0.25);
+}
+.mood-card.active::before {
+  content: "✓";
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 10px;
+  color: var(--accent-cyan);
+  font-weight: bold;
+}
+.mood-emoji {
+  font-size: 26px;
+  margin-bottom: 4px;
+  filter: drop-shadow(0 0 4px rgba(255,255,255,0.15));
+}
+.mood-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 2px;
+}
+.mood-skill {
+  font-size: 9px;
+  color: var(--text-sub);
+  font-family: monospace;
+  opacity: 0.7;
+}
+
 .field { margin-bottom: 14px; }
 label {
   display: flex;
@@ -423,15 +479,44 @@ button:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important
         <div class="card-body open">
           <div class="field">
             <label>选择小福宝的心情</label>
-            <select id="moodSelect">
-              <option value="happy" selected>😊 开心</option>
-              <option value="cheerful">😄 愉快</option>
-              <option value="sad">😢 难过</option>
-              <option value="anger">😠 生气</option>
-              <option value="fear">😨 害怕</option>
-              <option value="disgust">😒 厌恶</option>
-              <option value="surprise">😲 惊讶</option>
-            </select>
+            <div class="mood-grid" id="moodGrid">
+              <div class="mood-card active" data-mood="happy" onclick="selectMood(this)">
+                <div class="mood-emoji">😊</div>
+                <div class="mood-name">开心</div>
+                <div class="mood-skill">happy_mood</div>
+              </div>
+              <div class="mood-card" data-mood="cheerful" onclick="selectMood(this)">
+                <div class="mood-emoji">😄</div>
+                <div class="mood-name">愉快</div>
+                <div class="mood-skill">cheerful_mood</div>
+              </div>
+              <div class="mood-card" data-mood="sad" onclick="selectMood(this)">
+                <div class="mood-emoji">😢</div>
+                <div class="mood-name">难过</div>
+                <div class="mood-skill">sad_mood</div>
+              </div>
+              <div class="mood-card" data-mood="anger" onclick="selectMood(this)">
+                <div class="mood-emoji">😠</div>
+                <div class="mood-name">生气</div>
+                <div class="mood-skill">anger_mood</div>
+              </div>
+              <div class="mood-card" data-mood="fear" onclick="selectMood(this)">
+                <div class="mood-emoji">😨</div>
+                <div class="mood-name">害怕</div>
+                <div class="mood-skill">fear_mood</div>
+              </div>
+              <div class="mood-card" data-mood="disgust" onclick="selectMood(this)">
+                <div class="mood-emoji">😒</div>
+                <div class="mood-name">厌恶</div>
+                <div class="mood-skill">disgust_mood</div>
+              </div>
+              <div class="mood-card" data-mood="surprise" onclick="selectMood(this)">
+                <div class="mood-emoji">😲</div>
+                <div class="mood-name">惊讶</div>
+                <div class="mood-skill">surprise_mood</div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -668,8 +753,7 @@ async function sendMessage() {
   const enabledTools = ['get_time', 'calculate', 'get_weather'].filter(tool => skillsConfig[tool] !== false);
   console.log('Enabled skills:', enabledTools);
   
-  const moodSelect = document.getElementById("moodSelect");
-  const currentMood = moodSelect.value;
+  const currentMood = window.currentMood || 'happy';
 
   // 人设和情绪提示统一由后端管理，前端只传 mood 标识
   const reqBody = {
@@ -764,8 +848,64 @@ function initNotification() {
   console.log("SSE 通知已连接");
 }
 
+// 心情切换
+window.currentMood = 'happy';
+
+async function selectMood(cardEl) {
+  const mood = cardEl.dataset.mood;
+  if (!mood) return;
+
+  const prevMood = window.currentMood || 'happy';
+  if (prevMood === mood) return;
+
+  document.querySelectorAll('.mood-card').forEach(c => c.classList.remove('active'));
+  cardEl.classList.add('active');
+
+  window.currentMood = mood;
+
+  localStorage.setItem('selected_mood', mood);
+
+  // 在对话历史中插入一条用户消息，让 LLM 知道心情切换了
+  if (chatHistory.length > 0) {
+    const moodLabel = {
+      'happy': '开心', 'cheerful': '愉快', 'sad': '难过',
+      'anger': '生气', 'fear': '害怕', 'disgust': '厌恶', 'surprise': '惊讶'
+    }[mood] || mood;
+    const emojiMap = {
+      'happy': '😊', 'cheerful': '😄', 'sad': '😢',
+      'anger': '😠', 'fear': '😨', 'disgust': '😒', 'surprise': '😲'
+    };
+    const emoji = emojiMap[mood] || '💭';
+    const systemNote = {
+      role: 'user',
+      content: `[系统通知] 用户把小福宝的心情切换为【${moodLabel}】。从现在起你必须严格按照【${moodLabel}】的语气回复，丢弃之前任何其他情绪的语气风格。`
+    };
+    chatHistory.push(systemNote);
+
+    // 在聊天窗口中显示一条系统消息
+    addMessage('system', `${emoji} 心情已切换为【${moodLabel}】，后续回复将以该语气进行`, new Date().toTimeString().slice(0, 5), false);
+  }
+
+
+}
+
+function restoreMood() {
+  const savedMood = localStorage.getItem('selected_mood') || 'happy';
+  window.currentMood = savedMood;
+  
+  document.querySelectorAll('.mood-card').forEach(c => {
+    if (c.dataset.mood === savedMood) {
+      c.classList.add('active');
+    } else {
+      c.classList.remove('active');
+    }
+  });
+  
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   initNotification();
+  restoreMood();
 });
 </script>
 </body>

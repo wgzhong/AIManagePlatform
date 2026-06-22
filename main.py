@@ -139,13 +139,19 @@ async def chat(request: ChatRequest):
     enabled_skills = [skill for skill in ALL_SKILLS if skill.enabled]
     tools = [skill.get_tool_schema() for skill in enabled_skills]
 
-    # 过滤出非 system 消息（前端不再发送 system 人设，由后端统一管理）
+    # 过滤消息：保留非 system 消息，以及带特殊标记的 system 消息（如[系统通知]）
     non_system_messages: List[dict] = []
     for m in request.messages:
-        if m.get("role") != "system":
-            content = m.get("content", "")
-            if content and not content.startswith("工具调用结果:"):
-                non_system_messages.append(m)
+        role = m.get("role", "")
+        content = m.get("content", "")
+        if not content:
+            continue
+        if content.startswith("工具调用结果:"):
+            continue
+        if role == "system" and not content.startswith("[系统通知]"):
+            # 普通 system 消息由后端统一管理，过滤掉
+            continue
+        non_system_messages.append(m)
 
     # 基础人设固定在后端
     system_content = "你是小福宝，一个可爱的AI助手。主要服务日常对话，也能支持视频或者图片识别。"
@@ -155,7 +161,11 @@ async def chat(request: ChatRequest):
     # 追加情绪相关描述（由对应 skill 提供）
     if request.mood:
         mood_prompt = get_mood_system_prompt(request.mood)
-        system_content += f" {mood_prompt}"
+        logger.info(f"使用心情: {request.mood}, 提示长度: {len(mood_prompt)}, 提示前30字: {mood_prompt[:30]}")
+        # 把心情提示放在最前面，强化覆盖效果
+        system_content = f"{mood_prompt}\n\n{system_content}"
+        # 在末尾追加强制提醒
+        system_content += f"\n\n【重要提醒】你当前必须严格按照上面的【{request.mood}】状态回复每一条消息，忽略之前所有对话中的语气风格。任何回复都必须以{request.mood}的语气表达，不要使用其他情绪。"
     
     final_messages: List[dict] = [{"role": "system", "content": system_content}]
     final_messages.extend(non_system_messages)
@@ -521,8 +531,8 @@ async def get_skill_system_prompt(skill_name: str):
         "system_prompt": skill.get_system_prompt(),
         "mood_system_prompt": skill.get_mood_system_prompt(skill_name.split("_")[0] if "_" in skill_name else ""),
         "has_md_files": {
-            "system_prompt": os.path.exists(os.path.join(skill.get_skill_dir() or "", "system_prompt.md")) if skill.get_skill_dir() else False,
-            "mood_prompt": os.path.exists(os.path.join(skill.get_skill_dir() or "", "mood_prompt.md")) if skill.get_skill_dir() else False,
+            "system_prompt": skill._skill_path is not None and os.path.isfile(skill._skill_path),
+            "mood_prompt": skill._skill_path is not None and os.path.isfile(skill._skill_path),
         }
     }
 
@@ -564,12 +574,26 @@ async def get_skill_file_path(skill_name: str):
     if not skill:
         raise HTTPException(status_code=404, detail="技能不存在")
 
-    skill_dir = skill.get_skill_dir()
+    skill_path = skill.get_skill_path()
     return {
         "skill_name": skill_name,
-        "skill_dir": skill_dir,
-        "system_prompt_path": os.path.join(skill_dir, "system_prompt.md") if skill_dir else None,
-        "mood_prompt_path": os.path.join(skill_dir, "mood_prompt.md") if skill_dir else None,
+        "skill_path": skill_path,
+        "skill_dir": skill.get_skill_dir(),
+        "md_file_path": skill_path if skill_path and os.path.isfile(skill_path) else None,
+    }
+
+
+# ============================================================
+#  心情提示 API
+# ============================================================
+@app.get("/api/mood-prompt/{mood}")
+async def get_mood_prompt_api(mood: str):
+    """获取指定心情的 prompt 内容"""
+    from skills import get_mood_system_prompt
+    prompt = get_mood_system_prompt(mood)
+    return {
+        "mood": mood,
+        "prompt": prompt
     }
 
 

@@ -1,9 +1,11 @@
 """
 Skill 基类模块
 定义所有 Skill 必须继承的基础类
+支持从 md 文件加载配置和内容
 """
 
 import os
+import re
 from typing import Dict, Any, Optional, List
 
 
@@ -99,6 +101,25 @@ class BaseSkill:
                 return f.read()
         return ""
 
+    def _load_from_md_file(self) -> str:
+        """
+        从 _skill_path 加载 md 文件内容（去掉 YAML frontmatter）
+        """
+        skill_path = getattr(self, '_skill_path', None)
+        if not skill_path or not os.path.isfile(skill_path):
+            return ""
+
+        try:
+            with open(skill_path, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            match = re.match(r'^---\s*\n(.*?)\n---\s*\n(.*)', content, re.DOTALL)
+            if match:
+                return match.group(2).strip()
+            return content.strip()
+        except Exception:
+            return ""
+
     def _save_md_file(self, filename: str, content: str) -> bool:
         """
         保存内容到 skill 目录下的 md 文件
@@ -116,9 +137,6 @@ class BaseSkill:
 
         md_path = os.path.join(skill_dir, filename)
         try:
-            import re
-            content = re.sub(r'  \n', '\n', content)
-            content = re.sub(r'(?<!\n)\n(?!\n)', '  \n', content)
             with open(md_path, "w", encoding="utf-8") as f:
                 f.write(content)
             return True
@@ -133,7 +151,10 @@ class BaseSkill:
         Returns:
             system prompt 字符串
         """
-        md_content = self._load_md_file("system_prompt.md")
+        skill_path = getattr(self, '_skill_path', None)
+        if skill_path and os.path.isfile(skill_path):
+            return self._load_from_md_file()
+        md_content = self._load_md_file("skill.md")
         return md_content if md_content else self.system_prompt
 
     def get_mood_system_prompt(self, mood: str) -> Optional[str]:
@@ -147,7 +168,10 @@ class BaseSkill:
         Returns:
             心情系统提示字符串，非情绪 skill 返回 None
         """
-        md_content = self._load_md_file("mood_prompt.md")
+        skill_path = getattr(self, '_skill_path', None)
+        if skill_path and os.path.isfile(skill_path):
+            return self._load_from_md_file()
+        md_content = self._load_md_file("skill.md")
         if md_content:
             return md_content
         return self.mood_system_prompt if self.mood_system_prompt else None
@@ -219,3 +243,95 @@ class BaseSkill:
             if param not in args:
                 return False
         return True
+
+
+class MdSkill(BaseSkill):
+    """从 md 文件加载的 Skill"""
+
+    def __init__(self, md_path: str):
+        self._skill_path = md_path
+        self._load_from_frontmatter()
+
+    def _load_from_frontmatter(self):
+        """从 YAML frontmatter 加载配置"""
+        if not self._skill_path:
+            return
+
+        try:
+            with open(self._skill_path, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            match = re.match(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
+            if match:
+                frontmatter = match.group(1)
+                self._parse_frontmatter(frontmatter)
+        except Exception:
+            pass
+
+    def _parse_frontmatter(self, frontmatter: str):
+        """解析 YAML frontmatter"""
+        try:
+            import yaml
+            config = yaml.safe_load(frontmatter)
+            if config and isinstance(config, dict):
+                self.name = str(config.get("name", ""))
+                self.description = str(config.get("description", ""))
+                self.version = str(config.get("version", "1.0.0"))
+                self.category = str(config.get("category", "通用"))
+                self.icon = str(config.get("icon", "🔧"))
+                self.enabled = bool(config.get("enabled", True))
+                self.auto_trigger = bool(config.get("auto_trigger", False))
+
+                keywords = config.get("trigger_keywords", [])
+                if isinstance(keywords, str):
+                    keywords = [k.strip() for k in keywords.strip("[]").split(",") if k.strip()]
+                elif not isinstance(keywords, list):
+                    keywords = []
+                self.trigger_keywords = keywords
+
+                params = config.get("parameters", {})
+                if params and isinstance(params, dict):
+                    self.parameters = params
+            else:
+                self._simple_parse(frontmatter)
+        except ImportError:
+            self._simple_parse(frontmatter)
+        except Exception:
+            self._simple_parse(frontmatter)
+
+    def _simple_parse(self, frontmatter: str):
+        """简单解析 YAML frontmatter（不依赖 PyYAML）"""
+        for line in frontmatter.split("\n"):
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if ":" not in line:
+                continue
+            key, value = line.split(":", 1)
+            key = key.strip()
+            value = value.strip()
+            
+            if key == "name":
+                self.name = value
+            elif key == "description":
+                self.description = value
+            elif key == "version":
+                self.version = value
+            elif key == "category":
+                self.category = value
+            elif key == "icon":
+                self.icon = value
+            elif key == "enabled":
+                self.enabled = value.lower() == "true"
+            elif key == "auto_trigger":
+                self.auto_trigger = value.lower() == "true"
+            elif key == "trigger_keywords":
+                value = value.strip("[]")
+                self.trigger_keywords = [k.strip().strip('"').strip("'") for k in value.split(",") if k.strip()]
+
+    def run(self, args: Dict[str, Any]) -> str:
+        """
+        执行技能
+        返回完整的 system prompt 内容，供 LLM 使用
+        """
+        return self.get_system_prompt()

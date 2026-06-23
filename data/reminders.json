@@ -97,5 +97,93 @@
     "status": "pending",
     "created_at": "2026-06-22T22:17:16.012288",
     "triggered_count": 0
+  },
+  "f25eb510": {
+    "id": "f25eb510",
+    "message": "时间到了！别装死，赶紧回来！",
+    "trigger_time": "2026-06-23T17:08:03.316605",
+    "repeat_type": "once",
+    "repeat_interval": 0,
+    "repeat_count": 0,
+    "status": "triggered",
+    "created_at": "2026-06-23T17:07:03.316605",
+    "triggered_count": 1
+  },
+  "c04eca39": {
+    "id": "c04eca39",
+    "message": "时间到了！快点起来！别说我没叫你！",
+    "trigger_time": "2026-06-23T17:18:44.872188",
+    "repeat_type": "once",
+    "repeat_interval": 0,
+    "repeat_count": 0,
+    "status": "triggered",
+    "created_at": "2026-06-23T17:17:44.872188",
+    "triggered_count": 1
+  },
+  "40a6ca63": {
+    "id": "40a6ca63",
+    "message": "测试提醒",
+    "trigger_time": "2026-06-23T17:23:17.002637",
+    "repeat_type": "once",
+    "repeat_interval": 0,
+    "repeat_count": 0,
+    "status": "triggered",
+    "created_at": "2026-06-23T17:23:05.002637",
+    "triggered_count": 1
+  },
+  "b8ca5755": {
+    "id": "b8ca5755",
+    "message": "喂！叫你了！别再说没提醒你了！",
+    "trigger_time": "2026-06-23T17:40:32.828641",
+    "repeat_type": "once",
+    "repeat_interval": 0,
+    "repeat_count": 0,
+    "status": "triggered",
+    "created_at": "2026-06-23T17:39:32.828641",
+    "triggered_count": 1
+  },
+  "8ac1d20c": {
+    "id": "8ac1d20c",
+    "message": "喂！闹钟响了！赶紧回应！别再说没收到了！！！",
+    "trigger_time": "2026-06-23T17:45:29.242878",
+    "repeat_type": "once",
+    "repeat_interval": 0,
+    "repeat_count": 0,
+    "status": "triggered",
+    "created_at": "2026-06-23T17:44:29.242878",
+    "triggered_count": 1
+  },
+  "a60f43a2": {
+    "id": "a60f43a2",
+    "message": "时间到啦！快来快来！⏰",
+    "trigger_time": "2026-06-23T17:48:55.802829",
+    "repeat_type": "once",
+    "repeat_interval": 0,
+    "repeat_count": 0,
+    "status": "triggered",
+    "created_at": "2026-06-23T17:47:55.802829",
+    "triggered_count": 1
+  },
+  "f69afbf5": {
+    "id": "f69afbf5",
+    "message": "时间到啦！这是你设置的1分钟提醒哦～",
+    "trigger_time": "2026-06-23T17:55:23.979259",
+    "repeat_type": "once",
+    "repeat_interval": 0,
+    "repeat_count": 0,
+    "status": "triggered",
+    "created_at": "2026-06-23T17:54:23.979259",
+    "triggered_count": 1
+  },
+  "202aeda0": {
+    "id": "202aeda0",
+    "message": "⏰ 时间到啦！小福宝来叫你啦～该起来活动活动啦！🎉",
+    "trigger_time": "2026-06-23T18:02:50.408789",
+    "repeat_type": "once",
+    "repeat_interval": 0,
+    "repeat_count": 0,
+    "status": "pending",
+    "created_at": "2026-06-23T18:01:50.408789",
+    "triggered_count": 0
   }
 }

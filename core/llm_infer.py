@@ -268,8 +268,8 @@ class LLMInfer:
         chunk_count = 0
         
         # 智能截断过长历史，避免 payload 膨胀
-        print(messages)
         truncated_messages = self._truncate_messages(messages, max_messages=20)
+        print(truncated_messages)
         msg_size = self._estimate_messages_size(truncated_messages)
         
         payload = {

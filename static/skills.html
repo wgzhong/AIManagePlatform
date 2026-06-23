@@ -443,8 +443,7 @@ body {
 
         <div id="promptEditor" class="prompt-editor">
           <div class="prompt-tabs">
-            <button class="prompt-tab active" data-type="system_prompt" onclick="switchPromptTab('system_prompt')">System Prompt</button>
-            <button class="prompt-tab" data-type="mood_prompt" onclick="switchPromptTab('mood_prompt')">Mood Prompt</button>
+            <button class="prompt-tab active" data-type="system_prompt" onclick="switchPromptTab('system_prompt')">Skill Prompt</button>
           </div>
           <textarea id="promptTextarea" class="prompt-textarea" placeholder="在此编辑 System Prompt..."></textarea>
           <div class="prompt-info">
@@ -533,6 +532,9 @@ body {
       // 加载详细的 prompt 信息
       try {
         const response = await fetch(`/api/skills/${skillName}/system-prompt`);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
         const promptData = await response.json();
 
         // 保存原始值
@@ -554,17 +556,6 @@ body {
         // 更新关键词
         renderKeywords(skill.trigger_keywords || []);
 
-        // 根据是否有 mood_prompt 显示/隐藏 tab
-        const moodTab = document.querySelector('[data-type="mood_prompt"]');
-        if (promptData.mood_system_prompt !== null && promptData.mood_system_prompt !== undefined) {
-          moodTab.style.display = 'block';
-        } else {
-          moodTab.style.display = 'none';
-          if (currentPromptType === 'mood_prompt') {
-            switchPromptTab('system_prompt');
-          }
-        }
-
         // 加载当前 tab 的 prompt
         loadPromptContent(currentPromptType, promptData);
 
@@ -578,66 +569,44 @@ body {
         } catch (e) {
           console.log('获取文件路径失败', e);
         }
-
       } catch (error) {
         console.error('加载 prompt 失败:', error);
-        showToast('加载失败', 'error');
+        showToast('加载失败: ' + error.message, 'error');
       }
 
       renderSkillsList();
     }
 
     function loadPromptContent(type, promptData) {
-      const textarea = document.getElementById('promptTextarea');
-      const pathEl = document.getElementById('promptPath');
-      const badgeEl = document.getElementById('promptBadge');
+      try {
+        const textarea = document.getElementById('promptTextarea');
+        const pathEl = document.getElementById('promptPath');
+        const badgeEl = document.getElementById('promptBadge');
 
-      const content = type === 'system_prompt' ? promptData.system_prompt : promptData.mood_system_prompt;
-      const hasMd = type === 'system_prompt' ? promptData.has_md_files.system_prompt : promptData.has_md_files.mood_prompt;
+        const content = promptData.system_prompt || '';
+        const hasMd = promptData.has_md_files?.system_prompt || false;
 
-      textarea.value = (content || '').replace(/  \n/g, '\n');
-      textarea.placeholder = type === 'system_prompt'
-        ? '# System Prompt\n\n在此编辑技能的 System Prompt...\n\n## 使用场景\n- 描述技能的功能\n- 说明调用方式'
-        : '# Mood Prompt\n\n在此编辑情绪提示...\n\n## 语气特征\n- 描述当前情绪的特点\n\n## 典型表达\n- 列出典型的回复语句';
+        textarea.value = content.replace(/  \n/g, '\n');
+        textarea.placeholder = '# Skill Prompt\n\n在此编辑技能的提示内容...\n\n## 使用场景\n- 描述技能的功能\n- 说明调用方式';
 
-      // 获取文件路径
-      const pathSuffix = type === 'system_prompt' ? 'system_prompt.md' : 'mood_prompt.md';
-      if (skill._skill_dir) {
-        pathEl.textContent = '路径：' + skill._skill_dir + '/' + pathSuffix;
-      } else {
-        pathEl.textContent = '路径：skills/类别/技能名/' + pathSuffix;
+        // 获取文件路径
+        const pathSuffix = 'skill.md';
+        if (skill._skill_dir) {
+          pathEl.textContent = '路径：' + skill._skill_dir + '/' + pathSuffix;
+        } else {
+          pathEl.textContent = '路径：skills/类别/技能名/' + pathSuffix;
+        }
+
+        // 更新 badge
+        badgeEl.className = 'prompt-badge ' + (hasMd ? 'md-file' : 'default');
+        badgeEl.textContent = hasMd ? 'MD 文件' : '默认值';
+      } catch (error) {
+        console.error('显示 prompt 失败:', error);
       }
-
-      // 更新 badge
-      badgeEl.className = 'prompt-badge ' + (hasMd ? 'md-file' : 'default');
-      badgeEl.textContent = hasMd ? 'MD 文件' : '默认值';
     }
 
     function switchPromptTab(type) {
-      // 保存当前编辑的内容
-      const textarea = document.getElementById('promptTextarea');
-      if (currentPromptType === 'system_prompt') {
-        originalPrompts.system_prompt = textarea.value;
-      } else {
-        originalPrompts.mood_prompt = textarea.value;
-      }
-
       currentPromptType = type;
-
-      // 更新 tab 样式
-      document.querySelectorAll('.prompt-tab').forEach(tab => {
-        tab.classList.toggle('active', tab.dataset.type === type);
-      });
-
-      // 加载新 tab 的内容
-      loadPromptContent(type, {
-        system_prompt: originalPrompts.system_prompt,
-        mood_system_prompt: originalPrompts.mood_prompt,
-        has_md_files: {
-          system_prompt: currentSkill.system_prompt !== '',
-          mood_prompt: currentSkill.mood_system_prompt !== ''
-        }
-      });
     }
 
     function updateSwitchUI(switchId, enabled) {
@@ -726,9 +695,7 @@ body {
 
     function resetPrompt() {
       const textarea = document.getElementById('promptTextarea');
-      textarea.value = currentPromptType === 'system_prompt'
-        ? originalPrompts.system_prompt
-        : originalPrompts.mood_prompt;
+      textarea.value = originalPrompts.system_prompt || '';
     }
 
     async function saveAllConfig() {

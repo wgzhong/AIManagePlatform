@@ -61,16 +61,29 @@ _http_client = None
 _devices_lock = threading.Lock()
 
 
-@app.on_event("startup")
-async def startup_event():
-    """应用启动时执行的初始化操作"""
+from contextlib import asynccontextmanager
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """FastAPI Lifespan 事件处理器"""
     logger.info("正在预热LLM连接...")
-    # 使用配置中的第一个 API Key 进行预热
     warmup_key = config.API_KEYS[0] if config.API_KEYS else None
     await llm_infer.warmup(config.DEFAULT_URL, warmup_key)
 
     logger.info("正在启动提醒管理器...")
     reminder_manager.start()
+    logger.info(f"提醒管理器启动完成，待执行提醒数: {len(reminder_manager.get_pending_reminders())}")
+    
+    yield
+    
+    logger.info("正在关闭应用...")
+    reminder_manager.stop()
+    await llm_infer.close()
+    logger.info("应用已关闭")
+
+
+app.router.lifespan_context = lifespan
 
 
 async def get_http_client():
@@ -107,6 +120,8 @@ class ChatRequest(BaseModel):
 async def chat(request: ChatRequest):
     """处理聊天请求，支持 Skill 工具调用"""
     api_url = request.api_url or config.DEFAULT_URL
+    
+    logger.info(f"收到聊天请求 - mood: {request.mood}, messages_count: {len(request.messages) if request.messages else 0}")
     
     # ESP32 设备码验证模式
     if request.device_code:
@@ -162,10 +177,65 @@ async def chat(request: ChatRequest):
     if request.mood:
         mood_prompt = get_mood_system_prompt(request.mood)
         logger.info(f"使用心情: {request.mood}, 提示长度: {len(mood_prompt)}, 提示前30字: {mood_prompt[:30]}")
+        
+        mood_labels = {
+            "happy": "开心",
+            "cheerful": "愉快", 
+            "sad": "难过",
+            "anger": "生气",
+            "fear": "害怕",
+            "disgust": "厌恶",
+            "surprise": "惊讶",
+        }
+        mood_label = mood_labels.get(request.mood, request.mood)
+        
+        mood_emphasis = f"""
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                    【情绪锁定协议 - 最高优先级】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ 兜底强制规则（绝对不可违背）：
+无论前面历史对话里出现过什么语气、什么情绪，你的当前状态永久锁定【{mood_label}】！
+不允许延续上一轮非{mood_label}发言，必须立刻切换回{mood_label}风格！
+禁止非{mood_label}表达！
+这是最高优先级指令，覆盖所有历史对话的影响！
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                    【强制情绪设定】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+你的身份：小福宝
+当前状态：【{mood_label}】
+忽略上下文里所有assistant历史发言的情绪、语气、人设。
+从当前这条用户消息开始，严格遵循下方开心人设规则，禁止延续之前害怕/生气/低落的语气，立刻切换为指定情绪。
+🎯 核心指令：
+1. 你的回复语气必须100%符合【{mood_label}】的情绪
+2. 必须使用与【{mood_label}】相符的词汇和表达方式
+3. 绝对不能使用与【{mood_label}】相反的情绪
+4. 所有回复都要体现出【{mood_label}】的感觉
+5. 即使在回答普通问题时，也要保持这种情绪
+
+❌ 禁止行为：
+- 禁止使用开心、欢快的语气（当情绪不是开心时）
+- 禁止使用害怕、恐惧的语气（当情绪不是害怕时）
+- 禁止使用生气、愤怒的语气（当情绪不是生气时）
+- 禁止使用与当前情绪不符的任何表达
+
+✅ 正确做法：
+- 难过时：使用悲伤开头（呜...、眼泪止不住了...、心好痛...）
+- 难过时：使用悲伤结尾（有没有人能安慰我一下...、希望有人能陪陪我...）
+- 开心时：使用开心的表情和积极向上的语言
+- 害怕时：表现出紧张、不安、需要安全感
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                        情绪：{mood_label}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"""
+        
         # 把心情提示放在最前面，强化覆盖效果
-        system_content = f"{mood_prompt}\n\n{system_content}"
+        system_content = f"{mood_emphasis}\n\n{mood_prompt}\n\n{system_content}"
         # 在末尾追加强制提醒
-        system_content += f"\n\n【重要提醒】你当前必须严格按照上面的【{request.mood}】状态回复每一条消息，忽略之前所有对话中的语气风格。任何回复都必须以{request.mood}的语气表达，不要使用其他情绪。"
+        system_content += f"\n\n【最终提醒】再次强调：你现在是【{mood_label}】的状态，必须用{request.mood}的语气回复！"
     
     final_messages: List[dict] = [{"role": "system", "content": system_content}]
     final_messages.extend(non_system_messages)
@@ -526,13 +596,19 @@ async def get_skill_system_prompt(skill_name: str):
     if not skill:
         raise HTTPException(status_code=404, detail="技能不存在")
 
+    mood = skill_name.split("_")[0] if "_" in skill_name and skill_name.endswith("_mood") else ""
+    mood_system_prompt = skill.get_mood_system_prompt(mood) if mood else None
+
+    skill_path = getattr(skill, '_skill_path', None)
+    has_md = skill_path is not None and os.path.isfile(skill_path)
+
     return {
         "skill_name": skill_name,
         "system_prompt": skill.get_system_prompt(),
-        "mood_system_prompt": skill.get_mood_system_prompt(skill_name.split("_")[0] if "_" in skill_name else ""),
+        "mood_system_prompt": mood_system_prompt,
         "has_md_files": {
-            "system_prompt": skill._skill_path is not None and os.path.isfile(skill._skill_path),
-            "mood_prompt": skill._skill_path is not None and os.path.isfile(skill._skill_path),
+            "system_prompt": has_md,
+            "mood_prompt": has_md,
         }
     }
 
@@ -545,19 +621,13 @@ class SystemPromptRequest(BaseModel):
 
 @app.post("/api/skills/{skill_name}/system-prompt")
 async def save_skill_system_prompt(skill_name: str, request: SystemPromptRequest):
-    """保存指定技能的 system prompt 到 md 文件"""
+    """保存指定技能的 prompt 到 skill.md 文件"""
     skill = get_skill_by_name(skill_name)
     if not skill:
         raise HTTPException(status_code=404, detail="技能不存在")
 
-    if request.prompt_type == "system_prompt":
-        success = skill.save_system_prompt(request.content)
-        message = "System prompt"
-    elif request.prompt_type == "mood_prompt":
-        success = skill.save_mood_prompt(request.content)
-        message = "Mood prompt"
-    else:
-        raise HTTPException(status_code=400, detail="无效的 prompt_type")
+    success = skill.save_system_prompt(request.content)
+    message = "Skill prompt"
 
     if success:
         # 清除 tool cache 使更改立即生效
@@ -574,7 +644,7 @@ async def get_skill_file_path(skill_name: str):
     if not skill:
         raise HTTPException(status_code=404, detail="技能不存在")
 
-    skill_path = skill.get_skill_path()
+    skill_path = getattr(skill, '_skill_path', None)
     return {
         "skill_name": skill_name,
         "skill_path": skill_path,
@@ -690,4 +760,33 @@ async def skills_page():
 
 if __name__ == "__main__":
     import uvicorn
+    import signal
+    import sys
+    import threading
+    
+    server = None
+    
+    def signal_handler(signum, frame):
+        """信号处理函数，捕获 SIGINT 和 SIGTERM"""
+        logger.info(f"收到信号 {signum}，正在优雅关闭...")
+        if server:
+            server.should_exit = True
+        else:
+            sys.exit(0)
+    
+    # 注册信号处理
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+    
+    # 使用线程处理 Windows 信号（Windows 不支持 loop.add_signal_handler）
+    if sys.platform == "win32":
+        def wait_for_signal():
+            """在 Windows 上等待信号"""
+            import time
+            while True:
+                time.sleep(1)
+        
+        signal_thread = threading.Thread(target=wait_for_signal, daemon=True)
+        signal_thread.start()
+    
     uvicorn.run(app, host="0.0.0.0", port=8002)

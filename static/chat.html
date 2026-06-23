@@ -313,6 +313,29 @@ button:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important
 }
 .msg-container::-webkit-scrollbar { width:5px; }
 .msg-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius:4px; }
+.load-more-container {
+  text-align: center;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+.load-more-btn {
+  background: rgba(114, 224, 224, 0.15);
+  border: 1px solid rgba(114, 224, 224, 0.3);
+  border-radius: 10px;
+  padding: 10px 20px;
+  color: var(--accent-cyan);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.load-more-btn:hover {
+  background: rgba(114, 224, 224, 0.25);
+  border-color: var(--accent-cyan);
+}
+.load-more-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 .msg-block { margin-bottom: 20px; animation: slideUp 0.3s ease; }
 @keyframes slideUp {
   from { opacity:0; transform: translateY(10px); }
@@ -539,6 +562,11 @@ button:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important
       </div>
     </div>
     <div class="msg-container" id="msgBox">
+      <div class="load-more-container" id="loadMoreContainer">
+        <button class="load-more-btn" id="loadMoreBtn" onclick="loadMoreHistory()">
+          🔄 点击加载更多历史记录
+        </button>
+      </div>
       <div class="msg-block msg-assist">
         <div class="msg-head">
           <span class="msg-role">AI Assistant</span>
@@ -561,14 +589,25 @@ button:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important
 
 <script>
 let chatHistory = [];
+let displayedHistory = [];
 let currentApiKey = '';
 let currentApiUrl = '';
 const DEFAULT_API_URL = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
 const BASE_URL = window.location.origin;
+const PAGE_SIZE = 20;
+let currentPage = 0;
+let isLoadingMore = false;
 
 document.addEventListener('DOMContentLoaded', function() {
   currentApiKey = localStorage.getItem('ai_platform_api_key') || '';
   currentApiUrl = localStorage.getItem('ai_platform_api_url') || DEFAULT_API_URL;
+  
+  const savedMoodFromStorage = localStorage.getItem('selected_mood');
+  window.currentMood = savedMoodFromStorage || 'happy';
+  
+  console.log(`=== 页面初始化 ===`);
+  console.log(`localStorage.selected_mood: "${savedMoodFromStorage}"`);
+  console.log(`window.currentMood: "${window.currentMood}"`);
   
   if (!currentApiKey) {
     alert('请先在首页输入 API Key！');
@@ -576,8 +615,10 @@ document.addEventListener('DOMContentLoaded', function() {
     return;
   }
   
+  restoreMood();
   loadChatHistory();
   fetchTokenStats();
+  initNotification();
 });
 
 async function loadChatHistory() {
@@ -586,20 +627,171 @@ async function loadChatHistory() {
     const data = await res.json();
     if (data.history && data.history.length > 0) {
       chatHistory = data.history;
-      const msgBox = document.getElementById('msgBox');
-      msgBox.innerHTML = '';
-      chatHistory.forEach(msg => {
-        if (msg.role !== 'system') {
-          const time = new Date().toLocaleTimeString();
-          addMessage(msg.role, msg.content, time, false);
-        }
-      });
+      currentPage = 0;
+      console.log(`=== 加载历史记录 ===`);
+      console.log(`总条数: ${chatHistory.length}`);
+      console.log(`消息类型分布:`, chatHistory.reduce((acc, msg) => {
+        acc[msg.role] = (acc[msg.role] || 0) + 1;
+        return acc;
+      }, {}));
+      console.log(`前3条消息:`, chatHistory.slice(0, 3));
+      
+      if (chatHistory.length <= PAGE_SIZE) {
+        displayedHistory = [...chatHistory];
+      } else {
+        const start = chatHistory.length - PAGE_SIZE;
+        displayedHistory = chatHistory.slice(start);
+      }
     } else {
-      // 没有历史记录，添加默认欢迎消息到 chatHistory
-      chatHistory.push({ role: 'assistant', content: '你好，欢迎使用 AIManagePlatform 对话控制台！\n开始与 AI 进行智能对话吧。' });
+      const moodGreetings = {
+        'happy': '😄 你好呀！很高兴见到你～今天也是元气满满的一天呢！',
+        'cheerful': '😊 嗨！看到你真开心！有什么想聊的吗？',
+        'sad': '😢 你好...我知道有时候心情会很低落，如果你愿意，可以和我说说。',
+        'anger': '😤 哼！干嘛啦！有话快说！',
+        'fear': '😰 你...你好...我有点紧张...',
+        'disgust': '😒 哦，是你啊...有什么事？',
+        'surprise': '😲 哇！你来了！真没想到会在这里见到你！'
+      };
+      const greeting = moodGreetings[window.currentMood] || '你好，欢迎使用 AIManagePlatform 对话控制台！\n开始与 AI 进行智能对话吧。';
+      chatHistory = [{ role: 'assistant', content: greeting }];
+      displayedHistory = [...chatHistory];
     }
+    
+    displayHistory();
   } catch (err) {
     console.error('Failed to load chat history:', err);
+  }
+}
+
+function loadMoreHistory() {
+  const container = document.getElementById('loadMoreContainer');
+  const btn = document.getElementById('loadMoreBtn');
+  const msgBox = document.getElementById('msgBox');
+  
+  if (chatHistory.length <= displayedHistory.length) {
+    btn.innerHTML = '✅ 已加载全部历史记录';
+    btn.disabled = true;
+    return;
+  }
+  
+  btn.innerHTML = '🔄 加载中...';
+  btn.disabled = true;
+  
+  const totalPages = Math.ceil(chatHistory.length / PAGE_SIZE);
+  currentPage++;
+  
+  const previousHeight = msgBox.scrollHeight;
+  
+  if (currentPage >= totalPages) {
+    displayedHistory = [...chatHistory];
+    displayHistory(false);
+    
+    const newHeight = msgBox.scrollHeight;
+    const heightDiff = newHeight - previousHeight;
+    msgBox.scrollTop = heightDiff;
+    
+    btn.innerHTML = '✅ 已加载全部历史记录';
+    btn.disabled = true;
+    return;
+  }
+  
+  const start = Math.max(0, chatHistory.length - (currentPage + 1) * PAGE_SIZE);
+  const end = chatHistory.length - currentPage * PAGE_SIZE;
+  const pageData = chatHistory.slice(start, end);
+  
+  displayedHistory = [...pageData, ...displayedHistory];
+  displayHistory(false);
+  
+  const newHeight = msgBox.scrollHeight;
+  const heightDiff = newHeight - previousHeight;
+  msgBox.scrollTop = heightDiff;
+  
+  const remaining = chatHistory.length - displayedHistory.length;
+  if (remaining <= 0) {
+    btn.innerHTML = '✅ 已加载全部历史记录';
+    btn.disabled = true;
+  } else {
+    btn.innerHTML = `🔄 向上滑动加载更多历史记录 (还剩 ${remaining} 条)`;
+    btn.disabled = true;
+  }
+}
+
+function displayHistory(scrollToBottom = true) {
+  const msgBox = document.getElementById('msgBox');
+  const container = document.getElementById('loadMoreContainer');
+  const btn = document.getElementById('loadMoreBtn');
+  
+  msgBox.innerHTML = '';
+  
+  if (chatHistory.length > displayedHistory.length) {
+    btn.innerHTML = `🔄 向上滑动加载更多历史记录 (还剩 ${chatHistory.length - displayedHistory.length} 条)`;
+    btn.disabled = true;
+    container.style.display = 'block';
+    msgBox.appendChild(container);
+  } else {
+    container.style.display = 'none';
+  }
+  
+  displayedHistory.forEach(msg => {
+    if (msg.role !== 'system') {
+      const time = new Date().toLocaleTimeString();
+      const wrap = document.createElement("div");
+      wrap.className = `msg-block ${msg.role === "user" ? "msg-user" : "msg-assist"}`;
+      
+      const head = document.createElement("div");
+      head.className = "msg-head";
+      head.innerHTML = `
+        <span class="msg-role">${msg.role === "user" ? "You" : "AI Assistant"}</span>
+        <div>
+          <span class="msg-time">${time}</span>
+          <span class="msg-del" onclick="delMsg(this)">删除</span>
+        </div>
+      `;
+      
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.textContent = msg.content;
+      
+      wrap.appendChild(head);
+      wrap.appendChild(bubble);
+      msgBox.appendChild(wrap);
+    }
+  });
+  
+  if (scrollToBottom) {
+    msgBox.scrollTop = msgBox.scrollHeight;
+  }
+  
+  setupScrollLoader();
+}
+
+function setupScrollLoader() {
+  const msgBox = document.getElementById('msgBox');
+  
+  msgBox.removeEventListener('scroll', handleScroll);
+  msgBox.addEventListener('scroll', handleScroll);
+}
+
+let isLoadingInProgress = false;
+function handleScroll() {
+  const msgBox = document.getElementById('msgBox');
+  const container = document.getElementById('loadMoreContainer');
+  const btn = document.getElementById('loadMoreBtn');
+  
+  if (isLoadingInProgress) return;
+  if (chatHistory.length <= displayedHistory.length) {
+    container.style.display = 'none';
+    return;
+  }
+  
+  if (msgBox.scrollTop < 50) {
+    isLoadingInProgress = true;
+    btn.innerHTML = '🔄 加载中...';
+    
+    setTimeout(() => {
+      loadMoreHistory();
+      isLoadingInProgress = false;
+    }, 300);
   }
 }
 
@@ -753,11 +945,27 @@ async function sendMessage() {
   const enabledTools = ['get_time', 'calculate', 'get_weather'].filter(tool => skillsConfig[tool] !== false);
   console.log('Enabled skills:', enabledTools);
   
-  const currentMood = window.currentMood || 'happy';
+  const savedMood = localStorage.getItem('selected_mood') || 'happy';
+  window.currentMood = savedMood;
+  console.log(`发送消息时心情: ${savedMood}`);
+  
+  // 调试：查看发送前的聊天历史
+  console.log(`=== 发送前聊天历史 ===`);
+  console.log(`总条数: ${chatHistory.length}`);
+  console.log(`消息类型分布:`, chatHistory.reduce((acc, msg) => {
+    acc[msg.role] = (acc[msg.role] || 0) + 1;
+    return acc;
+  }, {}));
+
+  // 限制历史消息数量，避免情绪提示词被淹没
+  // 保留完整的对话历史（包括assistant回复）以维持上下文连贯性
+  const MAX_HISTORY_MESSAGES = 20;
+  const recentHistory = chatHistory.slice(-MAX_HISTORY_MESSAGES);
+  console.log(`历史消息总数: ${chatHistory.length}, 发送最近: ${recentHistory.length} 条`);
 
   // 人设和情绪提示统一由后端管理，前端只传 mood 标识
   const reqBody = {
-    messages: chatHistory,
+    messages: recentHistory,
     api_key: currentApiKey,
     api_url: currentApiUrl,
     model: "glm-5.1",
@@ -848,9 +1056,6 @@ function initNotification() {
   console.log("SSE 通知已连接");
 }
 
-// 心情切换
-window.currentMood = 'happy';
-
 async function selectMood(cardEl) {
   const mood = cardEl.dataset.mood;
   if (!mood) return;
@@ -865,26 +1070,20 @@ async function selectMood(cardEl) {
 
   localStorage.setItem('selected_mood', mood);
 
-  // 在对话历史中插入一条用户消息，让 LLM 知道心情切换了
-  if (chatHistory.length > 0) {
-    const moodLabel = {
-      'happy': '开心', 'cheerful': '愉快', 'sad': '难过',
-      'anger': '生气', 'fear': '害怕', 'disgust': '厌恶', 'surprise': '惊讶'
-    }[mood] || mood;
-    const emojiMap = {
-      'happy': '😊', 'cheerful': '😄', 'sad': '😢',
-      'anger': '😠', 'fear': '😨', 'disgust': '😒', 'surprise': '😲'
-    };
-    const emoji = emojiMap[mood] || '💭';
-    const systemNote = {
-      role: 'user',
-      content: `[系统通知] 用户把小福宝的心情切换为【${moodLabel}】。从现在起你必须严格按照【${moodLabel}】的语气回复，丢弃之前任何其他情绪的语气风格。`
-    };
-    chatHistory.push(systemNote);
-
-    // 在聊天窗口中显示一条系统消息
-    addMessage('system', `${emoji} 心情已切换为【${moodLabel}】，后续回复将以该语气进行`, new Date().toTimeString().slice(0, 5), false);
-  }
+  // 情绪设置完全由后端的 system prompt 处理，前端只传递 mood 参数
+  // 不在历史消息中添加情绪切换通知
+  const moodLabel = {
+    'happy': '开心', 'cheerful': '愉快', 'sad': '难过',
+    'anger': '生气', 'fear': '害怕', 'disgust': '厌恶', 'surprise': '惊讶'
+  }[mood] || mood;
+  const emojiMap = {
+    'happy': '😊', 'cheerful': '😄', 'sad': '😢',
+    'anger': '😠', 'fear': '😨', 'disgust': '😒', 'surprise': '😲'
+  };
+  const emoji = emojiMap[mood] || '💭';
+  
+  // 在聊天窗口中显示一条系统消息（不添加到历史记录）
+  addMessage('system', `${emoji} 心情已切换为【${moodLabel}】，后续回复将以该语气进行`, new Date().toTimeString().slice(0, 5), false);
 
 
 }
@@ -903,10 +1102,6 @@ function restoreMood() {
   
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-  initNotification();
-  restoreMood();
-});
 </script>
 </body>
 </html>

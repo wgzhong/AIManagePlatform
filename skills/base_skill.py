@@ -178,7 +178,7 @@ class BaseSkill:
 
     def save_system_prompt(self, content: str) -> bool:
         """
-        保存 system prompt 到 md 文件
+        保存 system prompt 到 skill.md 文件，保留 YAML frontmatter
 
         Args:
             content: 要保存的 system prompt 内容
@@ -186,7 +186,26 @@ class BaseSkill:
         Returns:
             是否保存成功
         """
-        return self._save_md_file("system_prompt.md", content)
+        skill_path = getattr(self, '_skill_path', None)
+        if skill_path and os.path.isfile(skill_path):
+            try:
+                with open(skill_path, "r", encoding="utf-8") as f:
+                    original_content = f.read()
+                
+                match = re.match(r'^---\s*\n(.*?)\n---\s*\n', original_content, re.DOTALL)
+                if match:
+                    yaml_frontmatter = match.group(0)
+                    new_content = yaml_frontmatter + "\n" + content
+                else:
+                    new_content = content
+                
+                with open(skill_path, "w", encoding="utf-8") as f:
+                    f.write(new_content)
+                return True
+            except Exception:
+                return False
+        
+        return self._save_md_file("skill.md", content)
 
     def save_mood_prompt(self, content: str) -> bool:
         """
@@ -223,8 +242,8 @@ class BaseSkill:
             "system_prompt": current_system_prompt,
             "mood_system_prompt": current_mood_prompt,
             "has_md_files": {
-                "system_prompt": os.path.exists(os.path.join(self.get_skill_dir() or "", "system_prompt.md")) if self.get_skill_dir() else False,
-                "mood_prompt": os.path.exists(os.path.join(self.get_skill_dir() or "", "mood_prompt.md")) if self.get_skill_dir() else False,
+                "system_prompt": os.path.exists(os.path.join(self.get_skill_dir() or "", "skill.md")) if self.get_skill_dir() else False,
+                "mood_prompt": os.path.exists(os.path.join(self.get_skill_dir() or "", "skill.md")) if self.get_skill_dir() else False,
             }
         }
 
@@ -328,6 +347,15 @@ class MdSkill(BaseSkill):
             elif key == "trigger_keywords":
                 value = value.strip("[]")
                 self.trigger_keywords = [k.strip().strip('"').strip("'") for k in value.split(",") if k.strip()]
+
+    def get_skill_dir(self) -> Optional[str]:
+        """
+        获取当前 skill 的目录路径
+        从 _skill_path 中提取目录路径
+        """
+        if self._skill_path:
+            return os.path.dirname(self._skill_path)
+        return None
 
     def run(self, args: Dict[str, Any]) -> str:
         """

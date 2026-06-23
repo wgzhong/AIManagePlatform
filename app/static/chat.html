@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIManagePlatform - AI 推理对话</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg-gradient: linear-gradient(140deg, #0b0822 0%, #1c1648 48%, #121030 100%);
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.09);
+  --primary-gradient: linear-gradient(120deg, #72e0e0, #ffc8dd);
+  --text-main: #f4f4f7;
+  --text-sub: #a9a9b8;
+  --accent-cyan: #87e8e8;
+  --accent-pink: #ffc8dd;
+  --danger: #ff6b6b;
+  --success: #4ade80;
+  --warn: #facc15;
+}
+body {
+  font-family: "Segoe UI", PingFang SC, Microsoft YaHei, system-ui, sans-serif;
+  background: var(--bg-gradient);
+  min-height: 100vh;
+  color: var(--text-main);
+  padding: 16px;
+}
+.top-nav {
+  max-width: 1500px;
+  margin: 0 auto 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 24px;
+  border-radius: 16px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(24px);
+}
+.nav-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.nav-title h1 {
+  font-size: 22px;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  color: transparent;
+}
+.nav-tag {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(114, 224, 224, 0.12);
+  color: var(--accent-cyan);
+}
+.nav-actions {
+  display: flex;
+  gap: 10px;
+}
+.btn {
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 13px;
+}
+.btn-secondary {
+  background: rgba(255,255,255,0.08);
+  color: var(--text-main);
+}
+.btn-secondary:hover { background: rgba(255,255,255,0.14); }
+.wrapper {
+  max-width: 1500px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 16px;
+  height: calc(100vh - 120px);
+}
+.panel {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  backdrop-filter: blur(24px);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  overflow: hidden;
+}
+.sidebar-panel {
+  display: flex;
+  flex-direction: column;
+}
+.sidebar-scroll {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+.sidebar-scroll::-webkit-scrollbar { width: 5px; }
+.sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+.collapse-card {
+  margin-bottom: 18px;
+  border-radius: 14px;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.card-header {
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+.card-header h2 {
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  color: var(--text-main);
+  font-weight: 600;
+}
+.card-toggle {
+  font-size: 16px;
+  color: var(--text-sub);
+  transition: transform 0.2s;
+}
+.card-body {
+  padding: 0 16px 16px;
+  display: none;
+}
+.card-body.open { display: block; }
+
+/* 心情卡片网格 */
+.mood-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 4px;
+}
+.mood-card {
+  background: rgba(0,0,0,0.2);
+  border: 1.5px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 10px 6px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.mood-card:hover {
+  background: rgba(255,255,255,0.06);
+  transform: translateY(-1px);
+  border-color: rgba(255,255,255,0.18);
+}
+.mood-card.active {
+  background: linear-gradient(135deg, rgba(114, 224, 224, 0.18), rgba(255, 200, 221, 0.18));
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 12px rgba(114, 224, 224, 0.25);
+}
+.mood-card.active::before {
+  content: "✓";
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 10px;
+  color: var(--accent-cyan);
+  font-weight: bold;
+}
+.mood-emoji {
+  font-size: 26px;
+  margin-bottom: 4px;
+  filter: drop-shadow(0 0 4px rgba(255,255,255,0.15));
+}
+.mood-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 2px;
+}
+.mood-skill {
+  font-size: 9px;
+  color: var(--text-sub);
+  font-family: monospace;
+  opacity: 0.7;
+}
+
+.field { margin-bottom: 14px; }
+label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-sub);
+  margin-bottom: 6px;
+}
+.badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.badge-req { background: rgba(255,107,107,0.18); color: #ffb4b4; }
+input[type="text"],
+textarea,
+select {
+  width: 100%;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: #fff;
+  font-size: 13px;
+  outline: none;
+  transition: all 0.2s;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 0 3px rgba(114, 224, 224, 0.12);
+}
+.row-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.slider-wrap input[type="range"] { flex: 1; }
+.slider-val { min-width: 32px; text-align: right; color: var(--accent-cyan); font-weight: 500; }
+.switch-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+.switch {
+  position: relative;
+  width: 40px;
+  height: 20px;
+}
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider-switch {
+  position: absolute;
+  cursor: pointer;
+  top:0; left:0; right:0; bottom:0;
+  background: rgba(255,255,255,0.1);
+  border-radius: 20px;
+  transition: .3s;
+}
+.slider-switch:before {
+  position: absolute;
+  content: "";
+  height: 16px; width:16px;
+  left:2px; bottom:2px;
+  background: white;
+  border-radius: 50%;
+  transition: .3s;
+}
+input:checked + .slider-switch { background: var(--accent-cyan); }
+input:checked + .slider-switch:before { transform: translateX(20px); }
+.skill-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+.skill-item {
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(114,224,224,0.08);
+  border: 1px solid rgba(114,224,224,0.15);
+}
+.skill-name { font-weight: 600; font-size: 13px; color: var(--accent-cyan); }
+.skill-desc { font-size: 11px; color: var(--text-sub); margin-top:3px; }
+.btn-primary {
+  background: var(--primary-gradient);
+  color: #0a0a1a;
+}
+.btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(114,224,224,0.25); }
+.btn-group { display: flex; gap: 8px; margin-top:10px; }
+.btn-full { width: 100%; }
+button:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+.chat-panel {
+  display: flex;
+  flex-direction: column;
+}
+.chat-header-bar {
+  padding: 18px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--glass-border);
+}
+.chat-title h2 { font-size: 18px; }
+.chat-stat { font-size:12px; color: var(--text-sub); }
+.status-row { display: flex; align-items: center; gap: 8px; }
+.dot {
+  width:9px; height:9px; border-radius:50%;
+  background: var(--success);
+  animation: pulse 2s infinite;
+}
+.dot.thinking { background: var(--warn); animation: pulse 0.8s infinite; }
+@keyframes pulse {
+  0%,100% { opacity:1; }
+  50% { opacity:0.35; }
+}
+.msg-container {
+  flex:1;
+  padding: 20px 24px;
+  overflow-y: auto;
+}
+.msg-container::-webkit-scrollbar { width:5px; }
+.msg-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius:4px; }
+.load-more-container {
+  text-align: center;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+.load-more-btn {
+  background: rgba(114, 224, 224, 0.15);
+  border: 1px solid rgba(114, 224, 224, 0.3);
+  border-radius: 10px;
+  padding: 10px 20px;
+  color: var(--accent-cyan);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.load-more-btn:hover {
+  background: rgba(114, 224, 224, 0.25);
+  border-color: var(--accent-cyan);
+}
+.load-more-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.msg-block { margin-bottom: 20px; animation: slideUp 0.3s ease; }
+@keyframes slideUp {
+  from { opacity:0; transform: translateY(10px); }
+  to { opacity:1; transform: translateY(0); }
+}
+.msg-head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  padding: 0 4px;
+}
+.msg-role { font-size:12px; font-weight:600; letter-spacing:0.5px; }
+.msg-time { font-size:10px; color: var(--text-sub); opacity:0.7; }
+.msg-del { font-size:11px; color: var(--danger); cursor:pointer; opacity:0; transition:0.2s; }
+.msg-block:hover .msg-del { opacity:0.8; }
+.bubble {
+  padding:14px 18px;
+  border-radius:14px;
+  line-height:1.7;
+  font-size:14px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  position: relative;
+}
+.msg-user .msg-role { color: var(--accent-cyan); }
+.msg-user .bubble {
+  background: linear-gradient(135deg, rgba(114,224,224,0.12), rgba(114,224,224,0.05));
+  border: 1px solid rgba(114,224,224,0.2);
+}
+.msg-assist .msg-role { color: var(--accent-pink); }
+.msg-assist .bubble {
+  background: rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.09);
+}
+.msg-error .bubble {
+  background: rgba(255,107,107,0.12);
+  border:1px solid rgba(255,107,107,0.2);
+  color: #ffc2c2;
+}
+.input-footer {
+  padding:18px 24px;
+  border-top:1px solid var(--glass-border);
+}
+.input-row {
+  display: flex;
+  gap:12px;
+  align-items: flex-end;
+}
+#userInput {
+  flex:1;
+  min-height: 72px;
+  max-height: 220px;
+  resize: vertical;
+}
+.cursor {
+  display: inline-block;
+  width:2px; height:17px;
+  background: var(--accent-cyan);
+  margin-left:3px;
+  animation: blink 1s infinite;
+  vertical-align: text-bottom;
+}
+@keyframes blink {
+  0%,50% { opacity:1; }
+  51%,100% { opacity:0; }
+}
+.toast {
+  position: fixed;
+  bottom:24px; right:24px;
+  padding:12px 18px;
+  border-radius:10px;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(10px);
+  border:1px solid rgba(255,255,255,0.1);
+  z-index:999;
+  font-size:13px;
+  transform: translateY(120px);
+  opacity:0;
+  transition: all 0.3s;
+}
+.toast.show { transform: translateY(0); opacity:1; }
+@media(max-width: 1080px) {
+  .wrapper { grid-template-columns: 1fr; height: auto; gap:16px; }
+  .sidebar-panel { max-height: 500px; }
+}
+@media(max-width: 640px) {
+  .top-nav { flex-direction: column; gap:12px; align-items: flex-start; }
+  .row-two { grid-template-columns: 1fr; }
+  .input-row { flex-direction: column; }
+  .input-row button { width:100%; }
+}
+</style>
+</head>
+<body>
+<div class="top-nav">
+  <div class="nav-title">
+    <h1>AIManagePlatform</h1>
+    <span class="nav-tag">AI 推理对话</span>
+  </div>
+  <div class="nav-actions">
+    <button class="btn btn-secondary" onclick="window.location.href='/'"">返回首页</button>
+    <button class="btn btn-secondary" onclick="exportChat()">导出对话</button>
+    <button class="btn btn-secondary" onclick="clearAllChat()">清空全部</button>
+  </div>
+</div>
+
+<div class="wrapper">
+  <div class="panel sidebar-panel">
+    <div class="sidebar-scroll">
+      <div class="collapse-card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <h2>⚙️ 生成参数</h2>
+          <span class="card-toggle">−</span>
+        </div>
+        <div class="card-body open">
+          <div class="row-two">
+            <div class="field">
+              <label>Temperature 随机性</label>
+              <div class="slider-wrap">
+                <input type="range" id="tempSlider" min="0" max="2" step="0.1" value="0.7">
+                <span class="slider-val" id="tempVal">0.7</span>
+              </div>
+            </div>
+            <div class="field">
+              <label>Max Tokens 输出上限</label>
+              <input type="number" id="maxTokens" value="1024" min="64" max="8192">
+            </div>
+          </div>
+          <div class="row-two">
+            <div class="field">
+              <label>Top P</label>
+              <div class="slider-wrap">
+                <input type="range" id="topPSlider" min="0" max="1" step="0.1" value="0.7">
+                <span class="slider-val" id="topPVal">0.7</span>
+              </div>
+            </div>
+            <div class="field">
+              <label>Top K</label>
+              <input type="number" id="topK" value="50" min="1" max="100">
+            </div>
+          </div>
+          <div class="field">
+            <label>频率惩罚 Frequency Penalty</label>
+            <div class="slider-wrap">
+              <input type="range" id="freqSlider" min="-2" max="2" step="0.1" value="0.5">
+              <span class="slider-val" id="freqVal">0.5</span>
+            </div>
+          </div>
+          <div class="switch-row">
+            <span>启用模型思考标签 &lt;think&gt;</span>
+            <label class="switch">
+              <input type="checkbox" id="enableThink">
+              <span class="slider-switch"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="collapse-card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <h2>💭 小福宝的心情</h2>
+          <span class="card-toggle">−</span>
+        </div>
+        <div class="card-body open">
+          <div class="field">
+            <label>选择小福宝的心情</label>
+            <div class="mood-grid" id="moodGrid">
+              <div class="mood-card active" data-mood="happy" onclick="selectMood(this)">
+                <div class="mood-emoji">😊</div>
+                <div class="mood-name">开心</div>
+                <div class="mood-skill">happy_mood</div>
+              </div>
+              <div class="mood-card" data-mood="cheerful" onclick="selectMood(this)">
+                <div class="mood-emoji">😄</div>
+                <div class="mood-name">愉快</div>
+                <div class="mood-skill">cheerful_mood</div>
+              </div>
+              <div class="mood-card" data-mood="sad" onclick="selectMood(this)">
+                <div class="mood-emoji">😢</div>
+                <div class="mood-name">难过</div>
+                <div class="mood-skill">sad_mood</div>
+              </div>
+              <div class="mood-card" data-mood="anger" onclick="selectMood(this)">
+                <div class="mood-emoji">😠</div>
+                <div class="mood-name">生气</div>
+                <div class="mood-skill">anger_mood</div>
+              </div>
+              <div class="mood-card" data-mood="fear" onclick="selectMood(this)">
+                <div class="mood-emoji">😨</div>
+                <div class="mood-name">害怕</div>
+                <div class="mood-skill">fear_mood</div>
+              </div>
+              <div class="mood-card" data-mood="disgust" onclick="selectMood(this)">
+                <div class="mood-emoji">😒</div>
+                <div class="mood-name">厌恶</div>
+                <div class="mood-skill">disgust_mood</div>
+              </div>
+              <div class="mood-card" data-mood="surprise" onclick="selectMood(this)">
+                <div class="mood-emoji">😲</div>
+                <div class="mood-name">惊讶</div>
+                <div class="mood-skill">surprise_mood</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-secondary btn-full" onclick="clearAllChat()">清空全部对话</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel chat-panel">
+    <div class="chat-header-bar">
+      <div>
+        <h2>实时对话控制台</h2>
+        <div class="chat-stat" id="tokenStat">本次输出 Token：0</div>
+      </div>
+      <div class="status-row">
+        <span class="dot" id="statusDot"></span>
+        <span id="statusText">就绪空闲</span>
+      </div>
+    </div>
+    <div class="msg-container" id="msgBox">
+      <div class="load-more-container" id="loadMoreContainer">
+        <button class="load-more-btn" id="loadMoreBtn" onclick="loadMoreHistory()">
+          🔄 点击加载更多历史记录
+        </button>
+      </div>
+      <div class="msg-block msg-assist">
+        <div class="msg-head">
+          <span class="msg-role">AI Assistant</span>
+          <span class="msg-time">刚刚</span>
+        </div>
+        <div class="bubble">你好，欢迎使用 AIManagePlatform 对话控制台！
+开始与 AI 进行智能对话吧。</div>
+      </div>
+    </div>
+    <div class="input-footer">
+      <div class="input-row">
+        <textarea id="userInput" placeholder="输入消息，Enter发送，Shift+Enter换行"></textarea>
+        <button class="btn btn-primary" id="sendBtn" onclick="sendMessage()">发送消息</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let chatHistory = [];
+let displayedHistory = [];
+let currentApiKey = '';
+let currentApiUrl = '';
+const DEFAULT_API_URL = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+const BASE_URL = window.location.origin;
+const PAGE_SIZE = 20;
+let currentPage = 0;
+let isLoadingMore = false;
+
+document.addEventListener('DOMContentLoaded', function() {
+  currentApiKey = localStorage.getItem('ai_platform_api_key') || '';
+  currentApiUrl = localStorage.getItem('ai_platform_api_url') || DEFAULT_API_URL;
+  
+  const savedMoodFromStorage = localStorage.getItem('selected_mood');
+  window.currentMood = savedMoodFromStorage || 'happy';
+  
+  console.log(`=== 页面初始化 ===`);
+  console.log(`localStorage.selected_mood: "${savedMoodFromStorage}"`);
+  console.log(`window.currentMood: "${window.currentMood}"`);
+  
+  if (!currentApiKey) {
+    alert('请先在首页输入 API Key！');
+    window.location.href = '/';
+    return;
+  }
+  
+  restoreMood();
+  loadChatHistory();
+  initNotification();
+});
+
+async function loadChatHistory() {
+  try {
+    const res = await fetch('/api/chat/history');
+    const data = await res.json();
+    if (data.history && data.history.length > 0) {
+      chatHistory = data.history;
+      currentPage = 0;
+      console.log(`=== 加载历史记录 ===`);
+      console.log(`总条数: ${chatHistory.length}`);
+      console.log(`消息类型分布:`, chatHistory.reduce((acc, msg) => {
+        acc[msg.role] = (acc[msg.role] || 0) + 1;
+        return acc;
+      }, {}));
+      console.log(`前3条消息:`, chatHistory.slice(0, 3));
+      
+      if (chatHistory.length <= PAGE_SIZE) {
+        displayedHistory = [...chatHistory];
+      } else {
+        const start = chatHistory.length - PAGE_SIZE;
+        displayedHistory = chatHistory.slice(start);
+      }
+    } else {
+      const moodGreetings = {
+        'happy': '😄 你好呀！很高兴见到你～今天也是元气满满的一天呢！',
+        'cheerful': '😊 嗨！看到你真开心！有什么想聊的吗？',
+        'sad': '😢 你好...我知道有时候心情会很低落，如果你愿意，可以和我说说。',
+        'anger': '😤 哼！干嘛啦！有话快说！',
+        'fear': '😰 你...你好...我有点紧张...',
+        'disgust': '😒 哦，是你啊...有什么事？',
+        'surprise': '😲 哇！你来了！真没想到会在这里见到你！'
+      };
+      const greeting = moodGreetings[window.currentMood] || '你好，欢迎使用 AIManagePlatform 对话控制台！\n开始与 AI 进行智能对话吧。';
+      chatHistory = [{ role: 'assistant', content: greeting }];
+      displayedHistory = [...chatHistory];
+    }
+    
+    displayHistory();
+  } catch (err) {
+    console.error('Failed to load chat history:', err);
+  }
+}
+
+function loadMoreHistory() {
+  const container = document.getElementById('loadMoreContainer');
+  const btn = document.getElementById('loadMoreBtn');
+  const msgBox = document.getElementById('msgBox');
+  
+  if (chatHistory.length <= displayedHistory.length) {
+    btn.innerHTML = '✅ 已加载全部历史记录';
+    btn.disabled = true;
+    return;
+  }
+  
+  btn.innerHTML = '🔄 加载中...';
+  btn.disabled = true;
+  
+  const totalPages = Math.ceil(chatHistory.length / PAGE_SIZE);
+  currentPage++;
+  
+  const previousHeight = msgBox.scrollHeight;
+  
+  if (currentPage >= totalPages) {
+    displayedHistory = [...chatHistory];
+    displayHistory(false);
+    
+    const newHeight = msgBox.scrollHeight;
+    const heightDiff = newHeight - previousHeight;
+    msgBox.scrollTop = heightDiff;
+    
+    btn.innerHTML = '✅ 已加载全部历史记录';
+    btn.disabled = true;
+    return;
+  }
+  
+  const start = Math.max(0, chatHistory.length - (currentPage + 1) * PAGE_SIZE);
+  const end = chatHistory.length - currentPage * PAGE_SIZE;
+  const pageData = chatHistory.slice(start, end);
+  
+  displayedHistory = [...pageData, ...displayedHistory];
+  displayHistory(false);
+  
+  const newHeight = msgBox.scrollHeight;
+  const heightDiff = newHeight - previousHeight;
+  msgBox.scrollTop = heightDiff;
+  
+  const remaining = chatHistory.length - displayedHistory.length;
+  if (remaining <= 0) {
+    btn.innerHTML = '✅ 已加载全部历史记录';
+    btn.disabled = true;
+  } else {
+    btn.innerHTML = `🔄 向上滑动加载更多历史记录 (还剩 ${remaining} 条)`;
+    btn.disabled = true;
+  }
+}
+
+function displayHistory(scrollToBottom = true) {
+  const msgBox = document.getElementById('msgBox');
+  const container = document.getElementById('loadMoreContainer');
+  const btn = document.getElementById('loadMoreBtn');
+  
+  msgBox.innerHTML = '';
+  
+  if (chatHistory.length > displayedHistory.length) {
+    btn.innerHTML = `🔄 向上滑动加载更多历史记录 (还剩 ${chatHistory.length - displayedHistory.length} 条)`;
+    btn.disabled = true;
+    container.style.display = 'block';
+    msgBox.appendChild(container);
+  } else {
+    container.style.display = 'none';
+  }
+  
+  displayedHistory.forEach(msg => {
+    if (msg.role !== 'system') {
+      const time = new Date().toLocaleTimeString();
+      const wrap = document.createElement("div");
+      wrap.className = `msg-block ${msg.role === "user" ? "msg-user" : "msg-assist"}`;
+      
+      const head = document.createElement("div");
+      head.className = "msg-head";
+      head.innerHTML = `
+        <span class="msg-role">${msg.role === "user" ? "You" : "AI Assistant"}</span>
+        <div>
+          <span class="msg-time">${time}</span>
+          <span class="msg-del" onclick="delMsg(this)">删除</span>
+        </div>
+      `;
+      
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.textContent = msg.content;
+      
+      wrap.appendChild(head);
+      wrap.appendChild(bubble);
+      msgBox.appendChild(wrap);
+    }
+  });
+  
+  if (scrollToBottom) {
+    msgBox.scrollTop = msgBox.scrollHeight;
+  }
+  
+  setupScrollLoader();
+}
+
+function setupScrollLoader() {
+  const msgBox = document.getElementById('msgBox');
+  
+  msgBox.removeEventListener('scroll', handleScroll);
+  msgBox.addEventListener('scroll', handleScroll);
+}
+
+let isLoadingInProgress = false;
+function handleScroll() {
+  const msgBox = document.getElementById('msgBox');
+  const container = document.getElementById('loadMoreContainer');
+  const btn = document.getElementById('loadMoreBtn');
+  
+  if (isLoadingInProgress) return;
+  if (chatHistory.length <= displayedHistory.length) {
+    container.style.display = 'none';
+    return;
+  }
+  
+  if (msgBox.scrollTop < 50) {
+    isLoadingInProgress = true;
+    btn.innerHTML = '🔄 加载中...';
+    
+    setTimeout(() => {
+      loadMoreHistory();
+      isLoadingInProgress = false;
+    }, 300);
+  }
+}
+
+async function saveChatHistory() {
+  try {
+    await fetch('/api/chat/history', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ history: chatHistory })
+    });
+  } catch (err) {
+    console.error('Failed to save chat history:', err);
+  }
+}
+
+async function clearAllChat() {
+  if (!confirm('确定要清空所有对话历史吗？')) return;
+  chatHistory = [];
+  document.getElementById('msgBox').innerHTML = '';
+  try {
+    await fetch('/api/chat/history', { method: 'DELETE' });
+  } catch (err) {
+    console.error('Failed to clear chat history:', err);
+  }
+  location.reload();
+}
+
+function toggleCard(el) {
+  const body = el.nextElementSibling;
+  const icon = el.querySelector(".card-toggle");
+  body.classList.toggle("open");
+  icon.textContent = body.classList.contains("open") ? "−" : "+";
+}
+
+const tempSlider = document.getElementById("tempSlider");
+const tempVal = document.getElementById("tempVal");
+tempSlider.oninput = () => tempVal.textContent = tempSlider.value;
+
+const topPSlider = document.getElementById("topPSlider");
+const topPVal = document.getElementById("topPVal");
+topPSlider.oninput = () => topPVal.textContent = topPSlider.value;
+
+const freqSlider = document.getElementById("freqSlider");
+const freqVal = document.getElementById("freqVal");
+freqSlider.oninput = () => freqVal.textContent = freqSlider.value;
+
+function showToast(text) {
+  const toast = document.getElementById("toast");
+  toast.textContent = text;
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 2200);
+}
+
+function setStatus(isThinking, text) {
+  const dot = document.getElementById("statusDot");
+  const t = document.getElementById("statusText");
+  dot.className = "dot" + (isThinking ? " thinking" : "");
+  t.textContent = text;
+}
+
+function updateTokenStat(prompt, comp) {
+  document.getElementById("tokenStat").textContent =
+    `本次输出 Token：${comp}`;
+}
+
+function addMessage(role, content, time = null, isError = false) {
+  const box = document.getElementById("msgBox");
+  const wrap = document.createElement("div");
+  wrap.className = `msg-block ${role === "user" ? "msg-user" : isError ? "msg-error" : "msg-assist"}`;
+  const now = time || new Date().toLocaleTimeString();
+
+  const head = document.createElement("div");
+  head.className = "msg-head";
+  head.innerHTML = `
+    <span class="msg-role">${role === "user" ? "You" : isError ? "错误" : "AI Assistant"}</span>
+    <div>
+      <span class="msg-time">${now}</span>
+      <span class="msg-del" onclick="delMsg(this)">删除</span>
+    </div>
+  `;
+
+  const bubble = document.createElement("div");
+  bubble.className = "bubble";
+  bubble.textContent = content;
+
+  wrap.appendChild(head);
+  wrap.appendChild(bubble);
+  box.appendChild(wrap);
+  box.scrollTop = box.scrollHeight;
+  return bubble;
+}
+
+function delMsg(el) {
+  const block = el.closest(".msg-block");
+  block.remove();
+  showToast("已删除单条消息");
+}
+
+function exportChat() {
+  let txt = "# AIManagePlatform 对话导出\n";
+  document.querySelectorAll(".msg-block").forEach(block => {
+    const role = block.querySelector(".msg-role").textContent;
+    const text = block.querySelector(".bubble").textContent;
+    txt += `\n【${role}】\n${text}\n`;
+  });
+  const blob = new Blob([txt], { type: "text/plain" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "chat_log.txt";
+  a.click();
+  showToast("对话日志已导出");
+}
+
+document.getElementById("userInput").onkeydown = function(e) {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+};
+
+async function sendMessage() {
+  const input = document.getElementById("userInput");
+  const text = input.value.trim();
+  if (!text) return showToast("请输入对话内容");
+
+  if (!currentApiKey) {
+    alert('请先在首页输入 API Key！');
+    window.location.href = '/';
+    return;
+  }
+
+  input.value = "";
+  const now = new Date().toLocaleTimeString();
+  addMessage("user", text, now);
+  chatHistory.push({ role: "user", content: text });
+  saveChatHistory();
+
+  document.getElementById("tokenStat").textContent = "本次输出 Token：0";
+
+  const sendBtn = document.getElementById("sendBtn");
+  sendBtn.disabled = true;
+  setStatus(true, "模型思考流式输出中...");
+
+  const bubble = addMessage("assist", "", now);
+  const cursor = document.createElement("span");
+  cursor.className = "cursor";
+  bubble.appendChild(cursor);
+  let fullResp = "";
+
+  const skillsConfig = JSON.parse(localStorage.getItem('skills_config') || '{}');
+  const enabledTools = ['get_time', 'calculate', 'get_weather'].filter(tool => skillsConfig[tool] !== false);
+  console.log('Enabled skills:', enabledTools);
+  
+  const savedMood = localStorage.getItem('selected_mood') || 'happy';
+  window.currentMood = savedMood;
+  console.log(`发送消息时心情: ${savedMood}`);
+  
+  // 调试：查看发送前的聊天历史
+  console.log(`=== 发送前聊天历史 ===`);
+  console.log(`总条数: ${chatHistory.length}`);
+  console.log(`消息类型分布:`, chatHistory.reduce((acc, msg) => {
+    acc[msg.role] = (acc[msg.role] || 0) + 1;
+    return acc;
+  }, {}));
+
+  // 限制历史消息数量，避免情绪提示词被淹没
+  // 保留完整的对话历史（包括assistant回复）以维持上下文连贯性
+  const MAX_HISTORY_MESSAGES = 20;
+  const recentHistory = chatHistory.slice(-MAX_HISTORY_MESSAGES);
+  console.log(`历史消息总数: ${chatHistory.length}, 发送最近: ${recentHistory.length} 条`);
+
+  // 人设和情绪提示统一由后端管理，前端只传 mood 标识
+  const reqBody = {
+    messages: recentHistory,
+    api_key: currentApiKey,
+    api_url: currentApiUrl,
+    model: "glm-5.1",
+    max_tokens: Number(document.getElementById("maxTokens").value),
+    temperature: Number(tempSlider.value),
+    top_p: Number(topPSlider.value),
+    top_k: Number(document.getElementById("topK").value),
+    frequency_penalty: Number(freqSlider.value),
+    enable_think: document.getElementById("enableThink").checked,
+    enabled_tools: enabledTools,
+    mood: currentMood
+  };
+
+  try {
+    const res = await fetch(`${BASE_URL}/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(reqBody)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream: true });
+      const lines = chunk.split("\n");
+      for (let line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        const data = line.slice(6);
+        if (data === "[DONE]") continue;
+        try {
+          const obj = JSON.parse(data);
+          if (obj.content) {
+            fullResp += obj.content;
+            bubble.textContent = fullResp;
+            bubble.appendChild(cursor);
+            document.getElementById("msgBox").scrollTop = document.getElementById("msgBox").scrollHeight;
+          }
+          if (obj.tool_result) {
+            const toolMsg = `🛠️ 工具调用 [${obj.tool_result.name}]:\n${obj.tool_result.result}`;
+            if (!fullResp) {
+              fullResp = toolMsg;
+            } else {
+              fullResp += "\n\n" + toolMsg;
+            }
+            bubble.textContent = fullResp;
+            bubble.appendChild(cursor);
+            document.getElementById("msgBox").scrollTop = document.getElementById("msgBox").scrollHeight;
+          }
+          if (obj.usage) {
+            updateTokenStat(obj.usage.prompt_tokens || 0, obj.usage.completion_tokens || 0);
+          }
+        } catch (err) {}
+      }
+    }
+    cursor.remove();
+    chatHistory.push({ role: "assistant", content: fullResp });
+    saveChatHistory();
+    setStatus(false, "就绪空闲");
+  } catch (err) {
+    bubble.remove();
+    addMessage("assist", `请求异常：${err.message}`, now, true);
+    setStatus(false, "连接错误");
+    showToast("接口请求失败");
+  }
+  sendBtn.disabled = false;
+}
+
+function initNotification() {
+  if (!window.EventSource) {
+    console.log("浏览器不支持 SSE");
+    return;
+  }
+
+  const url = `${BASE_URL}/api/notifications`;
+  console.log("尝试连接 SSE:", url);
+  
+  const eventSource = new EventSource(url, {
+    withCredentials: true
+  });
+
+  eventSource.onopen = function() {
+    console.log("SSE 连接成功！");
+    showToast("通知已连接", 'success');
+  };
+
+  eventSource.onmessage = function(event) {
+    console.log("收到 SSE 消息:", event.data);
+    try {
+      const data = JSON.parse(event.data);
+      if (data.type === 'reminder') {
+        const now = new Date();
+        const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+        addMessage("assist", `⏰ 提醒！${data.message}`, timeStr, false);
+        showToast(`提醒：${data.message}`, 'success');
+      }
+    } catch (e) {
+      console.error("解析通知失败", e);
+    }
+  };
+
+  eventSource.onerror = function(e) {
+    console.error("SSE 连接错误:", e);
+    if (eventSource.readyState === EventSource.CLOSED) {
+      console.log("SSE 连接已关闭，5秒后重试...");
+      setTimeout(initNotification, 5000);
+    } else {
+      console.log("SSE 连接异常");
+    }
+  };
+
+  console.log("SSE EventSource 创建完成，等待连接...");
+}
+
+async function selectMood(cardEl) {
+  const mood = cardEl.dataset.mood;
+  if (!mood) return;
+
+  const prevMood = window.currentMood || 'happy';
+  if (prevMood === mood) return;
+
+  document.querySelectorAll('.mood-card').forEach(c => c.classList.remove('active'));
+  cardEl.classList.add('active');
+
+  window.currentMood = mood;
+
+  localStorage.setItem('selected_mood', mood);
+
+  // 情绪设置完全由后端的 system prompt 处理，前端只传递 mood 参数
+  // 不在历史消息中添加情绪切换通知
+  const moodLabel = {
+    'happy': '开心', 'cheerful': '愉快', 'sad': '难过',
+    'anger': '生气', 'fear': '害怕', 'disgust': '厌恶', 'surprise': '惊讶'
+  }[mood] || mood;
+  const emojiMap = {
+    'happy': '😊', 'cheerful': '😄', 'sad': '😢',
+    'anger': '😠', 'fear': '😨', 'disgust': '😒', 'surprise': '😲'
+  };
+  const emoji = emojiMap[mood] || '💭';
+  
+  // 在聊天窗口中显示一条系统消息（不添加到历史记录）
+  addMessage('system', `${emoji} 心情已切换为【${moodLabel}】，后续回复将以该语气进行`, new Date().toTimeString().slice(0, 5), false);
+
+
+}
+
+function restoreMood() {
+  const savedMood = localStorage.getItem('selected_mood') || 'happy';
+  window.currentMood = savedMood;
+  
+  document.querySelectorAll('.mood-card').forEach(c => {
+    if (c.dataset.mood === savedMood) {
+      c.classList.add('active');
+    } else {
+      c.classList.remove('active');
+    }
+  });
+  
+}
+
+</script>
+</body>
+</html>

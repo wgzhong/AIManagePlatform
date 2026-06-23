@@ -1,5 +1,19 @@
+# Web 框架
 fastapi>=0.100.0
 uvicorn[standard]>=0.23.0
-httpx>=0.24.0
+httpx[http2]>=0.24.0
 pydantic>=2.0.0
+pydantic-settings>=2.0.0
 orjson>=3.9.0
+
+# HTTP/2 支持（httpx[http2] 依赖，显式声明）
+h2>=4.0.0
+
+# YAML frontmatter 解析（skills/base_skill.py 解析 skill.md）
+PyYAML>=6.0
+
+# 定时提醒调度器（core/reminder_manager.py）
+APScheduler>=3.10
+
+# 限流中间件（middleware/rate_limit.py）
+slowapi>=0.1.9

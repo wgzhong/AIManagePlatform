@@ -127,6 +127,9 @@ class ChatService:
                             tool_call_buffer[idx]["arguments"] += func["arguments"]
             
             if tool_call_buffer:
+                direct_tools = ["get_time"]
+                need_summary = False
+                
                 for call_info in tool_call_buffer.values():
                     skill_name = call_info["name"]
                     args_json = call_info["arguments"]
@@ -146,27 +149,30 @@ class ChatService:
                             ensure_ascii=False,
                         )}\n\n"
                         
-                        final_messages.append({
-                            "role": "tool",
-                            "name": skill_name,
-                            "content": skill_result,
-                        })
+                        if skill_name not in direct_tools:
+                            need_summary = True
+                            final_messages.append({
+                                "role": "tool",
+                                "name": skill_name,
+                                "content": skill_result,
+                            })
                 
-                async for text, tool_calls, usage in stream_chat_request(
-                    final_messages, api_key, api_url, tools,
-                    model=request.model,
-                    max_tokens=request.max_tokens,
-                    temperature=request.temperature,
-                    top_p=request.top_p,
-                    frequency_penalty=request.frequency_penalty,
-                    thinking_enabled=request.enable_think,
-                ):
-                    if usage is not None:
-                        final_usage = usage
-                        continue
-                    
-                    if text:
-                        yield f"data: {json.dumps({'content': text}, ensure_ascii=False)}\n\n"
+                if need_summary:
+                    async for text, tool_calls, usage in stream_chat_request(
+                        final_messages, api_key, api_url, tools,
+                        model=request.model,
+                        max_tokens=request.max_tokens,
+                        temperature=request.temperature,
+                        top_p=request.top_p,
+                        frequency_penalty=request.frequency_penalty,
+                        thinking_enabled=request.enable_think,
+                    ):
+                        if usage is not None:
+                            final_usage = usage
+                            continue
+                        
+                        if text:
+                            yield f"data: {json.dumps({'content': text}, ensure_ascii=False)}\n\n"
             
             if final_usage:
                 stats_manager.update_token_usage(final_usage.get("completion_tokens", 0))

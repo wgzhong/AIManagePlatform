@@ -135,11 +135,15 @@ def main():
     signal.signal(signal.SIGTERM, signal_handler)
 
     if sys.platform == "win32":
-        def _win_wait():
-            import time
-            while True:
-                time.sleep(1)
-        threading.Thread(target=_win_wait, daemon=True).start()
+        import ctypes
+        
+        def handler(dwCtrlType, func):
+            if dwCtrlType in [0, 2]:
+                signal_handler(signal.SIGINT, None)
+                return 1
+            return 0
+        
+        ctypes.windll.kernel32.SetConsoleCtrlHandler(ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_int, ctypes.c_int)(handler), 1)
 
     config_obj = uvicorn.Config(app, host="0.0.0.0", port=config.APP_PORT, log_level="info")
     server = uvicorn.Server(config_obj)

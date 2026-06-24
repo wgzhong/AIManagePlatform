@@ -601,6 +601,7 @@ let isLoadingMore = false;
 document.addEventListener('DOMContentLoaded', function() {
   currentApiKey = localStorage.getItem('ai_platform_api_key') || '';
   currentApiUrl = localStorage.getItem('ai_platform_api_url') || DEFAULT_API_URL;
+  currentModel = localStorage.getItem('ai_platform_model') || 'glm-5.1';
   
   const savedMoodFromStorage = localStorage.getItem('selected_mood');
   window.currentMood = savedMoodFromStorage || 'happy';
@@ -608,6 +609,7 @@ document.addEventListener('DOMContentLoaded', function() {
   console.log(`=== 页面初始化 ===`);
   console.log(`localStorage.selected_mood: "${savedMoodFromStorage}"`);
   console.log(`window.currentMood: "${window.currentMood}"`);
+  console.log(`当前模型: "${currentModel}"`);
   
   if (!currentApiKey) {
     alert('请先在首页输入 API Key！');
@@ -967,7 +969,7 @@ async function sendMessage() {
     messages: recentHistory,
     api_key: currentApiKey,
     api_url: currentApiUrl,
-    model: "glm-5.1",
+    model: currentModel,
     max_tokens: Number(document.getElementById("maxTokens").value),
     temperature: Number(tempSlider.value),
     top_p: Number(topPSlider.value),
@@ -1006,7 +1008,9 @@ async function sendMessage() {
             document.getElementById("msgBox").scrollTop = document.getElementById("msgBox").scrollHeight;
           }
           if (obj.tool_result) {
-            const toolMsg = `🛠️ 工具调用 [${obj.tool_result.name}]:\n${obj.tool_result.result}`;
+            let toolMsg = `${obj.tool_result.result}`;
+            toolMsg = toolMsg.replace(/[^\u4e00-\u9fa50-9:\s]/g, '');
+            toolMsg = toolMsg.replace(/工具调用\s*\[.*?\]\s*[:：]?\s*/g, '');
             if (!fullResp) {
               fullResp = toolMsg;
             } else {

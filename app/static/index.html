@@ -733,6 +733,54 @@ body {
   justify-content: flex-end;
   gap: 12px;
 }
+.model-list {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+}
+.model-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+.model-item .model-name {
+  font-size: 13px;
+  color: var(--text-main);
+}
+.model-item .model-id {
+  font-size: 11px;
+  color: var(--text-sub);
+  font-family: monospace;
+}
+.model-item .actions {
+  display: flex;
+  gap: 6px;
+}
+.model-item .actions button {
+  padding: 4px 8px;
+  font-size: 11px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+.btn-delete {
+  background: rgba(255,107,107,0.2);
+  color: var(--danger);
+}
+.btn-delete:hover {
+  background: rgba(255,107,107,0.3);
+}
+.btn-default {
+  background: rgba(114,224,224,0.2);
+  color: var(--accent-cyan);
+}
+.btn-default:hover {
+  background: rgba(114,224,224,0.3);
+}
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
@@ -767,9 +815,12 @@ body {
       <div class="model-select-wrapper">
         <select class="model-select" id="modelSelect" onchange="saveModel()">
           <option value="glm-5.1">GLM-5.1</option>
+          <option value="glm-4.5-air">GLM-4.5-Air</option>
+          <option value="glm-4.6v">GLM-4.6V</option>
           <option value="deepseek-chat">DeepSeek-Chat</option>
           <option value="qwen3-turbo">Qwen3-Turbo</option>
         </select>
+        <button class="btn btn-secondary" onclick="showModelManager()" style="margin-left: 8px; padding: 6px 10px; font-size: 11px;">+ 添加模型</button>
       </div>
       <div class="status-indicator" id="statusIndicator" onclick="toggleStatusTooltip()">
         <span class="status-dot" id="statusDot"></span>
@@ -1009,11 +1060,49 @@ body {
   </div>
 </div>
 
+<div class="modal-overlay" id="modelManagerOverlay" onclick="closeModelManager()">
+  <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 600px;">
+    <div class="modal-header">
+      <h3>⚙️ 模型管理</h3>
+      <span class="modal-close" onclick="closeModelManager()">×</span>
+    </div>
+    <div class="modal-body" style="padding-bottom: 0;">
+      <div style="margin-bottom: 16px;">
+        <label style="display:block;font-size:13px;color:var(--text-sub);margin-bottom:8px;">添加新模型</label>
+        <div style="display:flex;gap:10px;">
+          <input type="text" id="newModelId" placeholder="模型 ID (如: glm-4.6v)" style="flex:1;background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);border-radius:8px;padding:10px;color:#fff;font-size:13px;outline:none;">
+          <input type="text" id="newModelName" placeholder="模型名称 (如: GLM-4.6V)" style="flex:1;background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);border-radius:8px;padding:10px;color:#fff;font-size:13px;outline:none;">
+        </div>
+        <button class="btn btn-primary" onclick="addCustomModel()" style="width:100%;margin-top:10px;">添加模型</button>
+      </div>
+      
+      <div style="border-top:1px solid var(--glass-border);padding-top:16px;">
+        <label style="display:block;font-size:13px;color:var(--text-sub);margin-bottom:12px;">已添加的模型</label>
+        <div class="model-list" id="customModelsList">
+          <div style="text-align:center;padding:20px;color:var(--text-sub);font-size:13px;">暂无自定义模型</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModelManager()">关闭</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const API_KEY_STORAGE = 'ai_platform_api_key';
 const API_URL_STORAGE = 'ai_platform_api_url';
 const MODEL_STORAGE = 'ai_platform_model';
+const CUSTOM_MODELS_STORAGE = 'ai_platform_custom_models';
 const DEFAULT_API_URL = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+
+const DEFAULT_MODELS = [
+  { id: 'glm-5.1', name: 'GLM-5.1' },
+  { id: 'glm-4.5-air', name: 'GLM-4.5-Air' },
+  { id: 'glm-4.6v', name: 'GLM-4.6V' },
+  { id: 'deepseek-chat', name: 'DeepSeek-Chat' },
+  { id: 'qwen3-turbo', name: 'Qwen3-Turbo' }
+];
 
 document.addEventListener('DOMContentLoaded', function() {
   loadStoredConfig();
@@ -1030,11 +1119,126 @@ function loadStoredConfig() {
   
   document.getElementById('apiKeyInput').value = storedKey;
   document.getElementById('apiUrlInput').value = storedUrl;
-  document.getElementById('modelSelect').value = storedModel;
+  
+  loadCustomModels();
+  
+  const modelSelect = document.getElementById('modelSelect');
+  modelSelect.value = storedModel;
   
   if (storedKey) {
     document.getElementById('apiKeyInput').classList.add('success');
   }
+}
+
+function loadCustomModels() {
+  const customModels = getCustomModels();
+  const modelSelect = document.getElementById('modelSelect');
+  
+  const existingOptions = Array.from(modelSelect.options).map(o => o.value);
+  
+  customModels.forEach(model => {
+    if (!existingOptions.includes(model.id)) {
+      const option = document.createElement('option');
+      option.value = model.id;
+      option.textContent = model.name;
+      modelSelect.appendChild(option);
+    }
+  });
+}
+
+function getCustomModels() {
+  try {
+    const stored = localStorage.getItem(CUSTOM_MODELS_STORAGE);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveCustomModels(models) {
+  localStorage.setItem(CUSTOM_MODELS_STORAGE, JSON.stringify(models));
+}
+
+function showModelManager() {
+  const customModels = getCustomModels();
+  const list = document.getElementById('customModelsList');
+  
+  if (customModels.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-sub);font-size:13px;">暂无自定义模型</div>';
+  } else {
+    list.innerHTML = customModels.map(model => `
+      <div class="model-item">
+        <div>
+          <div class="model-name">${model.name}</div>
+          <div class="model-id">${model.id}</div>
+        </div>
+        <div class="actions">
+          <button class="btn-default" onclick="setAsDefault('${model.id}')">设为默认</button>
+          <button class="btn-delete" onclick="deleteModel('${model.id}')">删除</button>
+        </div>
+      </div>
+    `).join('');
+  }
+  
+  document.getElementById('modelManagerOverlay').classList.add('show');
+}
+
+function closeModelManager() {
+  document.getElementById('modelManagerOverlay').classList.remove('show');
+}
+
+function addCustomModel() {
+  const modelId = document.getElementById('newModelId').value.trim();
+  const modelName = document.getElementById('newModelName').value.trim();
+  
+  if (!modelId || !modelName) {
+    alert('请填写模型 ID 和名称');
+    return;
+  }
+  
+  const existingIds = [...DEFAULT_MODELS.map(m => m.id), ...getCustomModels().map(m => m.id)];
+  if (existingIds.includes(modelId)) {
+    alert('该模型 ID 已存在');
+    return;
+  }
+  
+  const customModels = getCustomModels();
+  customModels.push({ id: modelId, name: modelName });
+  saveCustomModels(customModels);
+  
+  const modelSelect = document.getElementById('modelSelect');
+  const option = document.createElement('option');
+  option.value = modelId;
+  option.textContent = modelName;
+  modelSelect.appendChild(option);
+  
+  document.getElementById('newModelId').value = '';
+  document.getElementById('newModelName').value = '';
+  
+  showModelManager();
+}
+
+function deleteModel(modelId) {
+  if (!confirm(`确定要删除模型 "${modelId}" 吗？`)) return;
+  
+  const customModels = getCustomModels().filter(m => m.id !== modelId);
+  saveCustomModels(customModels);
+  
+  const modelSelect = document.getElementById('modelSelect');
+  for (let i = modelSelect.options.length - 1; i >= 0; i--) {
+    if (modelSelect.options[i].value === modelId) {
+      modelSelect.remove(i);
+      break;
+    }
+  }
+  
+  showModelManager();
+}
+
+function setAsDefault(modelId) {
+  localStorage.setItem(MODEL_STORAGE, modelId);
+  document.getElementById('modelSelect').value = modelId;
+  closeModelManager();
 }
 
 function validateKey() {

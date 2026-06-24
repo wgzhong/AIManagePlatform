@@ -422,7 +422,18 @@ class LLMInfer:
                     if "choices" in data and len(data["choices"]) > 0:
                         delta = data["choices"][0].get("delta", {})
                         content = delta.get("content", "")
+                        
                         tool_calls = delta.get("tool_calls")
+                        
+                        if not tool_calls:
+                            function_call = delta.get("function_call")
+                            if function_call:
+                                tool_calls = [{"index": 0, "function": function_call}]
+                        
+                        if not tool_calls:
+                            tool_call = delta.get("tool_call")
+                            if tool_call:
+                                tool_calls = [{"index": 0, "function": tool_call}]
 
                         if content:
                             self._debug_log(f"已接收块 | 内容字符: {len(content)}")

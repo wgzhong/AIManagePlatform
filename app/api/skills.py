@@ -6,7 +6,7 @@ Skill 工具列表与配置 API。
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from app.schemas.skills import SkillConfigUpdate, SystemPromptRequest, SkillSystemPromptResponse, SkillFilePathResponse
+from app.schemas.skills import SkillConfigUpdate, SystemPromptRequest, SkillSystemPromptResponse, SkillFilePathResponse, CustomSkillCreate
 from app.services.skill_service import SkillService
 from app.middleware.auth import require_admin
 
@@ -68,4 +68,17 @@ async def get_skill_file_path(skill_name: str, service: SkillService = Depends(g
     result = service.get_skill_file_path(skill_name)
     if result is None:
         raise HTTPException(status_code=404, detail="技能不存在")
+    return result
+
+
+@router.post("/api/skills/custom")
+async def create_custom_skill(
+    skill_data: CustomSkillCreate,
+    service: SkillService = Depends(get_skill_service),
+    _: bool = Depends(require_admin)
+):
+    """创建自定义技能（需 admin 鉴权）"""
+    result = service.create_custom_skill(skill_data)
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("message", "创建失败"))
     return result

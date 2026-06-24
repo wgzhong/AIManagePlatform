@@ -146,33 +146,26 @@ body::before {
 .status-indicator {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: 20px;
-  background: rgba(74, 222, 128, 0.08);
+  padding: 8px;
+  border-radius: 50%;
+  background: rgba(74, 222, 128, 0.1);
   cursor: pointer;
   transition: all 0.25s;
-  border: 1px solid transparent;
+  border: 2px solid transparent;
 }
 .status-indicator:hover {
-  background: rgba(74, 222, 128, 0.14);
-  border-color: rgba(74, 222, 128, 0.2);
+  background: rgba(74, 222, 128, 0.18);
 }
 .status-dot {
-  width: 9px;
-  height: 9px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: var(--success);
   animation: pulse 2s infinite;
-  box-shadow: 0 0 8px rgba(74, 222, 128, 0.5);
+  box-shadow: 0 0 10px rgba(74, 222, 128, 0.6);
 }
-.status-dot.orange { background: var(--orange); box-shadow: 0 0 8px rgba(251, 146, 60, 0.5); }
-.status-dot.red { background: var(--danger); box-shadow: 0 0 8px rgba(255, 107, 107, 0.5); }
-.status-text {
-  font-size: 12px;
-  color: var(--text-main);
-  font-weight: 500;
-}
+.status-dot.orange { background: var(--orange); box-shadow: 0 0 10px rgba(251, 146, 60, 0.6); }
+.status-dot.red { background: var(--danger); box-shadow: 0 0 10px rgba(255, 107, 107, 0.6); }
 .status-tooltip {
   position: absolute;
   right: 20px;
@@ -886,9 +879,8 @@ body::before {
         </select>
         <button class="btn btn-secondary" onclick="showModelManager()" style="margin-left: 8px; padding: 6px 10px; font-size: 11px;">+ 添加模型</button>
       </div>
-      <div class="status-indicator" id="statusIndicator" onclick="toggleStatusTooltip()">
+      <div class="status-indicator" id="statusIndicator" onclick="toggleStatusTooltip()" title="点击查看连接详情">
         <span class="status-dot" id="statusDot"></span>
-        <span class="status-text" id="statusText">连接正常</span>
       </div>
       <div class="status-tooltip" id="statusTooltip">
         <div class="tooltip-row">
@@ -967,6 +959,9 @@ body::before {
         </div>
         <div class="stat-value" id="dailyRequests">0</div>
         <div class="stat-label">今日对话请求</div>
+        <div style="font-size: 11px; color: var(--text-sub); margin-bottom: 8px;">
+          总计: <span id="totalRequests">0</span>
+        </div>
         <div class="mini-chart" id="reqChart">
           <div class="mini-bar" style="height: 40%"></div>
           <div class="mini-bar" style="height: 60%"></div>
@@ -1006,12 +1001,14 @@ body::before {
         </div>
         <div class="stat-label">今日 Token 消耗</div>
         <div style="font-size: 11px; color: var(--text-sub); margin-bottom: 8px;">
-          输出: <span id="outputTokens">0</span>
+          输入: <span style="color: var(--accent-cyan);" id="todayInputTokens">0</span> &nbsp; 输出: <span style="color: var(--accent-pink);" id="todayOutputTokens">0</span>
         </div>
         <div class="progress-bar">
           <div class="progress-fill" id="tokenProgress" style="width: 35%"></div>
         </div>
-        <div style="font-size: 11px; color: var(--text-sub); margin-top: 6px;">本月累计: <span id="monthlyTokens">0</span></div>
+        <div style="font-size: 11px; color: var(--text-sub); margin-top: 6px;">
+          总计: <span id="totalTokensAll">0</span> &nbsp; 输入: <span id="totalInputTokens">0</span> &nbsp; 输出: <span id="totalOutputTokens">0</span>
+        </div>
       </div>
       <div class="stat-card">
         <div class="stat-header">
@@ -1246,6 +1243,15 @@ function getCustomModels() {
   }
 }
 
+function getModelDisplayName(modelId) {
+  if (!modelId) return '-';
+  const found = DEFAULT_MODELS.find(m => m.id === modelId);
+  if (found) return found.name;
+  const custom = getCustomModels().find(m => m.id === modelId);
+  if (custom) return custom.name;
+  return modelId;
+}
+
 function saveCustomModels(models) {
   localStorage.setItem(CUSTOM_MODELS_STORAGE, JSON.stringify(models));
 }
@@ -1420,7 +1426,15 @@ async function loadStats() {
     const data = await res.json();
     
     document.getElementById('dailyRequests').textContent = data.daily_requests || 0;
-    document.getElementById('todayTokens').textContent = data.today_output_tokens || 0;
+    document.getElementById('totalRequests').textContent = data.total_requests || 0;
+    
+    document.getElementById('todayTokens').textContent = (data.today_input_tokens || 0) + (data.today_output_tokens || 0);
+    document.getElementById('todayInputTokens').textContent = data.today_input_tokens || 0;
+    document.getElementById('todayOutputTokens').textContent = data.today_output_tokens || 0;
+    document.getElementById('totalTokensAll').textContent = (data.total_input_tokens || 0) + (data.total_output_tokens || 0);
+    document.getElementById('totalInputTokens').textContent = data.total_input_tokens || 0;
+    document.getElementById('totalOutputTokens').textContent = data.total_output_tokens || 0;
+    
     document.getElementById('outputTokens').textContent = data.today_output_tokens || 0;
     document.getElementById('monthlyTokens').textContent = data.total_output_tokens || 0;
     document.getElementById('toolCalls').textContent = (data.tool_calls?.total) || 0;
@@ -1431,9 +1445,9 @@ async function loadStats() {
     // 设备统计
     document.getElementById('onlineCount').textContent = data.total_devices || 0;
     
-    const totalTokens = (data.total_input_tokens || 0) + (data.total_output_tokens || 0);
-    const maxMonthly = 1000000;
-    const progress = Math.min((totalTokens / maxMonthly) * 100, 100);
+    const totalTokens = (data.today_input_tokens || 0) + (data.today_output_tokens || 0);
+    const maxDaily = 500000;
+    const progress = Math.min((totalTokens / maxDaily) * 100, 100);
     document.getElementById('tokenProgress').style.width = progress + '%';
     
     updateMiniChart(data.daily_records || []);
@@ -1463,24 +1477,20 @@ async function checkHealth() {
     const data = await res.json();
     
     const dot = document.getElementById('statusDot');
-    const text = document.getElementById('statusText');
     const tooltipStatus = document.getElementById('tooltipStatus');
     const tooltipLatency = document.getElementById('tooltipLatency');
     
     switch (data.status_color) {
       case 'green':
         dot.className = 'status-dot';
-        text.textContent = '连接正常';
         tooltipStatus.textContent = '在线';
         break;
       case 'orange':
         dot.className = 'status-dot orange';
-        text.textContent = '限流警告';
         tooltipStatus.textContent = '限流';
         break;
       case 'red':
         dot.className = 'status-dot red';
-        text.textContent = '连接断开';
         tooltipStatus.textContent = '离线';
         break;
     }
@@ -1489,7 +1499,6 @@ async function checkHealth() {
     
   } catch (err) {
     document.getElementById('statusDot').className = 'status-dot red';
-    document.getElementById('statusText').textContent = '连接断开';
   }
 }
 
@@ -1745,7 +1754,7 @@ function viewUserConfig(userId) {
   
   document.getElementById('modalTitle').textContent = `📋 ${user?.username || '用户'} 的配置`;
   document.getElementById('modalBody').innerHTML = `
-    <div class="tooltip-row"><span class="tooltip-label">默认模型</span><span class="tooltip-value">${config.default_model || '-'}</span></div>
+    <div class="tooltip-row"><span class="tooltip-label">默认模型</span><span class="tooltip-value">${getModelDisplayName(config.default_model)}</span></div>
     <div class="tooltip-row"><span class="tooltip-label">心情</span><span class="tooltip-value">${config.mood || '-'}</span></div>
     <div class="tooltip-row"><span class="tooltip-label">API URL</span><span class="tooltip-value" style="font-size:11px;">${config.api_url || '-'}</span></div>
     <div class="tooltip-row"><span class="tooltip-label">API Key</span><span class="tooltip-value" style="font-size:11px;">${config.api_key ? '***' + config.api_key.slice(-4) : '-'}</span></div>
@@ -1777,18 +1786,20 @@ function renderUserList() {
   usersList.forEach(user => {
     const userConfig = usersConfigMap[user.id] || {};
     const row = document.createElement('tr');
+    const apiKeyDisplay = userConfig.api_key ? '***' + userConfig.api_key.slice(-4) : '-';
     row.innerHTML = `
-      <td>${user.id}</td>
-      <td>${user.username}</td>
-      <td>${user.email}</td>
-      <td>${user.is_active ? '✅' : '❌'}</td>
-      <td>${user.is_superuser ? '超级管理员' : '普通用户'}</td>
-      <td>${userConfig.default_model || '-'}</td>
-      <td>${user.created_at ? new Date(user.created_at).toLocaleString('zh-CN') : '-'}</td>
+      <td style="color:var(--text-sub);font-size:11px;">${user.id}</td>
+      <td><strong>${user.username}</strong></td>
+      <td style="color:var(--text-sub);">${user.email}</td>
+      <td><span class="status-badge ${user.is_active ? 'active' : 'inactive'}">${user.is_active ? '激活' : '禁用'}</span></td>
+      <td><span class="role-badge ${user.is_superuser ? 'admin' : 'user'}">${user.is_superuser ? '超级管理员' : '普通用户'}</span></td>
+      <td style="color:var(--accent-cyan);font-size:12px;">${userConfig.default_model ? getModelDisplayName(userConfig.default_model) : '-'}</td>
+      <td style="color:var(--text-sub);font-size:11px;font-family:monospace;">${apiKeyDisplay}</td>
+      <td style="color:var(--text-sub);font-size:11px;">${user.created_at ? new Date(user.created_at).toLocaleString('zh-CN') : '-'}</td>
       <td>
-        <button onclick="editUser(${user.id})" class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px;">编辑</button>
-        <button onclick="viewUserConfig(${user.id})" class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px; background: rgba(114,224,224,0.2); color: var(--accent-cyan);">配置</button>
-        <button onclick="deleteUserConfirm(${user.id}, '${user.username}')" class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px; background: rgba(255,107,107,0.2); color: #ff6b6b;">删除</button>
+        <button onclick="editUser(${user.id})" class="btn-action">编辑</button>
+        <button onclick="viewUserConfig(${user.id})" class="btn-action" style="background:rgba(114,224,224,0.1);color:var(--accent-cyan);">配置</button>
+        <button onclick="deleteUserConfirm(${user.id}, '${user.username}')" class="btn-action danger">删除</button>
       </td>
     `;
     tbody.appendChild(row);
@@ -1873,14 +1884,17 @@ function closeEditUserModal() {
 </script>
 
 <div id="userModalOverlay" class="modal-overlay">
-  <div class="modal-content">
+  <div class="modal-content user-mgmt-modal">
     <div class="modal-header">
-      <h2>👥 用户管理</h2>
+      <div>
+        <h2>👥 用户管理</h2>
+        <span style="font-size:12px;color:var(--text-sub);">管理所有注册用户与配置</span>
+      </div>
       <button class="modal-close" onclick="closeUserManager()">×</button>
     </div>
-    <div class="modal-body">
-      <div style="overflow-x: auto;">
-        <table class="users-table">
+    <div class="modal-body" style="padding:0;">
+      <div style="overflow-x: auto; border-radius: 12px;">
+        <table class="users-table-new">
           <thead>
             <tr>
               <th>ID</th>
@@ -1889,6 +1903,7 @@ function closeEditUserModal() {
               <th>状态</th>
               <th>角色</th>
               <th>模型</th>
+              <th>API Key</th>
               <th>创建时间</th>
               <th>操作</th>
             </tr>
@@ -1905,9 +1920,12 @@ function closeEditUserModal() {
 </div>
 
 <div id="editUserModalOverlay" class="modal-overlay">
-  <div class="modal-content" style="max-width: 500px;">
+  <div class="modal-content edit-user-modal">
     <div class="modal-header">
-      <h2>✏️ 编辑用户</h2>
+      <div>
+        <h2>✏️ 编辑用户</h2>
+        <span style="font-size:12px;color:var(--text-sub);">修改用户信息与权限</span>
+      </div>
       <button class="modal-close" onclick="closeEditUserModal()">×</button>
     </div>
     <div class="modal-body">
@@ -1920,14 +1938,14 @@ function closeEditUserModal() {
         <label>邮箱</label>
         <input type="email" id="editEmail" class="form-input" required>
       </div>
-      <div class="form-group">
-        <label style="display: flex; align-items: center; gap: 8px;">
-          <input type="checkbox" id="editIsActive"> 启用用户
+      <div class="form-group form-check-group">
+        <label class="form-check-label">
+          <input type="checkbox" id="editIsActive" class="form-checkbox"> 启用用户
         </label>
       </div>
-      <div class="form-group">
-        <label style="display: flex; align-items: center; gap: 8px;">
-          <input type="checkbox" id="editIsSuperuser"> 超级管理员
+      <div class="form-group form-check-group">
+        <label class="form-check-label">
+          <input type="checkbox" id="editIsSuperuser" class="form-checkbox"> 超级管理员
         </label>
       </div>
     </div>
@@ -1939,6 +1957,109 @@ function closeEditUserModal() {
 </div>
 
 <style>
+.user-mgmt-modal {
+  max-width: 1100px;
+}
+.edit-user-modal {
+  max-width: 480px;
+}
+.users-table-new {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+}
+.users-table-new th {
+  background: rgba(255,255,255,0.06);
+  padding: 14px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--accent-cyan);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid rgba(135, 232, 232, 0.2);
+  white-space: nowrap;
+}
+.users-table-new td {
+  padding: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  color: var(--text-main);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.users-table-new tr:hover td {
+  background: rgba(135, 232, 232, 0.06);
+}
+.users-table-new .role-badge {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.role-badge.admin {
+  background: rgba(255, 200, 221, 0.15);
+  color: var(--accent-pink);
+}
+.role-badge.user {
+  background: rgba(135, 232, 232, 0.12);
+  color: var(--accent-cyan);
+}
+.status-badge {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.status-badge.active {
+  background: rgba(74, 222, 128, 0.12);
+  color: var(--success);
+}
+.status-badge.inactive {
+  background: rgba(255, 107, 107, 0.12);
+  color: var(--danger);
+}
+.users-table-new .btn-action {
+  padding: 5px 12px;
+  font-size: 11px;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.05);
+  color: var(--text-sub);
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-right: 4px;
+}
+.users-table-new .btn-action:hover {
+  background: rgba(135, 232, 232, 0.15);
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+}
+.users-table-new .btn-action.danger {
+  border-color: rgba(255, 107, 107, 0.2);
+}
+.users-table-new .btn-action.danger:hover {
+  background: rgba(255, 107, 107, 0.15);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+.form-check-group {
+  padding: 8px 0;
+}
+.form-check-label {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  color: var(--text-main) !important;
+  font-size: 14px !important;
+}
+.form-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent-cyan);
+  cursor: pointer;
+}
 .users-table {
   width: 100%;
   border-collapse: collapse;

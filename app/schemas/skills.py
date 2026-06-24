@@ -33,3 +33,15 @@ class SkillFilePathResponse(BaseModel):
     skill_path: Optional[str]
     skill_dir: Optional[str]
     md_file_path: Optional[str]
+
+
+class CustomSkillCreate(BaseModel):
+    """自定义技能创建请求模型"""
+    name: str
+    description: str
+    icon: str = "🔧"
+    category: str = "自定义"
+    system_prompt: str = ""
+    enabled: bool = True
+    auto_trigger: bool = False
+    trigger_keywords: List[str] = []

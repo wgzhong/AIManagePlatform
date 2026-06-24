@@ -23,6 +23,8 @@ class BaseSkill:
     enabled: bool = True
     auto_trigger: bool = False
     trigger_keywords: List[str] = []
+    # 是否为直接工具（执行后不需要 LLM 二次总结，直接返结果）
+    is_direct_tool: bool = False
 
     # System Prompt（可从 md 文件加载）
     system_prompt: str = ""

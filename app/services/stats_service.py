@@ -1,85 +1,113 @@
 """
-统计服务模块
-封装系统统计业务逻辑
+用户统计服务模块
+提供用户级别的统计数据存储和查询功能
 """
 
 from datetime import datetime
+from sqlalchemy.orm import Session
 
-from app.core.config import config
+from app.models.database import UserStats
 from app.core.stats import stats_manager
-from app.core.devices import device_manager
-from app.schemas.stats import StatsResponse, HealthResponse
 
 
-class StatsService:
-    """统计服务类"""
+def get_user_stats(db: Session, user_id: int) -> UserStats:
+    """获取用户统计数据（不存在则创建）"""
+    stats = db.query(UserStats).filter(UserStats.user_id == user_id).first()
+    if not stats:
+        stats = UserStats(user_id=user_id)
+        db.add(stats)
+        db.commit()
+        db.refresh(stats)
+    return stats
+
+
+def _rollover_if_new_day(stats: UserStats) -> bool:
+    """跨天时重置每日计数"""
+    today = datetime.now().date().isoformat()
+    if stats.last_reset != today:
+        stats.daily_requests = 0
+        stats.today_input_tokens = 0
+        stats.today_output_tokens = 0
+        stats.last_reset = today
+        return True
+    return False
+
+
+def increment_user_request(db: Session, user_id: int) -> None:
+    """增加用户请求计数"""
+    stats = get_user_stats(db, user_id)
+    _rollover_if_new_day(stats)
     
-    def get_stats(self) -> StatsResponse:
-        """获取系统统计数据"""
-        stats = stats_manager.load_stats()
-        devices = device_manager.get_all_devices()
-        
-        online_count = 0
-        now = datetime.now()
-        for info in devices.values():
-            last_used = info.get("last_used")
-            if last_used:
-                try:
-                    last_time = datetime.fromisoformat(last_used.replace("Z", "+00:00"))
-                    if (now - last_time).total_seconds() < 300:
-                        online_count += 1
-                except ValueError:
-                    continue
-        
-        uptime = now - config.SYSTEM_START_TIME
-        uptime_str = f"{uptime.days}天 {uptime.seconds // 3600}时 {(uptime.seconds // 60) % 60}分"
-        
-        daily_records = stats.get("daily_records", [])
-        today_count = stats.get("daily_requests", 0)
-        yesterday_count = 0
-        if len(daily_records) >= 2:
-            yesterday_count = daily_records[-2].get("count", 0)
-        
-        growth_rate = 0
-        if yesterday_count > 0:
-            growth_rate = ((today_count - yesterday_count) / yesterday_count * 100)
-        
-        return StatsResponse(
-            daily_requests=today_count,
-            total_requests=stats.get("total_requests", 0),
-            growth_rate=round(growth_rate, 1),
-            online_devices=online_count,
-            total_devices=len(devices),
-            today_output_tokens=stats.get("today_output_tokens", 0),
-            total_output_tokens=stats.get("total_output_tokens", 0),
-            tool_calls=stats.get("tool_calls", {}),
-            daily_records=daily_records,
-            uptime=uptime_str,
-            version="1.0.0",
-            skill_version="2025-06-18",
-        )
+    stats.daily_requests += 1
+    stats.total_requests += 1
     
-    async def check_health(self) -> HealthResponse:
-        """检查系统健康状态"""
-        import httpx
-        
-        try:
-            async with httpx.AsyncClient(timeout=5) as client:
-                response = await client.head(config.DEFAULT_URL)
-                latency = response.elapsed.total_seconds() * 1000
-                
-                if response.status_code == 200:
-                    status_text, status_color = "online", "green"
-                elif 400 <= response.status_code < 500:
-                    status_text, status_color = "rate_limited", "orange"
-                else:
-                    status_text, status_color = "error", "red"
-        except Exception:
-            status_text, status_color, latency = "offline", "red", -1
-        
-        return HealthResponse(
-            status=status_text,
-            status_color=status_color,
-            latency=round(latency, 1) if latency >= 0 else None,
-            timestamp=datetime.now().isoformat(),
-        )
+    today = stats.last_reset
+    daily_records = stats.daily_records or []
+    found = False
+    for record in daily_records:
+        if record.get("date") == today:
+            record["count"] += 1
+            found = True
+            break
+    if not found:
+        daily_records.append({"date": today, "count": 1})
+    stats.daily_records = daily_records
+    
+    db.commit()
+    
+    # 同时更新全局统计
+    stats_manager.increment_request_count()
+
+
+def update_user_token_usage(db: Session, user_id: int, output_tokens: int, input_tokens: int = 0) -> None:
+    """更新用户 Token 使用统计"""
+    stats = get_user_stats(db, user_id)
+    _rollover_if_new_day(stats)
+    
+    stats.today_input_tokens += input_tokens
+    stats.today_output_tokens += output_tokens
+    stats.total_input_tokens += input_tokens
+    stats.total_output_tokens += output_tokens
+    
+    db.commit()
+    
+    # 同时更新全局统计
+    stats_manager.update_token_usage(output_tokens, input_tokens)
+
+
+def increment_user_tool_call(db: Session, user_id: int, tool_name: str) -> None:
+    """增加用户工具调用计数"""
+    stats = get_user_stats(db, user_id)
+    
+    tool_calls = stats.tool_calls or {}
+    tool_calls[tool_name] = tool_calls.get(tool_name, 0) + 1
+    tool_calls["total"] = tool_calls.get("total", 0) + 1
+    stats.tool_calls = tool_calls
+    
+    db.commit()
+    
+    # 同时更新全局统计
+    stats_manager.increment_tool_call(tool_name)
+
+
+def get_user_stats_dict(db: Session, user_id: int) -> dict:
+    """获取用户统计数据字典"""
+    stats = get_user_stats(db, user_id)
+    _rollover_if_new_day(stats)
+    db.commit()
+    
+    return {
+        "daily_requests": stats.daily_requests,
+        "total_requests": stats.total_requests,
+        "today_input_tokens": stats.today_input_tokens,
+        "today_output_tokens": stats.today_output_tokens,
+        "total_input_tokens": stats.total_input_tokens,
+        "total_output_tokens": stats.total_output_tokens,
+        "tool_calls": stats.tool_calls,
+        "daily_records": stats.daily_records,
+    }
+
+
+def get_global_stats() -> dict:
+    """获取全局统计数据"""
+    return stats_manager.load_stats()

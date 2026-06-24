@@ -27,6 +27,7 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S"
 )
 
+from .config import config
 logger = logging.getLogger("LLM")
 
 
@@ -56,7 +57,6 @@ class LLMInfer:
         self._api_url = None
         self._api_key = None
         # SSL 校验开关：生产默认开启，本地调试可经 LLM_VERIFY_SSL=false 关闭
-        from .config import config
         self._verify_ssl = config.LLM_VERIFY_SSL
         # SSL/TLS 会话缓存，复用 SSL 握手（verify 由环境变量控制）
         self.TRANSPORT = AsyncHTTPTransport(
@@ -123,7 +123,7 @@ class LLMInfer:
         
         # 预热策略：发送真实请求建立连接
         warmup_payload = {
-            "model": "glm-5.1",
+            "model": config.DEFAULT_MODEL,
             "messages": [{"role": "user", "content": "ping"}],
             "max_tokens": 1,
             "stream": False
@@ -177,7 +177,7 @@ class LLMInfer:
                     
                     client = self._get_client()
                     heartbeat_payload = {
-                        "model": "glm-5.1",
+                        "model": config.DEFAULT_MODEL,
                         "messages": [{"role": "user", "content": "heartbeat"}],
                         "max_tokens": 1,
                         "stream": False
@@ -252,7 +252,7 @@ class LLMInfer:
         api_key: str, 
         api_url: str, 
         tools: List[dict] = None,
-        model: str = "glm-5.1",
+        model: str = "glm-4.6v",
         max_tokens: int = 1024,
         temperature: float = 1.0,
         top_p: float = 0.95,
@@ -321,7 +321,7 @@ class LLMInfer:
         # 智能截断过长历史，避免 payload 膨胀
         truncated_messages = self._truncate_messages(messages, max_messages=20)
         msg_size = self._estimate_messages_size(truncated_messages)
-
+        print("################# model = ", model)
         payload = {
             "model": model,
             "messages": truncated_messages,

@@ -1,15 +1,18 @@
-﻿"""
+"""
 设备管理模块
 负责管理ESP32设备的注册、查询和删除
 """
 
 import json
+import logging
 import os
 import secrets
 from datetime import datetime
 from typing import Dict, Optional
 
 from .config import config
+
+logger = logging.getLogger(__name__)
 
 
 class DeviceManager:
@@ -26,7 +29,8 @@ class DeviceManager:
             try:
                 with open(config.DEVICES_FILE, "r", encoding="utf-8") as f:
                     self._devices = json.load(f)
-            except Exception:
+            except Exception as e:
+                logger.warning("加载设备列表失败: %s", e)
                 self._devices = {}
     
     def _save_devices(self) -> None:

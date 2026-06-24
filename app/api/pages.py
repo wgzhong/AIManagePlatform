@@ -4,7 +4,7 @@
 
 import os
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -23,6 +23,18 @@ router.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 async def index():
     """首页"""
     return FileResponse(os.path.join(STATIC_DIR, "index.html"))
+
+
+@router.get("/home")
+async def home_page():
+    """主页面"""
+    return FileResponse(os.path.join(STATIC_DIR, "index.html"))
+
+
+@router.get("/login")
+async def login_page():
+    """登录页面"""
+    return FileResponse(os.path.join(STATIC_DIR, "login.html"))
 
 
 @router.get("/chat")

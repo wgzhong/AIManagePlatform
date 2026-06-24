@@ -1,28 +1,26 @@
 """
 系统统计与健康检查 API。
-使用 StatsService 封装业务逻辑。
 """
 
-from fastapi import APIRouter, Depends
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter
 
-from app.schemas.stats import StatsResponse, HealthResponse
-from app.services.stats_service import StatsService
+from app.core.stats import stats_manager
 
 router = APIRouter()
 
 
-def get_stats_service() -> StatsService:
-    return StatsService()
+@router.get("/api/stats")
+async def get_stats():
+    """获取系统统计数据（全局）"""
+    return stats_manager.load_stats()
 
 
-@router.get("/api/stats", response_model=StatsResponse)
-async def get_stats(service: StatsService = Depends(get_stats_service)):
-    """获取系统统计数据"""
-    return service.get_stats()
-
-
-@router.get("/api/health", response_model=HealthResponse)
-async def health_check(service: StatsService = Depends(get_stats_service)):
+@router.get("/api/health")
+async def health_check():
     """健康检查接口：探测 LLM 服务端连通性"""
-    return await service.check_health()
+    from app.core.llm_infer import llm_infer
+    try:
+        status = await llm_infer.check_health()
+        return {"status": "healthy", **status}
+    except Exception as e:
+        return {"status": "unhealthy", "error": str(e)}

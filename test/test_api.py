@@ -48,13 +48,17 @@ def test_stats():
 
 
 def test_chat_history():
-    """测试对话历史"""
+    """测试对话历史（使用 SQLite ORM）"""
     print("=== 对话历史测试 ===")
-    from core.chat_history import chat_history_manager
+    from models.database import SessionLocal, ChatHistory
 
-    history = chat_history_manager.load_history()
-    assert isinstance(history, list), "对话历史应该是列表"
-    print(f"[OK] 对话历史测试通过")
+    db = SessionLocal()
+    try:
+        count = db.query(ChatHistory).count()
+        assert isinstance(count, int), "查询结果应该是整数"
+        print(f"[OK] 对话历史测试通过，总计 {count} 条记录")
+    finally:
+        db.close()
 
 
 def test_reminders():

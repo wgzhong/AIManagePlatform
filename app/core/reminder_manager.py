@@ -6,6 +6,7 @@
 
 import uuid
 import json
+import logging
 import os
 import asyncio
 import threading
@@ -15,6 +16,8 @@ from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.cron import CronTrigger
 from typing import Dict, Any, Optional, List
 import queue
+
+logger = logging.getLogger(__name__)
 
 
 class ReminderManager:
@@ -37,7 +40,8 @@ class ReminderManager:
             try:
                 with open(self._data_path, 'r', encoding='utf-8') as f:
                     self.reminders = json.load(f)
-            except Exception:
+            except Exception as e:
+                logger.warning("加载提醒数据失败: %s", e)
                 self.reminders = {}
 
     def _save_reminders(self):
@@ -46,20 +50,20 @@ class ReminderManager:
             os.makedirs(os.path.dirname(self._data_path), exist_ok=True)
             with open(self._data_path, 'w', encoding='utf-8') as f:
                 json.dump(self.reminders, f, ensure_ascii=False, indent=2)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("保存提醒数据失败: %s", e)
 
     def start(self):
         """启动调度器"""
         if not self.scheduler.running:
             self.scheduler.start()
             self._restore_pending_reminders()
-            print(f"提醒管理器调度器已启动，当前待执行任务数: {len(self.scheduler.get_jobs())}")
+            logger.info("提醒管理器调度器已启动，当前待执行任务数: %d", len(self.scheduler.get_jobs()))
         if not self._running:
             self._running = True
             self._worker_thread = threading.Thread(target=self._notification_worker, daemon=True)
             self._worker_thread.start()
-            print("提醒管理器通知线程已启动")
+            logger.info("提醒管理器通知线程已启动")
 
     def stop(self):
         """停止调度器"""
@@ -79,7 +83,7 @@ class ReminderManager:
                 except queue.Empty:
                     continue
                 except Exception as e:
-                    print(f"通知线程错误: {e}")
+                    logger.warning("通知线程错误: %s", e)
                     continue
         finally:
             pass
@@ -96,7 +100,7 @@ class ReminderManager:
     def _schedule_reminder(self, reminder_id: str, trigger_time: datetime):
         """调度提醒任务"""
         def callback():
-            print(f"触发提醒: {reminder_id}, 当前时间: {datetime.now()}")
+            logger.info("触发提醒: %s, 当前时间: %s", reminder_id, datetime.now())
             self._trigger_reminder(reminder_id)
 
         self.scheduler.add_job(
@@ -105,7 +109,7 @@ class ReminderManager:
             id=f"reminder_{reminder_id}",
             replace_existing=True
         )
-        print(f"已调度提醒: {reminder_id}, 触发时间: {trigger_time}, 当前时间: {datetime.now()}")
+        logger.info("已调度提醒: %s, 触发时间: %s", reminder_id, trigger_time)
 
     def _trigger_reminder(self, reminder_id: str):
         """触发提醒"""
@@ -123,20 +127,20 @@ class ReminderManager:
                     'trigger_time': reminder['trigger_time'],
                     'created_at': reminder['created_at']
                 }
-                print(f"放入通知队列: {message}")
+                logger.info("放入通知队列: %s", message)
                 self._notification_queue.put(message)
 
     def _notify_all_subscribers(self, message: dict):
         """通知所有 SSE 订阅者（线程安全）"""
         with self._sse_lock:
-            print(f"通知订阅者，当前订阅者数: {len(self._sse_subscribers)}")
+            logger.debug("通知订阅者，当前订阅者数: %d", len(self._sse_subscribers))
             closed_queues = []
             for q in self._sse_subscribers:
                 try:
                     q.put_nowait(message)
-                    print("消息已发送到订阅者")
+                    logger.debug("消息已发送到订阅者")
                 except Exception as e:
-                    print(f"发送消息失败: {e}")
+                    logger.warning("发送消息到订阅者失败: %s", e)
                     closed_queues.append(q)
 
             for q in closed_queues:
@@ -148,7 +152,7 @@ class ReminderManager:
         q = queue.Queue()
         with self._sse_lock:
             self._sse_subscribers.append(q)
-            print(f"新订阅者加入，当前订阅者数: {len(self._sse_subscribers)}")
+            logger.debug("新订阅者加入，当前订阅者数: %d", len(self._sse_subscribers))
 
         try:
             loop = asyncio.get_event_loop()
@@ -163,7 +167,7 @@ class ReminderManager:
             with self._sse_lock:
                 if q in self._sse_subscribers:
                     self._sse_subscribers.remove(q)
-                    print(f"订阅者离开，当前订阅者数: {len(self._sse_subscribers)}")
+                    logger.debug("订阅者离开，当前订阅者数: %d", len(self._sse_subscribers))
 
     def set_reminder(self, message: str, trigger_time: datetime, repeat_type: str = 'once', 
                      repeat_interval: int = 0, repeat_count: int = 0) -> str:

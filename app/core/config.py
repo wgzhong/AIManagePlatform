@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     # LLM 配置
     zhipu_api_key: str = "your_api_key_1"
     zhipu_api_url: str = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
-    llm_default_model: str = "glm-5.1"
+    llm_default_model: str = "glm-4.6v"
     llm_verify_ssl: bool = True
     llm_debug: bool = False
     

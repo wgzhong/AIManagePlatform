@@ -18,6 +18,7 @@ class GetTimeSkill(BaseSkill):
     category = "工具"
     enabled = True
     auto_trigger = True
+    is_direct_tool = True  # 时间结果直接返回，不需要 LLM 二次总结
     trigger_keywords = ["时间", "几点", "日期", "提醒", "闹钟", "定时", "分钟后", "小时后", "叫我"]
 
     parameters = {

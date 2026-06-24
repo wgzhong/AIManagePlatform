@@ -40,8 +40,8 @@ class StatsManager:
             try:
                 with open(config.STATS_FILE, "r", encoding="utf-8") as f:
                     return json.load(f)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning("加载统计数据失败: %s", e)
         return {
             "daily_requests": 0,
             "total_requests": 0,

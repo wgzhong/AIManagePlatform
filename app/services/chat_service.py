@@ -4,7 +4,8 @@
 """
 
 import json
-import threading
+import logging
+import asyncio
 from typing import List, Optional, AsyncGenerator
 
 from app.core.config import config
@@ -15,19 +16,94 @@ from app.skills import ALL_SKILLS, get_skill_by_name, get_mood_system_prompt
 from app.prompts.mood import build_system_prompt
 from app.schemas.chat import ChatRequest
 
+logger = logging.getLogger(__name__)
+
 
 class ChatService:
     """聊天服务类"""
     
     def __init__(self):
-        self._devices_lock = threading.Lock()
+        self._devices_lock = asyncio.Lock()
+        self._last_response = ""
     
-    def _resolve_api_credentials(self, request: ChatRequest):
+    def _get_db(self):
+        """获取数据库会话"""
+        from app.models.database import SessionLocal
+        db = SessionLocal()
+        # 返回后由调用方负责关闭
+        return db
+    
+    def _save_chat_history(self, user_id: int, messages: list, model: str):
+        """保存聊天记录到数据库"""
+        if not user_id:
+            return
+        db = None
+        try:
+            from app.services.user_service import save_chat_history
+            
+            db = self._get_db()
+            for msg in messages[-2:]:
+                save_chat_history(db, user_id, msg.get("role"), msg.get("content"), model)
+        except Exception as e:
+            logger.warning("保存聊天记录失败: %s", e)
+        finally:
+            if db:
+                db.close()
+    
+    def _increment_user_request(self, user_id: int):
+        """增加用户请求计数"""
+        if not user_id:
+            return
+        db = None
+        try:
+            from app.services.stats_service import increment_user_request
+            
+            db = self._get_db()
+            increment_user_request(db, user_id)
+        except Exception as e:
+            logger.warning("更新用户请求统计失败: %s", e)
+        finally:
+            if db:
+                db.close()
+    
+    def _update_user_token_usage(self, user_id: int, output_tokens: int, input_tokens: int = 0):
+        """更新用户 Token 使用统计"""
+        if not user_id:
+            return
+        db = None
+        try:
+            from app.services.stats_service import update_user_token_usage
+            
+            db = self._get_db()
+            update_user_token_usage(db, user_id, output_tokens, input_tokens)
+        except Exception as e:
+            logger.warning("更新用户 Token 统计失败: %s", e)
+        finally:
+            if db:
+                db.close()
+    
+    def _increment_user_tool_call(self, user_id: int, tool_name: str):
+        """增加用户工具调用计数"""
+        if not user_id:
+            return
+        db = None
+        try:
+            from app.services.stats_service import increment_user_tool_call
+            
+            db = self._get_db()
+            increment_user_tool_call(db, user_id, tool_name)
+        except Exception as e:
+            logger.warning("更新用户工具调用统计失败: %s", e)
+        finally:
+            if db:
+                db.close()
+    
+    async def _resolve_api_credentials(self, request: ChatRequest):
         """解析 API 凭证"""
         api_url = request.api_url or config.DEFAULT_URL
         
         if request.device_code:
-            with self._devices_lock:
+            async with self._devices_lock:
                 devices = device_manager.get_all_devices()
                 
                 if request.device_code not in devices:
@@ -81,7 +157,7 @@ class ChatService:
     
     async def process_chat(self, request: ChatRequest) -> AsyncGenerator[str, None]:
         """处理聊天请求，返回流式响应"""
-        creds = self._resolve_api_credentials(request)
+        creds = await self._resolve_api_credentials(request)
         error_data, ok = creds[0], creds[1]
         
         if ok is None:
@@ -94,9 +170,11 @@ class ChatService:
         tools = self._get_tools()
         
         stats_manager.increment_request_count()
+        self._increment_user_request(request.user_id)
         
         final_usage = None
         tool_call_buffer = {}
+        self._last_response = ""
         
         try:
             async for text, tool_calls, usage in stream_chat_request(
@@ -113,6 +191,7 @@ class ChatService:
                     continue
                 
                 if text:
+                    self._last_response += text
                     yield f"data: {json.dumps({'content': text}, ensure_ascii=False)}\n\n"
                 
                 if tool_calls:
@@ -127,7 +206,6 @@ class ChatService:
                             tool_call_buffer[idx]["arguments"] += func["arguments"]
             
             if tool_call_buffer:
-                direct_tools = ["get_time"]
                 need_summary = False
                 
                 for call_info in tool_call_buffer.values():
@@ -143,13 +221,14 @@ class ChatService:
                     if skill:
                         skill_result = skill.run(args)
                         stats_manager.increment_tool_call(skill_name)
+                        self._increment_user_tool_call(request.user_id, skill_name)
                         
                         yield f"data: {json.dumps(
                             {'tool_result': {'name': skill_name, 'result': skill_result}},
                             ensure_ascii=False,
                         )}\n\n"
                         
-                        if skill_name not in direct_tools:
+                        if not skill.is_direct_tool:
                             need_summary = True
                             final_messages.append({
                                 "role": "tool",
@@ -172,11 +251,23 @@ class ChatService:
                             continue
                         
                         if text:
+                            self._last_response += text
                             yield f"data: {json.dumps({'content': text}, ensure_ascii=False)}\n\n"
             
             if final_usage:
                 stats_manager.update_token_usage(final_usage.get("completion_tokens", 0))
+                self._update_user_token_usage(
+                    request.user_id,
+                    final_usage.get("completion_tokens", 0),
+                    final_usage.get("prompt_tokens", 0)
+                )
                 yield f"data: {json.dumps({'usage': final_usage}, ensure_ascii=False)}\n\n"
+            
+            if request.user_id and self._last_response:
+                self._save_chat_history(request.user_id, [
+                    {"role": "user", "content": request.messages[-1].get("content", "")},
+                    {"role": "assistant", "content": self._last_response}
+                ], request.model)
             
             yield "data: [DONE]\n\n"
         

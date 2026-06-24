@@ -11,7 +11,7 @@ class ChatRequest(BaseModel):
     messages: List[dict]
     api_key: Optional[str] = None
     api_url: Optional[str] = None
-    model: str = "glm-5.1"
+    model: str = "glm-4.6v"
     max_tokens: int = 512
     temperature: float = 0.7
     top_p: float = 0.7
@@ -21,6 +21,7 @@ class ChatRequest(BaseModel):
     device_code: Optional[str] = None
     enabled_tools: Optional[List[str]] = None
     mood: Optional[str] = None
+    user_id: Optional[int] = None
 
 
 class ChatResponse(BaseModel):

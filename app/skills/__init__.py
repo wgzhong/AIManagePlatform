@@ -4,10 +4,13 @@
 同时支持传统 Python 技能类
 """
 
+import logging
 import os
 from typing import List, Dict, Optional
 
 from .base_skill import BaseSkill, MdSkill
+
+logger = logging.getLogger(__name__)
 
 
 ALL_SKILLS: List[BaseSkill] = []
@@ -29,8 +32,8 @@ def _load_skills_from_md():
                     skill = MdSkill(skill_md_path)
                     if skill.name and skill.name not in existing_names:
                         ALL_SKILLS.append(skill)
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning("加载 md 技能文件失败 %s: %s", skill_md_path, e)
 
 
 def _load_python_skills():

@@ -20,13 +20,36 @@
   --warn: #facc15;
   --success: #4ade80;
   --orange: #fb923c;
+  --card-shadow: 0 8px 32px rgba(0,0,0,0.18);
 }
 body {
   font-family: "Segoe UI", PingFang SC, Microsoft YaHei, system-ui, sans-serif;
   background: var(--bg-gradient);
   min-height: 100vh;
   color: var(--text-main);
-  padding-bottom: 120px;
+  padding-bottom: 80px;
+  position: relative;
+  overflow-x: hidden;
+}
+body::before {
+  content: '';
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: 
+    radial-gradient(ellipse at 20% 20%, rgba(114, 224, 224, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(255, 200, 221, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(118, 75, 162, 0.03) 0%, transparent 60%);
+  z-index: 0;
+  pointer-events: none;
+  animation: bgShift 20s ease-in-out infinite;
+}
+@keyframes bgShift {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(1%, -1%); }
+  66% { transform: translate(-1%, 1%); }
 }
 .top-nav {
   position: sticky;
@@ -61,9 +84,11 @@ body {
 }
 .nav-title h1 {
   font-size: 22px;
+  font-weight: 700;
   background: var(--primary-gradient);
   -webkit-background-clip: text;
   color: transparent;
+  letter-spacing: 1px;
 }
 .nav-tag {
   font-size: 11px;
@@ -97,12 +122,16 @@ body {
   font-size: 13px;
   cursor: pointer;
   outline: none;
-  transition: all 0.2s;
+  transition: all 0.25s;
   min-width: 160px;
+  font-weight: 500;
 }
 .model-select:focus {
   border-color: var(--accent-cyan);
-  box-shadow: 0 0 0 3px rgba(114, 224, 224, 0.12);
+  box-shadow: 0 0 0 3px rgba(114, 224, 224, 0.1);
+}
+.model-select:hover {
+  border-color: rgba(255,255,255,0.18);
 }
 .model-select-wrapper::after {
   content: '▼';
@@ -118,27 +147,31 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 14px;
+  padding: 8px 16px;
   border-radius: 20px;
-  background: rgba(74, 222, 128, 0.1);
+  background: rgba(74, 222, 128, 0.08);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s;
+  border: 1px solid transparent;
 }
 .status-indicator:hover {
-  background: rgba(74, 222, 128, 0.15);
+  background: rgba(74, 222, 128, 0.14);
+  border-color: rgba(74, 222, 128, 0.2);
 }
 .status-dot {
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   background: var(--success);
   animation: pulse 2s infinite;
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.5);
 }
-.status-dot.orange { background: var(--orange); }
-.status-dot.red { background: var(--danger); }
+.status-dot.orange { background: var(--orange); box-shadow: 0 0 8px rgba(251, 146, 60, 0.5); }
+.status-dot.red { background: var(--danger); box-shadow: 0 0 8px rgba(255, 107, 107, 0.5); }
 .status-text {
   font-size: 12px;
   color: var(--text-main);
+  font-weight: 500;
 }
 .status-tooltip {
   position: absolute;
@@ -163,12 +196,12 @@ body {
 .tooltip-label { color: var(--text-sub); font-size: 12px; }
 .tooltip-value { color: var(--text-main); font-size: 13px; font-weight: 600; }
 .btn {
-  padding: 8px 14px;
-  border-radius: 8px;
+  padding: 8px 16px;
+  border-radius: 10px;
   border: none;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s;
   font-size: 12px;
   display: flex;
   align-items: center;
@@ -177,47 +210,155 @@ body {
 .btn-secondary {
   background: rgba(255,255,255,0.08);
   color: var(--text-main);
+  border: 1px solid transparent;
 }
-.btn-secondary:hover { background: rgba(255,255,255,0.14); }
+.btn-secondary:hover { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.1); }
 .btn-primary {
   background: var(--primary-gradient);
   color: #0a0a1a;
 }
-.user-info {
+.profile-arrow {
+  font-size: 10px;
+  color: rgba(255,255,255,0.5);
+  margin-left: 4px;
+  transition: transform 0.2s;
+}
+.user-profile:hover .profile-arrow {
+  transform: rotate(180deg);
+}
+.user-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 280px;
+  background: #1a1a2e;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 8px 0;
+  display: none;
+  z-index: 1000;
+}
+.user-menu.show {
+  display: block;
+}
+.menu-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  gap: 12px;
+}
+.menu-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+}
+.menu-user-info {
+  flex: 1;
+}
+.menu-user-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+.menu-user-role {
+  font-size: 12px;
+  color: #00d4aa;
+}
+.menu-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.1);
+  margin: 8px 0;
+}
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+  gap: 10px;
+}
+.menu-item:hover {
+  background: rgba(255,255,255,0.06);
+}
+.menu-icon {
+  font-size: 16px;
+}
+.menu-arrow {
+  margin-left: auto;
+  color: rgba(255,255,255,0.4);
+  font-size: 12px;
+}
+.menu-value {
+  margin-right: auto;
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+}
+.menu-badge {
+  background: #ef4444;
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 16px;
+  text-align: center;
+}
+.user-profile {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 12px;
-  border-radius: 20px;
-  background: rgba(114, 224, 224, 0.08);
+  padding: 6px 10px 6px 6px;
+  border-radius: 24px;
+  background: rgba(114, 224, 224, 0.1);
   cursor: pointer;
   transition: all 0.2s;
+  min-width: 100px;
 }
-.user-info:hover {
-  background: rgba(114, 224, 224, 0.12);
+.user-profile:hover {
+  background: rgba(114, 224, 224, 0.18);
 }
-.user-avatar {
-  width: 28px;
-  height: 28px;
+.profile-avatar {
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: var(--primary-gradient);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: #0a0a1a;
+  flex-shrink: 0;
 }
-.user-name {
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.profile-name {
   font-size: 13px;
+  font-weight: 500;
   color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 80px;
 }
-.user-role {
+.profile-role {
   font-size: 11px;
   color: var(--accent-cyan);
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: rgba(114, 224, 224, 0.12);
+  background: rgba(114, 224, 224, 0.15);
+  padding: 1px 6px;
+  border-radius: 8px;
+  white-space: nowrap;
 }
 .key-input-wrapper {
   display: flex;
@@ -228,16 +369,18 @@ body {
   background: rgba(0,0,0,0.3);
   border: 1px solid var(--glass-border);
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 8px 14px;
   color: #fff;
   font-size: 13px;
   font-family: "Consolas", monospace;
   outline: none;
-  transition: all 0.2s;
+  transition: all 0.25s;
   min-width: 220px;
 }
+.key-input:hover { border-color: rgba(255,255,255,0.15); }
 .key-input:focus {
   border-color: var(--accent-cyan);
+  box-shadow: 0 0 0 3px rgba(114, 224, 224, 0.08);
 }
 .key-input.error { border-color: var(--danger); }
 .key-input.success { border-color: var(--success); }
@@ -245,16 +388,21 @@ body {
   background: rgba(0,0,0,0.3);
   border: 1px solid var(--glass-border);
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 8px 14px;
   color: #fff;
   font-size: 13px;
   outline: none;
   min-width: 300px;
+  transition: all 0.25s;
 }
+.key-url:hover { border-color: rgba(255,255,255,0.15); }
+.key-url:focus { border-color: var(--accent-cyan); }
 .wrapper {
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 24px;
+  position: relative;
+  z-index: 1;
 }
 .dashboard-section {
   margin-bottom: 32px;
@@ -262,12 +410,13 @@ body {
 .dashboard-title {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 12px;
+  margin-bottom: 24px;
 }
 .dashboard-title h2 {
   font-size: 18px;
   color: var(--text-main);
+  font-weight: 600;
 }
 .dashboard-grid {
   display: grid;
@@ -278,9 +427,16 @@ body {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: 16px;
-  padding: 20px;
+  padding: 24px;
   position: relative;
   overflow: hidden;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(12px);
+}
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.25);
+  border-color: rgba(255,255,255,0.18);
 }
 .stat-card::before {
   content: '';
@@ -290,6 +446,11 @@ body {
   right: 0;
   height: 3px;
   background: var(--primary-gradient);
+  border-radius: 3px 3px 0 0;
+  transition: height 0.3s;
+}
+.stat-card:hover::before {
+  height: 4px;
 }
 .stat-header {
   display: flex;
@@ -318,6 +479,7 @@ body {
   font-weight: 700;
   margin-bottom: 4px;
   color: var(--text-main);
+  letter-spacing: -0.5px;
 }
 .stat-label {
   font-size: 13px;
@@ -365,9 +527,9 @@ body {
   border: 1px solid var(--glass-border);
   border-radius: 24px;
   backdrop-filter: blur(24px);
-  padding: 32px;
+  padding: 36px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1.2);
   position: relative;
   overflow: hidden;
 }
@@ -380,29 +542,34 @@ body {
   height: 200%;
   background: var(--primary-gradient);
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.35s ease;
   z-index: 0;
 }
 .card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 20px 60px rgba(114, 224, 224, 0.15);
-  border-color: rgba(114, 224, 224, 0.3);
+  transform: translateY(-10px);
+  box-shadow: 0 24px 64px rgba(114, 224, 224, 0.12);
+  border-color: rgba(114, 224, 224, 0.25);
 }
 .card:hover::before {
-  opacity: 0.05;
+  opacity: 0.04;
 }
 .card-icon {
-  width: 72px;
-  height: 72px;
+  width: 68px;
+  height: 68px;
   margin-bottom: 20px;
   border-radius: 20px;
   background: rgba(114, 224, 224, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32px;
+  font-size: 30px;
   position: relative;
   z-index: 1;
+  transition: all 0.3s;
+}
+.card:hover .card-icon {
+  transform: scale(1.05);
+  box-shadow: 0 0 24px rgba(114, 224, 224, 0.15);
 }
 .card:nth-child(2) .card-icon { background: rgba(255, 200, 221, 0.1); }
 .card:nth-child(3) .card-icon { background: rgba(130, 210, 130, 0.1); }
@@ -477,17 +644,20 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 16px;
+  padding: 12px 20px;
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  border-radius: 12px;
+  border-radius: 14px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s;
   white-space: nowrap;
+  backdrop-filter: blur(8px);
 }
 .recent-item:hover {
   border-color: var(--accent-cyan);
-  background: rgba(114, 224, 224, 0.08);
+  background: rgba(114, 224, 224, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
 }
 .recent-icon {
   font-size: 16px;
@@ -496,124 +666,16 @@ body {
   font-size: 13px;
   color: var(--text-main);
 }
-.notification-panel {
-  position: fixed;
-  right: 24px;
-  top: 100px;
-  width: 320px;
-  z-index: 1000;
-}
-.notification-toggle {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 48px;
-  height: 48px;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.notification-toggle:hover {
-  background: rgba(114, 224, 224, 0.1);
-}
-.notification-badge {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 18px;
-  height: 18px;
-  background: var(--danger);
-  border-radius: 50%;
-  font-size: 11px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-}
-.notification-content {
-  position: absolute;
-  top: 56px;
-  right: 0;
-  width: 100%;
-  background: rgba(11, 8, 34, 0.95);
-  border: 1px solid var(--glass-border);
-  border-radius: 16px;
-  backdrop-filter: blur(24px);
-  padding: 16px;
-  display: none;
-}
-.notification-content.show {
-  display: block;
-}
-.notification-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--glass-border);
-}
-.notification-header h4 {
-  font-size: 14px;
-  color: var(--text-main);
-}
-.notification-clear {
-  font-size: 12px;
-  color: var(--text-sub);
-  cursor: pointer;
-}
-.notification-list {
-  max-height: 300px;
-  overflow-y: auto;
-}
-.notification-item {
-  padding: 12px;
-  border-radius: 10px;
-  margin-bottom: 10px;
-  background: rgba(0,0,0,0.2);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.notification-item:hover {
-  background: rgba(0,0,0,0.3);
-}
-.notification-item.warning {
-  border-left: 3px solid var(--orange);
-}
-.notification-item.error {
-  border-left: 3px solid var(--danger);
-}
-.notification-item.info {
-  border-left: 3px solid var(--accent-cyan);
-}
-.notification-title {
-  font-size: 13px;
-  color: var(--text-main);
-  margin-bottom: 4px;
-}
-.notification-desc {
-  font-size: 12px;
-  color: var(--text-sub);
-}
-.notification-time {
-  font-size: 10px;
-  color: #666;
-  margin-top: 6px;
-}
 .footer-section {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(11, 8, 34, 0.95);
+  background: rgba(11, 8, 34, 0.92);
   border-top: 1px solid var(--glass-border);
   backdrop-filter: blur(24px);
-  padding: 16px 24px;
+  padding: 12px 24px;
+  z-index: 99;
 }
 .footer-content {
   max-width: 1400px;
@@ -656,10 +718,13 @@ body {
   font-size: 12px;
   color: var(--text-sub);
   text-decoration: none;
-  transition: color 0.2s;
+  transition: all 0.2s;
+  padding: 4px 10px;
+  border-radius: 6px;
 }
 .footer-link:hover {
   color: var(--accent-cyan);
+  background: rgba(114, 224, 224, 0.06);
 }
 .footer-right {
   font-size: 11px;
@@ -794,7 +859,6 @@ body {
   .nav-content { flex-direction: column; align-items: stretch; }
   .nav-left, .nav-center, .nav-right { justify-content: center; }
   .key-input, .key-url { width: 100%; }
-  .notification-panel { display: none; }
 }
 </style>
 </head>
@@ -842,14 +906,47 @@ body {
       </div>
     </div>
     <div class="nav-right">
-      <button class="btn btn-secondary" onclick="exportConfig()">📥 导出配置</button>
-      <button class="btn btn-secondary" onclick="resetKey()">🔄 重置密钥</button>
-      <button class="btn btn-secondary" onclick="showLogs()">📋 系统日志</button>
-      <div class="user-info">
-        <div class="user-avatar">A</div>
-        <div>
-          <div class="user-name">管理员</div>
-          <div class="user-role">超级管理员</div>
+      <div class="user-profile" id="userProfile" onclick="toggleUserMenu()">
+        <div class="profile-avatar" id="userAvatar">A</div>
+        <div class="profile-info">
+          <div class="profile-name" id="userName">用户</div>
+          <div class="profile-role" id="userRole">普通用户</div>
+        </div>
+        <span class="profile-arrow">▼</span>
+      </div>
+      <div class="user-menu" id="userMenu">
+        <div class="menu-header">
+          <div class="menu-avatar" id="menuAvatar">A</div>
+          <div class="menu-user-info">
+            <div class="menu-user-name" id="menuUserName">用户</div>
+            <div class="menu-user-role" id="menuUserRole">普通用户</div>
+          </div>
+        </div>
+        <div class="menu-divider"></div>
+        <div class="menu-item" id="menuManageAccount" style="display: none;" onclick="showUserManager()">
+          <span class="menu-icon">👥</span>
+          <span>管理账号</span>
+          <span class="menu-arrow">→</span>
+        </div>
+        <div class="menu-item" id="menuNotifications">
+          <span class="menu-icon">🔔</span>
+          <span>消息</span>
+          <span class="menu-badge" id="notificationBadge">0</span>
+        </div>
+        <div class="menu-item" onclick="exportConfig()">
+          <span class="menu-icon">📥</span>
+          <span>导出配置</span>
+          <span class="menu-arrow">→</span>
+        </div>
+        <div class="menu-item" onclick="showLogs()">
+          <span class="menu-icon">📋</span>
+          <span>系统日志</span>
+          <span class="menu-arrow">→</span>
+        </div>
+        <div class="menu-divider"></div>
+        <div class="menu-item" onclick="logout()">
+          <span class="menu-icon">🚪</span>
+          <span>退出登录</span>
         </div>
       </div>
     </div>
@@ -886,10 +983,9 @@ body {
         </div>
         <div class="stat-value" id="onlineDevices">
           <span id="onlineCount">0</span>
-          <span style="font-size: 16px; color: var(--text-sub);">/</span>
-          <span style="font-size: 20px; color: var(--text-sub);" id="totalDevices">0</span>
+          <span style="font-size: 16px; color: var(--text-sub);"> 台</span>
         </div>
-        <div class="stat-label">在线设备 / 总注册</div>
+        <div class="stat-label">已注册设备</div>
         <div class="mini-chart" id="deviceChart">
           <div class="mini-bar" style="height: 30%"></div>
           <div class="mini-bar" style="height: 50%"></div>
@@ -924,7 +1020,7 @@ body {
         <div class="stat-value" id="toolCalls">0</div>
         <div class="stat-label">技能调用</div>
         <div style="font-size: 11px; color: var(--text-sub); margin-bottom: 12px;">
-          时间查询: <span id="toolTime">0</span> | 计算: <span id="toolCalc">0</span> | 天气: <span id="toolFile">0</span>
+          时间查询: <span id="toolTime">0</span> | 计算: <span id="toolCalc">0</span> | 天气: <span id="toolWeather">0</span>
         </div>
         <div class="mini-chart" id="toolChart">
           <div class="mini-bar" style="height: 20%"></div>
@@ -982,36 +1078,6 @@ body {
       <div class="recent-item" onclick="navigateTo('/devices')">
         <span class="recent-icon">📱</span>
         <span class="recent-text">设备管理</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="notification-panel">
-  <div class="notification-toggle" onclick="toggleNotifications()">
-    🔔
-    <span class="notification-badge" id="notificationBadge">3</span>
-  </div>
-  <div class="notification-content" id="notificationContent">
-    <div class="notification-header">
-      <h4>📢 通知中心</h4>
-      <span class="notification-clear" onclick="clearNotifications()">清空</span>
-    </div>
-    <div class="notification-list">
-      <div class="notification-item warning">
-        <div class="notification-title">API 额度预警</div>
-        <div class="notification-desc">本月 Token 用量已达 85%，请注意控制使用</div>
-        <div class="notification-time">5 分钟前</div>
-      </div>
-      <div class="notification-item error">
-        <div class="notification-title">设备离线告警</div>
-        <div class="notification-desc">ESP32-客厅设备已断开连接</div>
-        <div class="notification-time">10 分钟前</div>
-      </div>
-      <div class="notification-item info">
-        <div class="notification-title">系统更新</div>
-        <div class="notification-desc">技能系统版本已更新至 2025-06-18</div>
-        <div class="notification-time">1 小时前</div>
       </div>
     </div>
   </div>
@@ -1104,7 +1170,8 @@ const DEFAULT_MODELS = [
   { id: 'qwen3-turbo', name: 'Qwen3-Turbo' }
 ];
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+  await checkAuth();
   loadStoredConfig();
   loadStats();
   checkHealth();
@@ -1112,10 +1179,34 @@ document.addEventListener('DOMContentLoaded', function() {
   setInterval(checkHealth, 10000);
 });
 
+async function checkAuth() {
+  const token = localStorage.getItem('access_token');
+  if (!token) {
+    window.location.href = '/login';
+    return;
+  }
+  try {
+    const response = await fetch('/auth/me', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) {
+      throw new Error('未授权');
+    }
+    await loadUserInfo();
+  } catch (error) {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('user_id');
+    localStorage.removeItem('username');
+    localStorage.removeItem('email');
+    localStorage.removeItem('is_superuser');
+    window.location.href = '/login';
+  }
+}
+
 function loadStoredConfig() {
   const storedKey = localStorage.getItem(API_KEY_STORAGE) || '';
   const storedUrl = localStorage.getItem(API_URL_STORAGE) || DEFAULT_API_URL;
-  const storedModel = localStorage.getItem(MODEL_STORAGE) || 'glm-5.1';
+  const storedModel = localStorage.getItem(MODEL_STORAGE) || 'glm-4.6v';
   
   document.getElementById('apiKeyInput').value = storedKey;
   document.getElementById('apiUrlInput').value = storedUrl;
@@ -1205,6 +1296,7 @@ function addCustomModel() {
   const customModels = getCustomModels();
   customModels.push({ id: modelId, name: modelName });
   saveCustomModels(customModels);
+  saveConfigToBackend({ custom_models: JSON.stringify(customModels) });
   
   const modelSelect = document.getElementById('modelSelect');
   const option = document.createElement('option');
@@ -1223,6 +1315,7 @@ function deleteModel(modelId) {
   
   const customModels = getCustomModels().filter(m => m.id !== modelId);
   saveCustomModels(customModels);
+  saveConfigToBackend({ custom_models: JSON.stringify(customModels) });
   
   const modelSelect = document.getElementById('modelSelect');
   for (let i = modelSelect.options.length - 1; i >= 0; i--) {
@@ -1238,15 +1331,18 @@ function deleteModel(modelId) {
 function setAsDefault(modelId) {
   localStorage.setItem(MODEL_STORAGE, modelId);
   document.getElementById('modelSelect').value = modelId;
+  saveConfigToBackend({ default_model: modelId });
   closeModelManager();
 }
 
 function validateKey() {
   const input = document.getElementById('apiKeyInput');
-  if (input.value.trim()) {
+  const value = input.value.trim();
+  if (value) {
     input.classList.remove('error');
     input.classList.add('success');
-    localStorage.setItem(API_KEY_STORAGE, input.value.trim());
+    localStorage.setItem(API_KEY_STORAGE, value);
+    saveConfigToBackend({ api_key: value });
   } else {
     input.classList.remove('error', 'success');
   }
@@ -1254,29 +1350,60 @@ function validateKey() {
 
 function validateUrl() {
   const input = document.getElementById('apiUrlInput');
-  if (input.value.trim()) {
-    localStorage.setItem(API_URL_STORAGE, input.value.trim());
+  const value = input.value.trim();
+  if (value) {
+    localStorage.setItem(API_URL_STORAGE, value);
+    saveConfigToBackend({ api_url: value });
   }
 }
 
 function saveModel() {
   const model = document.getElementById('modelSelect').value;
   localStorage.setItem(MODEL_STORAGE, model);
+  saveConfigToBackend({ default_model: model });
 }
 
-function navigateTo(path) {
+async function saveConfigToBackend(configData) {
+  const token = localStorage.getItem('access_token');
+  if (!token) return;
+  try {
+    const params = new URLSearchParams();
+    Object.entries(configData).forEach(([k, v]) => {
+      if (v !== undefined && v !== null) params.append(k, v);
+    });
+    await fetch('/auth/config', {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString()
+    });
+  } catch (e) {
+    console.error('保存配置失败:', e);
+  }
+}
+
+async function navigateTo(path) {
   const apiKey = document.getElementById('apiKeyInput').value.trim();
-  if (!apiKey) {
+  if (!apiKey && path !== '/chat') {
     document.getElementById('apiKeyInput').classList.add('error');
     document.getElementById('apiKeyInput').focus();
     return;
   }
   
+  // 保存配置到后端和 localStorage
+  const model = document.getElementById('modelSelect').value;
+  const url = document.getElementById('apiUrlInput').value.trim() || DEFAULT_API_URL;
+  
+  if (apiKey) {
+    localStorage.setItem(API_KEY_STORAGE, apiKey);
+  }
+  // 等待配置保存完成后再跳转，否则 fetch 会被中断
+  await saveConfigToBackend({ api_key: apiKey || '', api_url: url, default_model: model });
+  
   const chatConfig = {
     mode: 'custom',
-    url: document.getElementById('apiUrlInput').value.trim() || DEFAULT_API_URL,
+    url: url,
     key: apiKey,
-    model: document.getElementById('modelSelect').value,
+    model: model,
     timestamp: Date.now()
   };
   localStorage.setItem('ai_chat_config', JSON.stringify(chatConfig));
@@ -1285,37 +1412,31 @@ function navigateTo(path) {
 }
 
 async function loadStats() {
+  const token = localStorage.getItem('access_token');
   try {
-    const res = await fetch('/api/stats');
+    const res = await fetch('/auth/stats', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
     const data = await res.json();
     
-    document.getElementById('dailyRequests').textContent = data.daily_requests;
-    document.getElementById('onlineCount').textContent = data.online_devices;
-    document.getElementById('totalDevices').textContent = data.total_devices;
-    document.getElementById('todayTokens').textContent = data.today_output_tokens;
-    document.getElementById('outputTokens').textContent = data.today_output_tokens;
-    document.getElementById('monthlyTokens').textContent = data.total_output_tokens;
-    document.getElementById('toolCalls').textContent = data.tool_calls.total;
-    document.getElementById('toolTime').textContent = data.tool_calls.get_time || 0;
-    document.getElementById('toolCalc').textContent = data.tool_calls.calculate || 0;
-    document.getElementById('toolFile').textContent = data.tool_calls.read_file || 0;
-    document.getElementById('uptime').textContent = data.uptime;
+    document.getElementById('dailyRequests').textContent = data.daily_requests || 0;
+    document.getElementById('todayTokens').textContent = data.today_output_tokens || 0;
+    document.getElementById('outputTokens').textContent = data.today_output_tokens || 0;
+    document.getElementById('monthlyTokens').textContent = data.total_output_tokens || 0;
+    document.getElementById('toolCalls').textContent = (data.tool_calls?.total) || 0;
+    document.getElementById('toolTime').textContent = (data.tool_calls?.get_time) || 0;
+    document.getElementById('toolCalc').textContent = (data.tool_calls?.calculate) || 0;
+    document.getElementById('toolWeather').textContent = (data.tool_calls?.get_weather) || 0;
     
-    const trend = document.getElementById('reqTrend');
-    if (data.growth_rate > 0) {
-      trend.textContent = '+' + data.growth_rate + '%';
-      trend.className = 'stat-trend up';
-    } else if (data.growth_rate < 0) {
-      trend.textContent = data.growth_rate + '%';
-      trend.className = 'stat-trend down';
-    }
+    // 设备统计
+    document.getElementById('onlineCount').textContent = data.total_devices || 0;
     
-    const totalTokens = data.total_input_tokens + data.total_output_tokens;
+    const totalTokens = (data.total_input_tokens || 0) + (data.total_output_tokens || 0);
     const maxMonthly = 1000000;
     const progress = Math.min((totalTokens / maxMonthly) * 100, 100);
     document.getElementById('tokenProgress').style.width = progress + '%';
     
-    updateMiniChart(data.daily_records);
+    updateMiniChart(data.daily_records || []);
     
   } catch (err) {
     console.error('加载统计数据失败:', err);
@@ -1374,15 +1495,6 @@ async function checkHealth() {
 
 function toggleStatusTooltip() {
   document.getElementById('statusTooltip').classList.toggle('show');
-}
-
-function toggleNotifications() {
-  document.getElementById('notificationContent').classList.toggle('show');
-}
-
-function clearNotifications() {
-  document.getElementById('notificationBadge').textContent = '0';
-  document.querySelector('.notification-list').innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-sub);font-size:13px;">暂无通知</div>';
 }
 
 function exportConfig() {
@@ -1530,6 +1642,343 @@ void sendChat(String deviceCode, String message) {
 function closeModal() {
   document.getElementById('modalOverlay').classList.remove('show');
 }
+
+function toggleUserMenu() {
+  const menu = document.getElementById('userMenu');
+  menu.classList.toggle('show');
+}
+
+document.addEventListener('click', function(event) {
+  const menu = document.getElementById('userMenu');
+  const profile = document.getElementById('userProfile');
+  if (menu && !menu.contains(event.target) && !profile.contains(event.target)) {
+    menu.classList.remove('show');
+  }
+});
+
+async function logout() {
+  if (!confirm('确定要登出吗？')) return;
+  try {
+    await fetch('/auth/logout', { method: 'POST' });
+  } catch (error) {
+    console.error('登出失败:', error);
+  }
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('user_id');
+  localStorage.removeItem('username');
+  localStorage.removeItem('email');
+  localStorage.removeItem('is_superuser');
+  window.location.href = '/login';
+}
+
+async function loadUserInfo() {
+  const token = localStorage.getItem('access_token');
+  if (!token) return;
+  
+  try {
+    const response = await fetch('/auth/me', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (response.ok) {
+      const user = await response.json();
+      const userName = user.username;
+      const userRole = user.is_superuser ? '超级管理员' : '普通用户';
+      document.getElementById('userName').textContent = userName;
+      document.getElementById('userAvatar').textContent = userName.charAt(0).toUpperCase();
+      document.getElementById('userRole').textContent = userRole;
+      document.getElementById('menuUserName').textContent = userName;
+      document.getElementById('menuAvatar').textContent = userName.charAt(0).toUpperCase();
+      document.getElementById('menuUserRole').textContent = userRole;
+      localStorage.setItem('is_superuser', user.is_superuser);
+      
+      // 超级管理员显示管理账号入口
+      if (user.is_superuser) {
+        document.getElementById('menuManageAccount').style.display = 'flex';
+      }
+    }
+  } catch (error) {
+    console.error('加载用户信息失败:', error);
+  }
+}
+
+let usersList = [];
+let usersConfigMap = {};
+
+function showUserManager() {
+  document.getElementById('userModalOverlay').classList.add('show');
+  loadUsers();
+  loadAllUserConfigs();
+}
+
+async function loadAllUserConfigs() {
+  const token = localStorage.getItem('access_token');
+  try {
+    const response = await fetch('/auth/admin/user-configs', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (response.ok) {
+      const configs = await response.json();
+      configs.forEach(c => {
+        usersConfigMap[c.user_id] = c;
+      });
+      renderUserList();
+    }
+  } catch (e) {
+    console.error('加载用户配置失败:', e);
+  }
+}
+
+function closeUserManager() {
+  document.getElementById('userModalOverlay').classList.remove('show');
+}
+
+function viewUserConfig(userId) {
+  const config = usersConfigMap[userId];
+  if (!config) {
+    alert('该用户暂无配置');
+    return;
+  }
+  const user = usersList.find(u => u.id === userId);
+  const customModelsStr = Array.isArray(config.custom_models) 
+    ? config.custom_models.map(m => `${m.name} (${m.id})`).join(', ') 
+    : '无';
+  
+  document.getElementById('modalTitle').textContent = `📋 ${user?.username || '用户'} 的配置`;
+  document.getElementById('modalBody').innerHTML = `
+    <div class="tooltip-row"><span class="tooltip-label">默认模型</span><span class="tooltip-value">${config.default_model || '-'}</span></div>
+    <div class="tooltip-row"><span class="tooltip-label">心情</span><span class="tooltip-value">${config.mood || '-'}</span></div>
+    <div class="tooltip-row"><span class="tooltip-label">API URL</span><span class="tooltip-value" style="font-size:11px;">${config.api_url || '-'}</span></div>
+    <div class="tooltip-row"><span class="tooltip-label">API Key</span><span class="tooltip-value" style="font-size:11px;">${config.api_key ? '***' + config.api_key.slice(-4) : '-'}</span></div>
+    <div class="tooltip-row"><span class="tooltip-label">自定义模型</span><span class="tooltip-value" style="font-size:11px;">${customModelsStr}</span></div>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+  document.getElementById('userModalOverlay').classList.remove('show');
+}
+
+async function loadUsers() {
+  const token = localStorage.getItem('access_token');
+  try {
+    const response = await fetch('/auth/users', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (response.ok) {
+      usersList = await response.json();
+      renderUserList();
+    }
+  } catch (error) {
+    console.error('加载用户列表失败:', error);
+  }
+}
+
+function renderUserList() {
+  const tbody = document.getElementById('usersTableBody');
+  tbody.innerHTML = '';
+  
+  usersList.forEach(user => {
+    const userConfig = usersConfigMap[user.id] || {};
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${user.id}</td>
+      <td>${user.username}</td>
+      <td>${user.email}</td>
+      <td>${user.is_active ? '✅' : '❌'}</td>
+      <td>${user.is_superuser ? '超级管理员' : '普通用户'}</td>
+      <td>${userConfig.default_model || '-'}</td>
+      <td>${user.created_at ? new Date(user.created_at).toLocaleString('zh-CN') : '-'}</td>
+      <td>
+        <button onclick="editUser(${user.id})" class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px;">编辑</button>
+        <button onclick="viewUserConfig(${user.id})" class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px; background: rgba(114,224,224,0.2); color: var(--accent-cyan);">配置</button>
+        <button onclick="deleteUserConfirm(${user.id}, '${user.username}')" class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px; background: rgba(255,107,107,0.2); color: #ff6b6b;">删除</button>
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+async function deleteUserConfirm(userId, username) {
+  if (!confirm(`确定要删除用户 "${username}" 吗？此操作不可撤销。`)) return;
+  
+  const token = localStorage.getItem('access_token');
+  try {
+    const response = await fetch(`/auth/users/${userId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (response.ok) {
+      alert('用户删除成功');
+      loadUsers();
+    } else {
+      const data = await response.json();
+      alert(data.detail || '删除失败');
+    }
+  } catch (error) {
+    console.error('删除用户失败:', error);
+    alert('删除失败');
+  }
+}
+
+function editUser(userId) {
+  const user = usersList.find(u => u.id === userId);
+  if (!user) return;
+  
+  document.getElementById('editUserId').value = user.id;
+  document.getElementById('editUsername').value = user.username;
+  document.getElementById('editEmail').value = user.email;
+  document.getElementById('editIsActive').checked = user.is_active;
+  document.getElementById('editIsSuperuser').checked = user.is_superuser;
+  
+  document.getElementById('userModalOverlay').classList.remove('show');
+  document.getElementById('editUserModalOverlay').classList.add('show');
+}
+
+async function saveUserEdit() {
+  const userId = document.getElementById('editUserId').value;
+  const username = document.getElementById('editUsername').value;
+  const email = document.getElementById('editEmail').value;
+  const isActive = document.getElementById('editIsActive').checked;
+  const isSuperuser = document.getElementById('editIsSuperuser').checked;
+  
+  const token = localStorage.getItem('access_token');
+  try {
+    const response = await fetch(`/auth/users/${userId}`, {
+      method: 'PUT',
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({
+        username,
+        email,
+        is_active: isActive,
+        is_superuser: isSuperuser
+      })
+    });
+    if (response.ok) {
+      alert('用户信息更新成功');
+      document.getElementById('editUserModalOverlay').classList.remove('show');
+      showUserManager();
+    } else {
+      const data = await response.json();
+      alert(data.detail || '更新失败');
+    }
+  } catch (error) {
+    console.error('更新用户失败:', error);
+    alert('更新失败');
+  }
+}
+
+function closeEditUserModal() {
+  document.getElementById('editUserModalOverlay').classList.remove('show');
+}
 </script>
+
+<div id="userModalOverlay" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>👥 用户管理</h2>
+      <button class="modal-close" onclick="closeUserManager()">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="overflow-x: auto;">
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>用户名</th>
+              <th>邮箱</th>
+              <th>状态</th>
+              <th>角色</th>
+              <th>模型</th>
+              <th>创建时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeUserManager()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<div id="editUserModalOverlay" class="modal-overlay">
+  <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-header">
+      <h2>✏️ 编辑用户</h2>
+      <button class="modal-close" onclick="closeEditUserModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editUserId">
+      <div class="form-group">
+        <label>用户名</label>
+        <input type="text" id="editUsername" class="form-input" required>
+      </div>
+      <div class="form-group">
+        <label>邮箱</label>
+        <input type="email" id="editEmail" class="form-input" required>
+      </div>
+      <div class="form-group">
+        <label style="display: flex; align-items: center; gap: 8px;">
+          <input type="checkbox" id="editIsActive"> 启用用户
+        </label>
+      </div>
+      <div class="form-group">
+        <label style="display: flex; align-items: center; gap: 8px;">
+          <input type="checkbox" id="editIsSuperuser"> 超级管理员
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeEditUserModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveUserEdit()">保存</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.users-table th, .users-table td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--glass-border);
+}
+.users-table th {
+  background: rgba(0,0,0,0.2);
+  font-weight: 600;
+  color: var(--text-sub);
+}
+.users-table tr:hover {
+  background: rgba(0,0,0,0.1);
+}
+.form-group {
+  margin-bottom: 16px;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-sub);
+  font-size: 13px;
+}
+.form-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  background: rgba(0,0,0,0.2);
+  color: var(--text-main);
+  font-size: 14px;
+  outline: none;
+}
+.form-input:focus {
+  border-color: var(--accent-cyan);
+}
+</style>
 </body>
 </html>

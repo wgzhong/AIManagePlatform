@@ -30,6 +30,11 @@ logger = logging.getLogger("APP")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """FastAPI Lifespan 事件处理器：启动预热各管理器，关闭时优雅清理"""
+    logger.info("正在初始化数据库...")
+    from app.models.database import init_db
+    init_db()
+    logger.info("数据库初始化完成")
+
     logger.info("正在预热LLM连接...")
     warmup_key = config.API_KEYS[0] if config.API_KEYS else None
     await llm_infer.warmup(config.DEFAULT_URL, warmup_key)
@@ -100,7 +105,9 @@ AI 推理对话平台 API 文档
     from app.api.history import router as history_router
     from app.api.mood import router as mood_router
     from app.api.pages import router as pages_router
+    from app.api.auth import router as auth_router
 
+    app.include_router(auth_router)
     app.include_router(chat_router)
     app.include_router(devices_router)
     app.include_router(skills_router)

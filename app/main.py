@@ -5,15 +5,13 @@ AI Manage Platform - 应用入口
 """
 
 import logging
-import os
 import sys
-import threading
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from app.core.config import config, settings
+from app.core.config import settings, assert_production_config
 from app.core.logging import setup_logging
 from app.core.exception import register_exception_handlers
 from app.core.reminder_manager import reminder_manager
@@ -26,6 +24,9 @@ from slowapi.errors import RateLimitExceeded
 setup_logging(log_level=settings.llm_debug and "DEBUG" or "INFO")
 logger = logging.getLogger("APP")
 
+# 启动自检：检查生产环境关键配置是否齐备（详见 P0-1 修复）
+assert_production_config()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -36,8 +37,8 @@ async def lifespan(app: FastAPI):
     logger.info("数据库初始化完成")
 
     logger.info("正在预热LLM连接...")
-    warmup_key = config.API_KEYS[0] if config.API_KEYS else None
-    await llm_infer.warmup(config.DEFAULT_URL, warmup_key)
+    warmup_key = settings.api_keys[0] if settings.api_keys else None
+    await llm_infer.warmup(settings.zhipu_api_url, warmup_key)
 
     logger.info("正在启动提醒管理器...")
     reminder_manager.start()
@@ -59,6 +60,25 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     """创建并配置 FastAPI 应用实例"""
+    # 解析 CORS 配置：留空表示允许全部源
+    raw_origins = settings.cors_origins.strip()
+    if raw_origins:
+        app_cors_origins = [o.strip() for o in raw_origins.split(",") if o.strip()]
+    else:
+        app_cors_origins = ["*"]
+
+    # 浏览器规范禁止 allow_origins=["*"] 与 allow_credentials=True 同时存在，
+    # 通配源时强制关闭 credentials。
+    if "*" in app_cors_origins:
+        if settings.cors_credentials:
+            logger.warning(
+                "CORS allow_origins 为通配 '*'，强制关闭 allow_credentials 以符合浏览器规范。"
+                "生产环境请通过 CORS_ORIGINS 配置具体域名。"
+            )
+        app_cors_credentials = False
+    else:
+        app_cors_credentials = settings.cors_credentials
+
     app = FastAPI(
         title="AI Manage Platform",
         description="""
@@ -85,8 +105,8 @@ AI 推理对话平台 API 文档
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
+        allow_origins=app_cors_origins,
+        allow_credentials=app_cors_credentials,
         allow_methods=["*"],
         allow_headers=["*"],
     )
@@ -106,8 +126,14 @@ AI 推理对话平台 API 文档
     from app.api.mood import router as mood_router
     from app.api.pages import router as pages_router
     from app.api.auth import router as auth_router
+    from app.api.user_config import router as user_config_router
+    from app.api.user_history import router as user_history_router
+    from app.api.admin_users import router as admin_users_router
 
     app.include_router(auth_router)
+    app.include_router(user_config_router)
+    app.include_router(user_history_router)
+    app.include_router(admin_users_router)
     app.include_router(chat_router)
     app.include_router(devices_router)
     app.include_router(skills_router)
@@ -132,10 +158,20 @@ def main():
     server_ref = {"instance": None}
 
     def signal_handler(signum, frame):
-        logger.info("收到信号 %s，正在优雅关闭...", signum)
+        signal_name = "SIGINT(Ctrl+C)" if signum == signal.SIGINT else f"SIGTERM({signum})"
+        logger.info("")
+        logger.info("=" * 50)
+        logger.info("收到信号 %s，正在安全退出...", signal_name)
+        logger.info("=" * 50)
+        logger.info("  正在关闭连接池...")
+        logger.info("  正在保存统计数据...")
+        logger.info("  正在释放资源...")
+        logger.info("=" * 50)
         if server_ref["instance"]:
             server_ref["instance"].should_exit = True
         else:
+            logger.info("  服务已安全退出！")
+            logger.info("=" * 50)
             sys.exit(0)
 
     signal.signal(signal.SIGINT, signal_handler)
@@ -143,16 +179,20 @@ def main():
 
     if sys.platform == "win32":
         import ctypes
-        
-        def handler(dwCtrlType, func):
-            if dwCtrlType in [0, 2]:
+        # Windows 上 Ctrl+C 不会发送 SIGINT，需要用 SetConsoleCtrlHandler 捕获
+        WIN_CTRL_C_EVENT = 0
+        WIN_CTRL_CLOSE_EVENT = 2
+
+        def win_handler(dwCtrlType, func):
+            if dwCtrlType in (WIN_CTRL_C_EVENT, WIN_CTRL_CLOSE_EVENT):
                 signal_handler(signal.SIGINT, None)
                 return 1
             return 0
-        
-        ctypes.windll.kernel32.SetConsoleCtrlHandler(ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_int, ctypes.c_int)(handler), 1)
 
-    config_obj = uvicorn.Config(app, host="0.0.0.0", port=config.APP_PORT, log_level="info")
+        handler_type = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_int, ctypes.c_int)
+        ctypes.windll.kernel32.SetConsoleCtrlHandler(handler_type(win_handler), 1)
+
+    config_obj = uvicorn.Config(app, host="0.0.0.0", port=settings.app_port, log_level="info")
     server = uvicorn.Server(config_obj)
     server_ref["instance"] = server
     server.run()

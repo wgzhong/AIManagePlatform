@@ -13,7 +13,13 @@ class GetTimeSkill(BaseSkill):
     """时间工具技能"""
 
     name = "get_time"
-    description = "获取当前时间、日期，设置定时提醒和闹钟。当用户说'N分钟后叫我'、'半小时后提醒我'、'设置闹钟'等时，应使用set_reminder动作"
+    description = (
+        "【强制调用】获取当前真实时间/日期/星期。"
+        "你没有内置时钟，不知道现在几点、今天几号。"
+        "当用户问「几点了」「什么时间」「今天几号」「星期几」「现在什么时候」时，"
+        "必须立即调用此工具（action=get_time），禁止猜测或编造时间！"
+        "也支持设置提醒（action=set_reminder）和查看/取消已有提醒。"
+    )
     icon = "⏰"
     category = "工具"
     enabled = True

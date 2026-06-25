@@ -1,8 +1,9 @@
+import os
 import time
 import sys
-sys.path.insert(0, '.')
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from core.reminder_manager import reminder_manager
+from app.core.reminder_manager import reminder_manager
 
 print("启动提醒管理器...")
 reminder_manager.start()

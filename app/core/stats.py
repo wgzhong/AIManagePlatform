@@ -14,7 +14,7 @@ import logging
 from datetime import datetime
 from typing import Dict, Any
 
-from .config import config
+from .config import settings
 
 logger = logging.getLogger("STATS")
 
@@ -36,9 +36,9 @@ class StatsManager:
     # ---------- 内部：磁盘读写 ----------
     def _load_from_disk(self) -> Dict[str, Any]:
         """从文件加载统计数据"""
-        if os.path.exists(config.STATS_FILE):
+        if os.path.exists(settings.stats_file):
             try:
-                with open(config.STATS_FILE, "r", encoding="utf-8") as f:
+                with open(settings.stats_file, "r", encoding="utf-8") as f:
                     return json.load(f)
             except Exception as e:
                 logger.warning("加载统计数据失败: %s", e)
@@ -59,10 +59,10 @@ class StatsManager:
         with self._lock:
             snapshot = json.loads(json.dumps(self._stats, ensure_ascii=False))
         try:
-            with open(config.STATS_FILE, "w", encoding="utf-8") as f:
+            with open(settings.stats_file, "w", encoding="utf-8") as f:
                 json.dump(snapshot, f, ensure_ascii=False, indent=2)
         except Exception as e:
-            logger.warning(f"统计落盘失败: {e}")
+            logger.warning("统计落盘失败: %s", e)
 
     def _rollover_if_new_day(self, stats: Dict[str, Any]) -> None:
         """跨天时重置每日计数（调用方需持锁）"""

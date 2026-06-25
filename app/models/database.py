@@ -78,8 +78,34 @@ class UserStats(Base):
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
 
-# 数据库连接
-SQLALCHEMY_DATABASE_URL = "sqlite:///./data/app.db"
+class UserSkill(Base):
+    """用户私人技能表（贡献开关控制存数据库还是 skills/ 文件夹）"""
+    __tablename__ = "user_skills"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    name = Column(String(100), nullable=False, index=True)
+    description = Column(Text, default="")
+    category = Column(String(50), default="自定义")
+    icon = Column(String(20), default="🔧")
+    enabled = Column(Boolean, default=True)
+    auto_trigger = Column(Boolean, default=False)
+    trigger_keywords = Column(JSON, default=[])
+    system_prompt = Column(Text, default="")
+    is_contributed = Column(Boolean, default=False)
+    contributed_skill_path = Column(String(255), default="")
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+    user = relationship("User")
+
+
+
+# 数据库连接（使用绝对路径，避免因启动目录不同而创建空库）
+import os as _os
+_data_dir = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))), "data")
+_os.makedirs(_data_dir, exist_ok=True)
+SQLALCHEMY_DATABASE_URL = f"sqlite:///{_data_dir}/app.db"
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}

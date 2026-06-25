@@ -15,6 +15,11 @@ from app.core.stats import StatsManager, stats_manager as _stats_manager
 from app.core.devices import DeviceManager, device_manager as _device_manager
 from app.core.api_keys import APIKeyManager, api_key_manager as _api_key_manager
 from app.core.reminder_manager import ReminderManager, reminder_manager as _reminder_manager
+from app.services.chat_service import ChatService
+from app.services.device_service import DeviceService
+from app.services.skill_service import SkillService
+from app.services.reminder_service import ReminderService
+from app.services.api_key_service import ApiKeyService
 
 
 # ── LLM 推理客户端 ──
@@ -54,14 +59,6 @@ def get_reminder_manager() -> ReminderManager:
 
 # ── 服务层工厂（每次请求新建实例） ──
 
-from app.services.chat_service import ChatService
-from app.services.device_service import DeviceService
-from app.services.skill_service import SkillService
-from app.services.reminder_service import ReminderService
-from app.services.api_key_service import ApiKeyService
-from app.services.stats_service import StatsService
-
-
 def get_chat_service() -> ChatService:
     """获取聊天服务实例"""
     return ChatService()
@@ -85,8 +82,3 @@ def get_reminder_service() -> ReminderService:
 def get_api_key_service() -> ApiKeyService:
     """获取 API Key 服务实例"""
     return ApiKeyService()
-
-
-def get_stats_service() -> StatsService:
-    """获取统计服务实例"""
-    return StatsService()

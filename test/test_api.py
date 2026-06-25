@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 def test_api_keys():
     """测试 API Key 管理"""
     print("=== API Key 管理测试 ===")
-    from core.api_keys import api_key_manager
+    from app.core.api_keys import api_key_manager
 
     new_key = api_key_manager.generate_key()
     api_key_manager.add_key(new_key)
@@ -28,7 +28,7 @@ def test_api_keys():
 def test_devices():
     """测试设备管理"""
     print("=== 设备管理测试 ===")
-    from core.devices import device_manager
+    from app.core.devices import device_manager
 
     devices = device_manager.get_all_devices()
     assert isinstance(devices, dict), "设备列表应该是字典"
@@ -38,7 +38,7 @@ def test_devices():
 def test_stats():
     """测试统计数据"""
     print("=== 统计数据测试 ===")
-    from core.stats import stats_manager
+    from app.core.stats import stats_manager
 
     stats = stats_manager.load_stats()
     assert isinstance(stats, dict), "统计数据应该是字典"
@@ -50,7 +50,7 @@ def test_stats():
 def test_chat_history():
     """测试对话历史（使用 SQLite ORM）"""
     print("=== 对话历史测试 ===")
-    from models.database import SessionLocal, ChatHistory
+    from app.models.database import SessionLocal, ChatHistory
 
     db = SessionLocal()
     try:
@@ -64,7 +64,7 @@ def test_chat_history():
 def test_reminders():
     """测试提醒管理"""
     print("=== 提醒管理测试 ===")
-    from core.reminder_manager import reminder_manager
+    from app.core.reminder_manager import reminder_manager
 
     message = "测试提醒"
     reminder_id = reminder_manager.set_reminder_in_minutes(message, 1)

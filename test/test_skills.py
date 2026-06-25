@@ -6,7 +6,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from skills import get_all_tool_definitions, get_skill_by_name, get_all_skill_configs, get_mood_system_prompt
+from app.skills import get_all_tool_definitions, get_skill_by_name, get_all_skill_configs, get_mood_system_prompt
 
 
 def test_all_skills_loaded():

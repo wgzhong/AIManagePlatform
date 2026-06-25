@@ -3,44 +3,111 @@
 提供用户注册、登录、获取信息等功能
 """
 
+import secrets as _secrets
 from datetime import datetime, timedelta
 from typing import Optional
+import bcrypt as _bcrypt
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
 from app.models.database import User, UserConfig, ChatHistory
 from app.core.config import settings
 
-# JWT配置
-SECRET_KEY = settings.admin_token or "your-secret-key-keep-it-safe"
+# JWT 签名密钥解析优先级：
+#   1. 显式配置的 JWT_SECRET_KEY（生产推荐）
+#   2. 回退到 ADMIN_TOKEN（单机部署方便）
+#   3. 都为空：启动随机生成并告警（重启后旧 token 全部失效，仅用于开发）
+if settings.jwt_secret_key:
+    SECRET_KEY = settings.jwt_secret_key
+elif settings.admin_token:
+    SECRET_KEY = settings.admin_token
+    import logging as _logging
+    _logging.getLogger(__name__).warning(
+        "未设置 JWT_SECRET_KEY，已回退使用 ADMIN_TOKEN 签名 JWT。"
+        "生产环境请单独配置 JWT_SECRET_KEY 环境变量。"
+    )
+else:
+    SECRET_KEY = _secrets.token_urlsafe(48)
+    import logging as _logging
+    _logging.getLogger(__name__).warning(
+        "⚠️ 未设置 JWT_SECRET_KEY / ADMIN_TOKEN，已生成临时随机密钥。"
+        "重启后所有已签发的 JWT 将失效！生产环境请务必配置 JWT_SECRET_KEY。"
+    )
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
-# 密码加密上下文
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
+# Refresh Token 有效期 7 天（详见第三阶段 F2）
+REFRESH_TOKEN_EXPIRE_DAYS = 7
+# Token 类型标识，用于区分 access / refresh
+TOKEN_TYPE_ACCESS = "access"
+TOKEN_TYPE_REFRESH = "refresh"
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """验证密码"""
-    return pwd_context.verify(plain_password, hashed_password)
+    return _bcrypt.checkpw(
+        plain_password.encode("utf-8"), hashed_password.encode("utf-8")
+    )
 
 
 def get_password_hash(password: str) -> str:
     """生成密码哈希"""
-    return pwd_context.hash(password)
+    return _bcrypt.hashpw(
+        password.encode("utf-8"), _bcrypt.gensalt()
+    ).decode("utf-8")
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    """创建JWT访问令牌"""
+    """创建 JWT 访问令牌（短期，默认 30 分钟）"""
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now() + expires_delta
     else:
         expire = datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": expire, "type": TOKEN_TYPE_ACCESS})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+
+def create_refresh_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    """创建 JWT 刷新令牌（长期，默认 7 天）。
+
+    Refresh token 不直接用于 API 鉴权，仅用于换取新的 access token。
+    详见第三阶段 F2。
+    """
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.now() + expires_delta
+    else:
+        expire = datetime.now() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    to_encode.update({"exp": expire, "type": TOKEN_TYPE_REFRESH})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+def decode_token(token: str) -> Optional[dict]:
+    """解码并验证 JWT，返回 payload 字典；失败返回 None。
+
+    同时校验 exp 过期时间。
+    """
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except JWTError:
+        return None
+
+
+def verify_refresh_token(token: str) -> Optional[str]:
+    """验证 refresh token 是否有效且类型正确。
+
+    Returns:
+        有效时返回 token 中 sub 字段（用户邮箱），无效返回 None。
+    """
+    payload = decode_token(token)
+    if payload is None:
+        return None
+    if payload.get("type") != TOKEN_TYPE_REFRESH:
+        return None
+    return payload.get("sub")
 
 
 def get_user_by_email(db: Session, email: str) -> Optional[User]:

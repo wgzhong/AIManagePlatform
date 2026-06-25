@@ -4,864 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AIManagePlatform - 总控制台</title>
-<style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --bg-gradient: linear-gradient(140deg, #0b0822 0%, #1c1648 48%, #121030 100%);
-  --glass-bg: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.09);
-  --primary-gradient: linear-gradient(120deg, #72e0e0, #ffc8dd);
-  --text-main: #f4f4f7;
-  --text-sub: #a9a9b8;
-  --accent-cyan: #87e8e8;
-  --accent-pink: #ffc8dd;
-  --accent-green: #82d282;
-  --danger: #ff6b6b;
-  --warn: #facc15;
-  --success: #4ade80;
-  --orange: #fb923c;
-  --card-shadow: 0 8px 32px rgba(0,0,0,0.18);
-}
-body {
-  font-family: "Segoe UI", PingFang SC, Microsoft YaHei, system-ui, sans-serif;
-  background: var(--bg-gradient);
-  min-height: 100vh;
-  color: var(--text-main);
-  padding-bottom: 80px;
-  position: relative;
-  overflow-x: hidden;
-}
-body::before {
-  content: '';
-  position: fixed;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: 
-    radial-gradient(ellipse at 20% 20%, rgba(114, 224, 224, 0.04) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 80%, rgba(255, 200, 221, 0.04) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 50%, rgba(118, 75, 162, 0.03) 0%, transparent 60%);
-  z-index: 0;
-  pointer-events: none;
-  animation: bgShift 20s ease-in-out infinite;
-}
-@keyframes bgShift {
-  0%, 100% { transform: translate(0, 0); }
-  33% { transform: translate(1%, -1%); }
-  66% { transform: translate(-1%, 1%); }
-}
-.top-nav {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  max-width: 1600px;
-  margin: 0 auto 24px;
-  padding: 12px 24px;
-  border-radius: 0 0 20px 20px;
-  background: rgba(11, 8, 34, 0.95);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: blur(24px);
-  box-shadow: 0 4px 30px rgba(0,0,0,0.3);
-}
-.nav-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-.nav-left {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  flex-wrap: wrap;
-}
-.nav-title {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.nav-title h1 {
-  font-size: 22px;
-  font-weight: 700;
-  background: var(--primary-gradient);
-  -webkit-background-clip: text;
-  color: transparent;
-  letter-spacing: 1px;
-}
-.nav-tag {
-  font-size: 11px;
-  padding: 3px 8px;
-  border-radius: 6px;
-  background: rgba(114, 224, 224, 0.12);
-  color: var(--accent-cyan);
-}
-.nav-center {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-.nav-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.model-select-wrapper {
-  position: relative;
-}
-.model-select {
-  appearance: none;
-  background: rgba(0,0,0,0.3);
-  border: 1px solid var(--glass-border);
-  border-radius: 10px;
-  padding: 8px 32px 8px 14px;
-  color: #fff;
-  font-size: 13px;
-  cursor: pointer;
-  outline: none;
-  transition: all 0.25s;
-  min-width: 160px;
-  font-weight: 500;
-}
-.model-select:focus {
-  border-color: var(--accent-cyan);
-  box-shadow: 0 0 0 3px rgba(114, 224, 224, 0.1);
-}
-.model-select:hover {
-  border-color: rgba(255,255,255,0.18);
-}
-.model-select-wrapper::after {
-  content: '▼';
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 10px;
-  color: var(--text-sub);
-  pointer-events: none;
-}
-.status-indicator {
-  display: flex;
-  align-items: center;
-  padding: 8px;
-  border-radius: 50%;
-  background: rgba(74, 222, 128, 0.1);
-  cursor: pointer;
-  transition: all 0.25s;
-  border: 2px solid transparent;
-}
-.status-indicator:hover {
-  background: rgba(74, 222, 128, 0.18);
-}
-.status-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--success);
-  animation: pulse 2s infinite;
-  box-shadow: 0 0 10px rgba(74, 222, 128, 0.6);
-}
-.status-dot.orange { background: var(--orange); box-shadow: 0 0 10px rgba(251, 146, 60, 0.6); }
-.status-dot.red { background: var(--danger); box-shadow: 0 0 10px rgba(255, 107, 107, 0.6); }
-.status-tooltip {
-  position: absolute;
-  right: 20px;
-  top: 60px;
-  background: rgba(0,0,0,0.9);
-  border: 1px solid var(--glass-border);
-  border-radius: 12px;
-  padding: 16px;
-  min-width: 220px;
-  display: none;
-  z-index: 1000;
-}
-.status-tooltip.show { display: block; }
-.tooltip-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--glass-border);
-}
-.tooltip-row:last-child { border-bottom: none; }
-.tooltip-label { color: var(--text-sub); font-size: 12px; }
-.tooltip-value { color: var(--text-main); font-size: 13px; font-weight: 600; }
-.btn {
-  padding: 8px 16px;
-  border-radius: 10px;
-  border: none;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.25s;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.btn-secondary {
-  background: rgba(255,255,255,0.08);
-  color: var(--text-main);
-  border: 1px solid transparent;
-}
-.btn-secondary:hover { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.1); }
-.btn-primary {
-  background: var(--primary-gradient);
-  color: #0a0a1a;
-}
-.profile-arrow {
-  font-size: 10px;
-  color: rgba(255,255,255,0.5);
-  margin-left: 4px;
-  transition: transform 0.2s;
-}
-.user-profile:hover .profile-arrow {
-  transform: rotate(180deg);
-}
-.user-menu {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  width: 280px;
-  background: #1a1a2e;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-  border: 1px solid rgba(255,255,255,0.1);
-  padding: 8px 0;
-  display: none;
-  z-index: 1000;
-}
-.user-menu.show {
-  display: block;
-}
-.menu-header {
-  display: flex;
-  align-items: center;
-  padding: 12px 16px;
-  gap: 12px;
-}
-.menu-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 600;
-  font-size: 14px;
-}
-.menu-user-info {
-  flex: 1;
-}
-.menu-user-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: #fff;
-}
-.menu-user-role {
-  font-size: 12px;
-  color: #00d4aa;
-}
-.menu-divider {
-  height: 1px;
-  background: rgba(255,255,255,0.1);
-  margin: 8px 0;
-}
-.menu-item {
-  display: flex;
-  align-items: center;
-  padding: 10px 16px;
-  cursor: pointer;
-  transition: background 0.15s;
-  gap: 10px;
-}
-.menu-item:hover {
-  background: rgba(255,255,255,0.06);
-}
-.menu-icon {
-  font-size: 16px;
-}
-.menu-arrow {
-  margin-left: auto;
-  color: rgba(255,255,255,0.4);
-  font-size: 12px;
-}
-.menu-value {
-  margin-right: auto;
-  font-size: 12px;
-  color: rgba(255,255,255,0.5);
-}
-.menu-badge {
-  background: #ef4444;
-  color: white;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 10px;
-  min-width: 16px;
-  text-align: center;
-}
-.user-profile {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 10px 6px 6px;
-  border-radius: 24px;
-  background: rgba(114, 224, 224, 0.1);
-  cursor: pointer;
-  transition: all 0.2s;
-  min-width: 100px;
-}
-.user-profile:hover {
-  background: rgba(114, 224, 224, 0.18);
-}
-.profile-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--primary-gradient);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 600;
-  color: #0a0a1a;
-  flex-shrink: 0;
-}
-.profile-info {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-.profile-name {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-main);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 80px;
-}
-.profile-role {
-  font-size: 11px;
-  color: var(--accent-cyan);
-  background: rgba(114, 224, 224, 0.15);
-  padding: 1px 6px;
-  border-radius: 8px;
-  white-space: nowrap;
-}
-.key-input-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.key-input {
-  background: rgba(0,0,0,0.3);
-  border: 1px solid var(--glass-border);
-  border-radius: 8px;
-  padding: 8px 14px;
-  color: #fff;
-  font-size: 13px;
-  font-family: "Consolas", monospace;
-  outline: none;
-  transition: all 0.25s;
-  min-width: 220px;
-}
-.key-input:hover { border-color: rgba(255,255,255,0.15); }
-.key-input:focus {
-  border-color: var(--accent-cyan);
-  box-shadow: 0 0 0 3px rgba(114, 224, 224, 0.08);
-}
-.key-input.error { border-color: var(--danger); }
-.key-input.success { border-color: var(--success); }
-.key-url {
-  background: rgba(0,0,0,0.3);
-  border: 1px solid var(--glass-border);
-  border-radius: 8px;
-  padding: 8px 14px;
-  color: #fff;
-  font-size: 13px;
-  outline: none;
-  min-width: 300px;
-  transition: all 0.25s;
-}
-.key-url:hover { border-color: rgba(255,255,255,0.15); }
-.key-url:focus { border-color: var(--accent-cyan); }
-.wrapper {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 24px;
-  position: relative;
-  z-index: 1;
-}
-.dashboard-section {
-  margin-bottom: 32px;
-}
-.dashboard-title {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
-}
-.dashboard-title h2 {
-  font-size: 18px;
-  color: var(--text-main);
-  font-weight: 600;
-}
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-}
-.stat-card {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: 16px;
-  padding: 24px;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(12px);
-}
-.stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 16px 48px rgba(0,0,0,0.25);
-  border-color: rgba(255,255,255,0.18);
-}
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--primary-gradient);
-  border-radius: 3px 3px 0 0;
-  transition: height 0.3s;
-}
-.stat-card:hover::before {
-  height: 4px;
-}
-.stat-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 12px;
-}
-.stat-icon {
-  font-size: 24px;
-}
-.stat-trend {
-  font-size: 12px;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-.stat-trend.up {
-  background: rgba(74, 222, 128, 0.15);
-  color: var(--success);
-}
-.stat-trend.down {
-  background: rgba(255, 107, 107, 0.15);
-  color: var(--danger);
-}
-.stat-value {
-  font-size: 32px;
-  font-weight: 700;
-  margin-bottom: 4px;
-  color: var(--text-main);
-  letter-spacing: -0.5px;
-}
-.stat-label {
-  font-size: 13px;
-  color: var(--text-sub);
-  margin-bottom: 12px;
-}
-.mini-chart {
-  display: flex;
-  align-items: flex-end;
-  gap: 4px;
-  height: 30px;
-}
-.mini-bar {
-  flex: 1;
-  background: rgba(114, 224, 224, 0.3);
-  border-radius: 2px 2px 0 0;
-  transition: height 0.3s;
-}
-.mini-bar.highlight {
-  background: rgba(114, 224, 224, 0.6);
-}
-.progress-bar {
-  height: 6px;
-  background: rgba(0,0,0,0.3);
-  border-radius: 3px;
-  overflow: hidden;
-  margin-top: 8px;
-}
-.progress-fill {
-  height: 100%;
-  background: var(--primary-gradient);
-  border-radius: 3px;
-  transition: width 0.5s;
-}
-.cards-section {
-  margin-bottom: 32px;
-}
-.cards-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
-}
-.card {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: 24px;
-  backdrop-filter: blur(24px);
-  padding: 36px;
-  cursor: pointer;
-  transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1.2);
-  position: relative;
-  overflow: hidden;
-}
-.card::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: var(--primary-gradient);
-  opacity: 0;
-  transition: opacity 0.35s ease;
-  z-index: 0;
-}
-.card:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 24px 64px rgba(114, 224, 224, 0.12);
-  border-color: rgba(114, 224, 224, 0.25);
-}
-.card:hover::before {
-  opacity: 0.04;
-}
-.card-icon {
-  width: 68px;
-  height: 68px;
-  margin-bottom: 20px;
-  border-radius: 20px;
-  background: rgba(114, 224, 224, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 30px;
-  position: relative;
-  z-index: 1;
-  transition: all 0.3s;
-}
-.card:hover .card-icon {
-  transform: scale(1.05);
-  box-shadow: 0 0 24px rgba(114, 224, 224, 0.15);
-}
-.card:nth-child(2) .card-icon { background: rgba(255, 200, 221, 0.1); }
-.card:nth-child(3) .card-icon { background: rgba(130, 210, 130, 0.1); }
-.card:nth-child(4) .card-icon { background: rgba(250, 204, 21, 0.1); }
-.card h3 {
-  font-size: 22px;
-  margin-bottom: 12px;
-  position: relative;
-  z-index: 1;
-}
-.card p {
-  font-size: 14px;
-  color: var(--text-sub);
-  line-height: 1.6;
-  position: relative;
-  z-index: 1;
-}
-.card-arrow {
-  position: relative;
-  z-index: 1;
-  margin-top: 20px;
-  font-size: 20px;
-  color: var(--accent-cyan);
-  opacity: 0;
-  transform: translateX(-10px);
-  transition: all 0.3s ease;
-}
-.card:hover .card-arrow {
-  opacity: 1;
-  transform: translateX(0);
-}
-.card:hover h3 {
-  color: var(--accent-cyan);
-}
-.card:nth-child(2):hover h3 { color: var(--accent-pink); }
-.card:nth-child(2) .card-arrow { color: var(--accent-pink); }
-.card:nth-child(3):hover h3 { color: var(--accent-green); }
-.card:nth-child(3) .card-arrow { color: var(--accent-green); }
-.card:nth-child(4):hover h3 { color: var(--warn); }
-.card:nth-child(4) .card-arrow { color: var(--warn); }
-.card-badge {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  font-size: 11px;
-  padding: 4px 10px;
-  border-radius: 12px;
-  background: rgba(255, 200, 221, 0.15);
-  color: var(--accent-pink);
-  z-index: 1;
-}
-.recent-section {
-  margin-bottom: 32px;
-}
-.recent-title {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-.recent-title h3 {
-  font-size: 16px;
-  color: var(--text-main);
-}
-.recent-list {
-  display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  padding-bottom: 10px;
-}
-.recent-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 20px;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: 14px;
-  cursor: pointer;
-  transition: all 0.25s;
-  white-space: nowrap;
-  backdrop-filter: blur(8px);
-}
-.recent-item:hover {
-  border-color: var(--accent-cyan);
-  background: rgba(114, 224, 224, 0.1);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-}
-.recent-icon {
-  font-size: 16px;
-}
-.recent-text {
-  font-size: 13px;
-  color: var(--text-main);
-}
-.footer-section {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(11, 8, 34, 0.92);
-  border-top: 1px solid var(--glass-border);
-  backdrop-filter: blur(24px);
-  padding: 12px 24px;
-  z-index: 99;
-}
-.footer-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-.footer-left {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  flex-wrap: wrap;
-}
-.footer-stat {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.footer-stat-icon {
-  font-size: 14px;
-}
-.footer-stat-text {
-  font-size: 12px;
-  color: var(--text-sub);
-}
-.footer-stat-value {
-  font-size: 13px;
-  color: var(--text-main);
-  font-weight: 600;
-}
-.footer-center {
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-.footer-link {
-  font-size: 12px;
-  color: var(--text-sub);
-  text-decoration: none;
-  transition: all 0.2s;
-  padding: 4px 10px;
-  border-radius: 6px;
-}
-.footer-link:hover {
-  color: var(--accent-cyan);
-  background: rgba(114, 224, 224, 0.06);
-}
-.footer-right {
-  font-size: 11px;
-  color: var(--text-sub);
-  opacity: 0.6;
-}
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.6);
-  backdrop-filter: blur(8px);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 2000;
-}
-.modal-overlay.show {
-  display: flex;
-}
-.modal-content {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: 20px;
-  padding: 24px;
-  width: 90%;
-  max-width: 500px;
-  max-height: 80vh;
-  overflow-y: auto;
-}
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-.modal-header h3 {
-  font-size: 18px;
-  color: var(--text-main);
-}
-.modal-close {
-  font-size: 20px;
-  cursor: pointer;
-  color: var(--text-sub);
-}
-.modal-body {
-  font-size: 14px;
-  color: var(--text-sub);
-  line-height: 1.8;
-}
-.modal-body code {
-  background: rgba(0,0,0,0.3);
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-family: "Consolas";
-  font-size: 12px;
-  color: var(--accent-cyan);
-}
-.modal-body pre {
-  background: rgba(0,0,0,0.3);
-  padding: 12px;
-  border-radius: 8px;
-  overflow-x: auto;
-  margin: 12px 0;
-}
-.modal-footer {
-  margin-top: 20px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-}
-.model-list {
-  max-height: 200px;
-  overflow-y: auto;
-  margin-bottom: 16px;
-}
-.model-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 12px;
-  background: rgba(0,0,0,0.2);
-  border-radius: 8px;
-  margin-bottom: 8px;
-}
-.model-item .model-name {
-  font-size: 13px;
-  color: var(--text-main);
-}
-.model-item .model-id {
-  font-size: 11px;
-  color: var(--text-sub);
-  font-family: monospace;
-}
-.model-item .actions {
-  display: flex;
-  gap: 6px;
-}
-.model-item .actions button {
-  padding: 4px 8px;
-  font-size: 11px;
-  border-radius: 4px;
-  border: none;
-  cursor: pointer;
-}
-.btn-delete {
-  background: rgba(255,107,107,0.2);
-  color: var(--danger);
-}
-.btn-delete:hover {
-  background: rgba(255,107,107,0.3);
-}
-.btn-default {
-  background: rgba(114,224,224,0.2);
-  color: var(--accent-cyan);
-}
-.btn-default:hover {
-  background: rgba(114,224,224,0.3);
-}
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-@media(max-width: 1200px) {
-  .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
-}
-@media(max-width: 768px) {
-  .dashboard-grid { grid-template-columns: 1fr; }
-  .cards-grid { grid-template-columns: 1fr; }
-  .nav-content { flex-direction: column; align-items: stretch; }
-  .nav-left, .nav-center, .nav-right { justify-content: center; }
-  .key-input, .key-url { width: 100%; }
-}
-</style>
+<link rel="stylesheet" href="/static/css/index.css">
 </head>
 <body>
+<!-- ===== 顶部导航栏 ===== -->
 <div class="top-nav">
   <div class="nav-content">
     <div class="nav-left">
       <div class="nav-title">
         <h1>AIManagePlatform</h1>
-        <span class="nav-tag">v1.0.0</span>
+        <span class="nav-tag">v1.0.5</span>
       </div>
       <div class="key-input-wrapper">
         <input type="text" class="key-input" id="apiKeyInput" placeholder="🔑 API Key" onkeyup="validateKey()">
@@ -872,12 +24,12 @@ body::before {
       <div class="model-select-wrapper">
         <select class="model-select" id="modelSelect" onchange="saveModel()">
           <option value="glm-5.1">GLM-5.1</option>
-          <option value="glm-4.5-air">GLM-4.5-Air</option>
+          <option value="glm-4.5-air" selected>GLM-4.5 Air</option>
           <option value="glm-4.6v">GLM-4.6V</option>
           <option value="deepseek-chat">DeepSeek-Chat</option>
           <option value="qwen3-turbo">Qwen3-Turbo</option>
         </select>
-        <button class="btn btn-secondary" onclick="showModelManager()" style="margin-left: 8px; padding: 6px 10px; font-size: 11px;">+ 添加模型</button>
+        <button class="btn btn-secondary model-add-btn" onclick="showModelManager()">+ 添加模型</button>
       </div>
       <div class="status-indicator" id="statusIndicator" onclick="toggleStatusTooltip()" title="点击查看连接详情">
         <span class="status-dot" id="statusDot"></span>
@@ -899,19 +51,19 @@ body::before {
     </div>
     <div class="nav-right">
       <div class="user-profile" id="userProfile" onclick="toggleUserMenu()">
-        <div class="profile-avatar" id="userAvatar">A</div>
+        <div class="profile-avatar" id="userAvatar">L</div>
         <div class="profile-info">
-          <div class="profile-name" id="userName">用户</div>
-          <div class="profile-role" id="userRole">普通用户</div>
+          <div class="profile-name" id="userName">lupa</div>
+          <div class="profile-role" id="userRole">超级管理员</div>
         </div>
         <span class="profile-arrow">▼</span>
       </div>
       <div class="user-menu" id="userMenu">
         <div class="menu-header">
-          <div class="menu-avatar" id="menuAvatar">A</div>
+          <div class="menu-avatar" id="menuAvatar">L</div>
           <div class="menu-user-info">
-            <div class="menu-user-name" id="menuUserName">用户</div>
-            <div class="menu-user-role" id="menuUserRole">普通用户</div>
+            <div class="menu-user-name" id="menuUserName">lupa</div>
+            <div class="menu-user-role" id="menuUserRole">超级管理员</div>
           </div>
         </div>
         <div class="menu-divider"></div>
@@ -945,127 +97,212 @@ body::before {
   </div>
 </div>
 
+<!-- ===== 主内容区域 ===== -->
 <div class="wrapper">
+
+  <!-- ===== 数据概览 ===== -->
   <div class="dashboard-section">
     <div class="dashboard-title">
       <h2>📊 数据概览</h2>
-      <span style="font-size: 12px; color: var(--text-sub);">实时统计</span>
+      <span class="stat-sub-text-sm" style="margin-bottom:0">实时统计</span>
     </div>
     <div class="dashboard-grid">
-      <div class="stat-card">
+      <!-- 卡片1: 今日对话请求 - 带趋势图 -->
+      <div class="stat-card stat-card-trend">
         <div class="stat-header">
           <span class="stat-icon">💬</span>
-          <span class="stat-trend" id="reqTrend">0%</span>
+          <span class="stat-trend up" id="reqTrend">+12%</span>
         </div>
-        <div class="stat-value" id="dailyRequests">0</div>
+        <div class="stat-value" id="dailyRequests">23</div>
         <div class="stat-label">今日对话请求</div>
-        <div style="font-size: 11px; color: var(--text-sub); margin-bottom: 8px;">
-          总计: <span id="totalRequests">0</span>
+        <div class="stat-sub-text">
+          总计: <span id="totalRequests">35</span>
         </div>
-        <div class="mini-chart" id="reqChart">
-          <div class="mini-bar" style="height: 40%"></div>
-          <div class="mini-bar" style="height: 60%"></div>
-          <div class="mini-bar" style="height: 80%"></div>
-          <div class="mini-bar" style="height: 50%"></div>
-          <div class="mini-bar" style="height: 90%"></div>
-          <div class="mini-bar" style="height: 70%"></div>
-          <div class="mini-bar highlight" style="height: 100%"></div>
+        <!-- 趋势折线图 SVG -->
+        <div class="trend-chart-container">
+          <svg class="trend-svg" viewBox="0 0 200 60" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="trendGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="rgba(114,224,224,0.35)" />
+                <stop offset="100%" stop-color="rgba(114,224,224,0.02)" />
+              </linearGradient>
+              <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#72e0e0" />
+                <stop offset="100%" stop-color="#a78bfa" />
+              </linearGradient>
+            </defs>
+            <!-- 填充区域 -->
+            <path class="trend-area" d="M0,55 Q20,50 40,42 T80,30 T120,22 T160,12 T200,5 L200,60 L0,60 Z" fill="url(#trendGradient)" />
+            <!-- 折线 -->
+            <path class="trend-line" d="M0,55 Q20,50 40,42 T80,30 T120,22 T160,12 T200,5" fill="none" stroke="url(#lineGradient)" stroke-width="2.5" stroke-linecap="round" />
+            <!-- 数据点 -->
+            <circle cx="200" cy="5" r="4" fill="#72e0e0" class="trend-dot" />
+            <!-- 增长箭头 -->
+            <g class="trend-arrow" transform="translate(175, 18)">
+              <polygon points="0,8 12,0 12,5 24,5 24,11 12,11 12,16" fill="rgba(74,222,128,0.85)" />
+            </g>
+          </svg>
         </div>
       </div>
-      <div class="stat-card" onclick="navigateTo('/devices')" style="cursor: pointer;">
+
+      <!-- 卡片2: 已注册设备 -->
+      <div class="stat-card stat-card-clickable" onclick="navigateTo('/devices')">
         <div class="stat-header">
-          <span class="stat-icon">📱</span>
+          <span class="stat-icon">🖥️</span>
         </div>
         <div class="stat-value" id="onlineDevices">
-          <span id="onlineCount">0</span>
-          <span style="font-size: 16px; color: var(--text-sub);"> 台</span>
+          <span id="onlineCount">2</span>
+          <span class="stat-device-unit">台</span>
         </div>
         <div class="stat-label">已注册设备</div>
         <div class="mini-chart" id="deviceChart">
           <div class="mini-bar" style="height: 30%"></div>
           <div class="mini-bar" style="height: 50%"></div>
-          <div class="mini-bar" style="height: 40%"></div>
-          <div class="mini-bar" style="height: 60%"></div>
+          <div class="mini-bar mini-bar-cyan" style="height: 70%"></div>
           <div class="mini-bar" style="height: 45%"></div>
-          <div class="mini-bar" style="height: 55%"></div>
-          <div class="mini-bar highlight" style="height: 50%"></div>
+          <div class="mini-bar" style="height: 60%"></div>
+          <div class="mini-bar mini-bar-pink" style="height: 80%"></div>
+          <div class="mini-bar highlight" style="height: 55%"></div>
         </div>
       </div>
+
+      <!-- 卡片3: Token 消耗 -->
       <div class="stat-card">
         <div class="stat-header">
           <span class="stat-icon">⚡</span>
         </div>
         <div class="stat-value" id="tokenUsage">
           <span id="todayTokens">0</span>
-          <span style="font-size: 14px; color: var(--text-sub);"> tokens</span>
+          <span class="stat-token-unit">tokens</span>
         </div>
         <div class="stat-label">今日 Token 消耗</div>
-        <div style="font-size: 11px; color: var(--text-sub); margin-bottom: 8px;">
-          输入: <span style="color: var(--accent-cyan);" id="todayInputTokens">0</span> &nbsp; 输出: <span style="color: var(--accent-pink);" id="todayOutputTokens">0</span>
-        </div>
         <div class="progress-bar">
-          <div class="progress-fill" id="tokenProgress" style="width: 35%"></div>
+          <div class="progress-fill" id="tokenProgress" style="width: 0%"></div>
         </div>
-        <div style="font-size: 11px; color: var(--text-sub); margin-top: 6px;">
-          总计: <span id="totalTokensAll">0</span> &nbsp; 输入: <span id="totalInputTokens">0</span> &nbsp; 输出: <span id="totalOutputTokens">0</span>
+        <div class="stat-sub-text token-detail-row">
+          输入 <span class="stat-token-inline-cyan" id="todayInputTokens">0</span> &nbsp; 输出 <span class="stat-token-inline-pink" id="todayOutputTokens">0</span>
+        </div>
+        <div class="stat-token-sub">
+          总计 <span id="totalTokensAll">0</span> &nbsp; 输入 <span id="totalInputTokens">0</span> &nbsp; 输出 <span id="totalOutputTokens">0</span>
         </div>
       </div>
+
+      <!-- 卡片4: 技能调用 -->
       <div class="stat-card">
         <div class="stat-header">
-          <span class="stat-icon">🧠</span>
+          <span class="stat-icon">🎯</span>
         </div>
         <div class="stat-value" id="toolCalls">0</div>
         <div class="stat-label">技能调用</div>
-        <div style="font-size: 11px; color: var(--text-sub); margin-bottom: 12px;">
-          时间查询: <span id="toolTime">0</span> | 计算: <span id="toolCalc">0</span> | 天气: <span id="toolWeather">0</span>
+        <div class="stat-sub-text-sm tool-stats-row">
+          时间曲线: <span id="toolTime">0</span> | 计算量: <span id="toolCalc">0</span> | 天气: <span id="toolWeather">0</span>
         </div>
         <div class="mini-chart" id="toolChart">
-          <div class="mini-bar" style="height: 20%"></div>
-          <div class="mini-bar" style="height: 40%"></div>
-          <div class="mini-bar" style="height: 30%"></div>
-          <div class="mini-bar" style="height: 50%"></div>
+          <div class="mini-bar" style="height: 15%"></div>
+          <div class="mini-bar" style="height: 25%"></div>
+          <div class="mini-bar mini-bar-purple" style="height: 20%"></div>
           <div class="mini-bar" style="height: 35%"></div>
-          <div class="mini-bar" style="height: 45%"></div>
-          <div class="mini-bar highlight" style="height: 60%"></div>
+          <div class="mini-bar" style="height: 28%"></div>
+          <div class="mini-bar" style="height: 40%"></div>
+          <div class="mini-bar highlight" style="height: 55%"></div>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- ===== 功能卡片区（新版双列大卡片布局）===== -->
   <div class="cards-section">
-    <div class="cards-grid">
-      <div class="card" onclick="navigateTo('/chat')">
-        <div class="card-icon">🤖</div>
-        <h3>AI 推理对话</h3>
-        <p>与 AI 模型进行实时对话，支持技能调用（时间查询、数学计算、天气查询），体验流式响应效果</p>
-        <div class="card-arrow">→</div>
+    <div class="cards-grid-premium">
+      <!-- 卡片1: AI 推理对话 -->
+      <div class="premium-card" onclick="navigateTo('/chat')">
+        <div class="premium-card-left">
+          <div class="card-icon card-icon-ai">🤖</div>
+          <div class="card-text-content">
+            <h3>AI 推理对话</h3>
+            <p>与 AI 模型进行实时对话，支持技能调用（时间查询、数学计算、天气查询），体验各式问答效果</p>
+          </div>
+          <div class="card-arrow-wrap">
+            <span class="card-arrow">→</span>
+          </div>
+        </div>
       </div>
-      <div class="card" onclick="navigateTo('/devices')">
-        <div class="card-icon">📱</div>
-        <h3>硬件设备管理</h3>
-        <p>管理 ESP32 等硬件设备的设备码，分配管理员 API Key，支持设备使用记录查询和状态监控</p>
-        <span class="card-badge">设备管理</span>
-        <div class="card-arrow">→</div>
-      </div>
-      <div class="card" onclick="navigateTo('/skills')">
-        <div class="card-icon">🧠</div>
-        <h3>技能管理</h3>
-        <p>管理所有技能的启用状态、自动触发设置、触发关键词配置、技能执行流程</p>
-        <div class="card-arrow">→</div>
-      </div>
-      <div class="card" onclick="showLogs()">
-        <div class="card-icon">📊</div>
-        <h3>日志记录中心</h3>
-        <p>AI 对话日志、硬件设备上下线日志、API 调用报错日志，支持关键词检索和导出</p>
-        <div class="card-arrow">→</div>
+
+      <!-- 卡片2: 硬件设备管理（带警告 + 设备画廊） -->
+      <div class="premium-card premium-card-device" onclick="navigateTo('/devices')">
+        <div class="premium-card-left">
+          <div class="card-icon card-icon-dev">🖥️</div>
+          <div class="card-text-content">
+            <h3>硬件设备管理</h3>
+            <p>管理 ESP32 等硬件设备的设备码，分配管理员 API Key，支持设备使用记录查询向导</p>
+          </div>
+          <!-- 设备警告提示框 -->
+          <div class="device-warning-banner" onclick="event.stopPropagation(); showDeviceWarning()">
+            <span class="warning-icon">⚠️</span>
+            <div class="warning-text">
+              <strong>排错提醒：</strong>检测到 ESP32 端设备有通信错误，请检查其 API Key，并重新连接（未连接）！
+            </div>
+          </div>
+          <div class="card-arrow-wrap">
+            <span class="card-arrow card-arrow-pink">→</span>
+          </div>
+        </div>
+        <!-- 右侧设备图片画廊 -->
+        <div class="device-gallery">
+          <div class="gallery-label">我的设备库</div>
+          <div class="gallery-grid">
+            <div class="gallery-item"><div class="gallery-placeholder gallery-img-1"></div></div>
+            <div class="gallery-item"><div class="gallery-placeholder gallery-img-2"></div></div>
+            <div class="gallery-item"><div class="gallery-placeholder gallery-img-3"></div></div>
+            <div class="gallery-item"><div class="gallery-placeholder gallery-img-4"></div></div>
+            <div class="gallery-item"><div class="gallery-placeholder gallery-img-5"></div></div>
+            <div class="gallery-item"><div class="gallery-placeholder gallery-img-6"></div></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
+  <!-- ===== 底部扩展功能区 ===== -->
+  <div class="bottom-section">
+    <div class="bottom-grid">
+      <!-- 运行状态卡片 -->
+      <div class="bottom-card" onclick="showLogs()">
+        <div class="bottom-card-header">
+          <span class="bottom-card-icon">⚙️</span>
+          <h4>运行状态</h4>
+          <span class="bottom-card-link">— 实时监控</span>
+        </div>
+        <div class="bottom-card-body">
+          <div class="status-row">
+            <span class="status-label">系统健康</span>
+            <span class="status-value status-ok">正常</span>
+          </div>
+          <div class="status-row">
+            <span class="status-label">在线设备</span>
+            <span class="status-value" id="bottomOnlineDevices">2 / 2</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 快捷操作卡片 -->
+      <div class="bottom-card" onclick="navigateTo('/skills')">
+        <div class="bottom-card-header">
+          <span class="bottom-card-icon">🧠</span>
+          <h4>技能中心</h4>
+          <span class="bottom-card-link">— 管理技能</span>
+        </div>
+        <div class="bottom-card-body">
+          <p class="bottom-desc">管理所有技能的启用状态与触发规则</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 最近使用 ===== -->
   <div class="recent-section">
     <div class="recent-title">
       <h3>🔗 最近使用</h3>
-      <span style="font-size: 12px; color: var(--text-sub);">快速访问</span>
+      <span class="stat-sub-text-sm" style="margin-bottom:0">快速访问</span>
     </div>
     <div class="recent-list" id="recentList">
       <div class="recent-item" onclick="navigateTo('/chat')">
@@ -1073,43 +310,52 @@ body::before {
         <span class="recent-text">AI 对话</span>
       </div>
       <div class="recent-item" onclick="navigateTo('/devices')">
-        <span class="recent-icon">📱</span>
+        <span class="recent-icon">🖥️</span>
         <span class="recent-text">设备管理</span>
       </div>
     </div>
   </div>
 </div>
 
+<!-- ===== 页脚 ===== -->
 <div class="footer-section">
   <div class="footer-content">
     <div class="footer-left">
       <div class="footer-stat">
-        <span class="footer-stat-icon">⏱️</span>
-        <span class="footer-stat-text">运行时长:</span>
-        <span class="footer-stat-value" id="uptime">-</span>
+        <span class="footer-stat-icon">版本号</span>
+        <span class="footer-stat-value">v1.0.0</span>
       </div>
       <div class="footer-stat">
-        <span class="footer-stat-icon">🔗</span>
-        <span class="footer-stat-text">并发连接:</span>
+        <span class="footer-stat-icon">在线数量:</span>
         <span class="footer-stat-value" id="connections">0</span>
       </div>
       <div class="footer-stat">
-        <span class="footer-stat-icon">📦</span>
-        <span class="footer-stat-text">版本:</span>
-        <span class="footer-stat-value">v1.0.0</span>
+        <span class="footer-stat-icon">历史:</span>
+        <span class="footer-stat-value" id="historyCount">0</span>
+      </div>
+      <div class="footer-stat">
+        <span class="footer-stat-icon">状态信息</span>
+        <span class="footer-stat-value" id="statusInfo">正常</span>
       </div>
     </div>
     <div class="footer-center">
+      <a class="footer-link" href="#">©2026 AIManagePlatform | Skill-2025-06-18</a>
+    </div>
+    <div class="footer-right">
       <a class="footer-link" onclick="showDoc('esp32')">📱 ESP32 接入教程</a>
       <a class="footer-link" onclick="showDoc('skills')">🧠 技能说明</a>
       <a class="footer-link" onclick="showDoc('api')">📡 API 接口文档</a>
     </div>
-    <div class="footer-right">
-      © 2026 AIManagePlatform | Skill-2025-06-18
-    </div>
   </div>
 </div>
 
+<!-- ===== 右下角悬浮头像按钮 ===== -->
+<div class="floating-avatar" id="floatingAvatar" onclick="toggleUserMenu()">
+  <img src="" alt="用户" class="floating-avatar-img" id="floatingAvatarImg" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+  <div class="floating-avatar-fallback" id="floatingAvatarFallback">L</div>
+</div>
+
+<!-- ===== 弹窗：通用模态框 ===== -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
   <div class="modal-content" onclick="event.stopPropagation()">
     <div class="modal-header">
@@ -1123,26 +369,27 @@ body::before {
   </div>
 </div>
 
+<!-- ===== 弹窗：模型管理 ===== -->
 <div class="modal-overlay" id="modelManagerOverlay" onclick="closeModelManager()">
-  <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 600px;">
+  <div class="modal-content model-manager-content" onclick="event.stopPropagation()">
     <div class="modal-header">
       <h3>⚙️ 模型管理</h3>
       <span class="modal-close" onclick="closeModelManager()">×</span>
     </div>
     <div class="modal-body" style="padding-bottom: 0;">
       <div style="margin-bottom: 16px;">
-        <label style="display:block;font-size:13px;color:var(--text-sub);margin-bottom:8px;">添加新模型</label>
-        <div style="display:flex;gap:10px;">
-          <input type="text" id="newModelId" placeholder="模型 ID (如: glm-4.6v)" style="flex:1;background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);border-radius:8px;padding:10px;color:#fff;font-size:13px;outline:none;">
-          <input type="text" id="newModelName" placeholder="模型名称 (如: GLM-4.6V)" style="flex:1;background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);border-radius:8px;padding:10px;color:#fff;font-size:13px;outline:none;">
+        <label class="model-manager-form-header">添加新模型</label>
+        <div class="model-manager-form-row">
+          <input type="text" id="newModelId" placeholder="模型 ID (如: glm-4.6v)" class="model-manager-form-input">
+          <input type="text" id="newModelName" placeholder="模型名称 (如: GLM-4.6V)" class="model-manager-form-input">
         </div>
-        <button class="btn btn-primary" onclick="addCustomModel()" style="width:100%;margin-top:10px;">添加模型</button>
+        <button class="btn btn-primary model-manager-btn-full" onclick="addCustomModel()">添加模型</button>
       </div>
       
-      <div style="border-top:1px solid var(--glass-border);padding-top:16px;">
-        <label style="display:block;font-size:13px;color:var(--text-sub);margin-bottom:12px;">已添加的模型</label>
+      <div class="model-manager-section">
+        <label class="model-manager-section-label">已添加的模型</label>
         <div class="model-list" id="customModelsList">
-          <div style="text-align:center;padding:20px;color:var(--text-sub);font-size:13px;">暂无自定义模型</div>
+          <div class="model-manager-empty">暂无自定义模型</div>
         </div>
       </div>
     </div>
@@ -1152,743 +399,13 @@ body::before {
   </div>
 </div>
 
-<script>
-const API_KEY_STORAGE = 'ai_platform_api_key';
-const API_URL_STORAGE = 'ai_platform_api_url';
-const MODEL_STORAGE = 'ai_platform_model';
-const CUSTOM_MODELS_STORAGE = 'ai_platform_custom_models';
-const DEFAULT_API_URL = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
-
-const DEFAULT_MODELS = [
-  { id: 'glm-5.1', name: 'GLM-5.1' },
-  { id: 'glm-4.5-air', name: 'GLM-4.5-Air' },
-  { id: 'glm-4.6v', name: 'GLM-4.6V' },
-  { id: 'deepseek-chat', name: 'DeepSeek-Chat' },
-  { id: 'qwen3-turbo', name: 'Qwen3-Turbo' }
-];
-
-document.addEventListener('DOMContentLoaded', async function() {
-  await checkAuth();
-  loadStoredConfig();
-  loadStats();
-  checkHealth();
-  setInterval(loadStats, 30000);
-  setInterval(checkHealth, 10000);
-});
-
-async function checkAuth() {
-  const token = localStorage.getItem('access_token');
-  if (!token) {
-    window.location.href = '/login';
-    return;
-  }
-  try {
-    const response = await fetch('/auth/me', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (!response.ok) {
-      throw new Error('未授权');
-    }
-    await loadUserInfo();
-  } catch (error) {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('user_id');
-    localStorage.removeItem('username');
-    localStorage.removeItem('email');
-    localStorage.removeItem('is_superuser');
-    window.location.href = '/login';
-  }
-}
-
-function loadStoredConfig() {
-  const storedKey = localStorage.getItem(API_KEY_STORAGE) || '';
-  const storedUrl = localStorage.getItem(API_URL_STORAGE) || DEFAULT_API_URL;
-  const storedModel = localStorage.getItem(MODEL_STORAGE) || 'glm-4.6v';
-  
-  document.getElementById('apiKeyInput').value = storedKey;
-  document.getElementById('apiUrlInput').value = storedUrl;
-  
-  loadCustomModels();
-  
-  const modelSelect = document.getElementById('modelSelect');
-  modelSelect.value = storedModel;
-  
-  if (storedKey) {
-    document.getElementById('apiKeyInput').classList.add('success');
-  }
-}
-
-function loadCustomModels() {
-  const customModels = getCustomModels();
-  const modelSelect = document.getElementById('modelSelect');
-  
-  const existingOptions = Array.from(modelSelect.options).map(o => o.value);
-  
-  customModels.forEach(model => {
-    if (!existingOptions.includes(model.id)) {
-      const option = document.createElement('option');
-      option.value = model.id;
-      option.textContent = model.name;
-      modelSelect.appendChild(option);
-    }
-  });
-}
-
-function getCustomModels() {
-  try {
-    const stored = localStorage.getItem(CUSTOM_MODELS_STORAGE);
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
-}
-
-function getModelDisplayName(modelId) {
-  if (!modelId) return '-';
-  const found = DEFAULT_MODELS.find(m => m.id === modelId);
-  if (found) return found.name;
-  const custom = getCustomModels().find(m => m.id === modelId);
-  if (custom) return custom.name;
-  return modelId;
-}
-
-function saveCustomModels(models) {
-  localStorage.setItem(CUSTOM_MODELS_STORAGE, JSON.stringify(models));
-}
-
-function showModelManager() {
-  const customModels = getCustomModels();
-  const list = document.getElementById('customModelsList');
-  
-  if (customModels.length === 0) {
-    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-sub);font-size:13px;">暂无自定义模型</div>';
-  } else {
-    list.innerHTML = customModels.map(model => `
-      <div class="model-item">
-        <div>
-          <div class="model-name">${model.name}</div>
-          <div class="model-id">${model.id}</div>
-        </div>
-        <div class="actions">
-          <button class="btn-default" onclick="setAsDefault('${model.id}')">设为默认</button>
-          <button class="btn-delete" onclick="deleteModel('${model.id}')">删除</button>
-        </div>
-      </div>
-    `).join('');
-  }
-  
-  document.getElementById('modelManagerOverlay').classList.add('show');
-}
-
-function closeModelManager() {
-  document.getElementById('modelManagerOverlay').classList.remove('show');
-}
-
-function addCustomModel() {
-  const modelId = document.getElementById('newModelId').value.trim();
-  const modelName = document.getElementById('newModelName').value.trim();
-  
-  if (!modelId || !modelName) {
-    alert('请填写模型 ID 和名称');
-    return;
-  }
-  
-  const existingIds = [...DEFAULT_MODELS.map(m => m.id), ...getCustomModels().map(m => m.id)];
-  if (existingIds.includes(modelId)) {
-    alert('该模型 ID 已存在');
-    return;
-  }
-  
-  const customModels = getCustomModels();
-  customModels.push({ id: modelId, name: modelName });
-  saveCustomModels(customModels);
-  saveConfigToBackend({ custom_models: JSON.stringify(customModels) });
-  
-  const modelSelect = document.getElementById('modelSelect');
-  const option = document.createElement('option');
-  option.value = modelId;
-  option.textContent = modelName;
-  modelSelect.appendChild(option);
-  
-  document.getElementById('newModelId').value = '';
-  document.getElementById('newModelName').value = '';
-  
-  showModelManager();
-}
-
-function deleteModel(modelId) {
-  if (!confirm(`确定要删除模型 "${modelId}" 吗？`)) return;
-  
-  const customModels = getCustomModels().filter(m => m.id !== modelId);
-  saveCustomModels(customModels);
-  saveConfigToBackend({ custom_models: JSON.stringify(customModels) });
-  
-  const modelSelect = document.getElementById('modelSelect');
-  for (let i = modelSelect.options.length - 1; i >= 0; i--) {
-    if (modelSelect.options[i].value === modelId) {
-      modelSelect.remove(i);
-      break;
-    }
-  }
-  
-  showModelManager();
-}
-
-function setAsDefault(modelId) {
-  localStorage.setItem(MODEL_STORAGE, modelId);
-  document.getElementById('modelSelect').value = modelId;
-  saveConfigToBackend({ default_model: modelId });
-  closeModelManager();
-}
-
-function validateKey() {
-  const input = document.getElementById('apiKeyInput');
-  const value = input.value.trim();
-  if (value) {
-    input.classList.remove('error');
-    input.classList.add('success');
-    localStorage.setItem(API_KEY_STORAGE, value);
-    saveConfigToBackend({ api_key: value });
-  } else {
-    input.classList.remove('error', 'success');
-  }
-}
-
-function validateUrl() {
-  const input = document.getElementById('apiUrlInput');
-  const value = input.value.trim();
-  if (value) {
-    localStorage.setItem(API_URL_STORAGE, value);
-    saveConfigToBackend({ api_url: value });
-  }
-}
-
-function saveModel() {
-  const model = document.getElementById('modelSelect').value;
-  localStorage.setItem(MODEL_STORAGE, model);
-  saveConfigToBackend({ default_model: model });
-}
-
-async function saveConfigToBackend(configData) {
-  const token = localStorage.getItem('access_token');
-  if (!token) return;
-  try {
-    const params = new URLSearchParams();
-    Object.entries(configData).forEach(([k, v]) => {
-      if (v !== undefined && v !== null) params.append(k, v);
-    });
-    await fetch('/auth/config', {
-      method: 'PUT',
-      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params.toString()
-    });
-  } catch (e) {
-    console.error('保存配置失败:', e);
-  }
-}
-
-async function navigateTo(path) {
-  const apiKey = document.getElementById('apiKeyInput').value.trim();
-  if (!apiKey && path !== '/chat') {
-    document.getElementById('apiKeyInput').classList.add('error');
-    document.getElementById('apiKeyInput').focus();
-    return;
-  }
-  
-  // 保存配置到后端和 localStorage
-  const model = document.getElementById('modelSelect').value;
-  const url = document.getElementById('apiUrlInput').value.trim() || DEFAULT_API_URL;
-  
-  if (apiKey) {
-    localStorage.setItem(API_KEY_STORAGE, apiKey);
-  }
-  // 等待配置保存完成后再跳转，否则 fetch 会被中断
-  await saveConfigToBackend({ api_key: apiKey || '', api_url: url, default_model: model });
-  
-  const chatConfig = {
-    mode: 'custom',
-    url: url,
-    key: apiKey,
-    model: model,
-    timestamp: Date.now()
-  };
-  localStorage.setItem('ai_chat_config', JSON.stringify(chatConfig));
-  
-  window.location.href = path;
-}
-
-async function loadStats() {
-  const token = localStorage.getItem('access_token');
-  try {
-    const res = await fetch('/auth/stats', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    const data = await res.json();
-    
-    document.getElementById('dailyRequests').textContent = data.daily_requests || 0;
-    document.getElementById('totalRequests').textContent = data.total_requests || 0;
-    
-    document.getElementById('todayTokens').textContent = (data.today_input_tokens || 0) + (data.today_output_tokens || 0);
-    document.getElementById('todayInputTokens').textContent = data.today_input_tokens || 0;
-    document.getElementById('todayOutputTokens').textContent = data.today_output_tokens || 0;
-    document.getElementById('totalTokensAll').textContent = (data.total_input_tokens || 0) + (data.total_output_tokens || 0);
-    document.getElementById('totalInputTokens').textContent = data.total_input_tokens || 0;
-    document.getElementById('totalOutputTokens').textContent = data.total_output_tokens || 0;
-    
-    document.getElementById('outputTokens').textContent = data.today_output_tokens || 0;
-    document.getElementById('monthlyTokens').textContent = data.total_output_tokens || 0;
-    document.getElementById('toolCalls').textContent = (data.tool_calls?.total) || 0;
-    document.getElementById('toolTime').textContent = (data.tool_calls?.get_time) || 0;
-    document.getElementById('toolCalc').textContent = (data.tool_calls?.calculate) || 0;
-    document.getElementById('toolWeather').textContent = (data.tool_calls?.get_weather) || 0;
-    
-    // 设备统计
-    document.getElementById('onlineCount').textContent = data.total_devices || 0;
-    
-    const totalTokens = (data.today_input_tokens || 0) + (data.today_output_tokens || 0);
-    const maxDaily = 500000;
-    const progress = Math.min((totalTokens / maxDaily) * 100, 100);
-    document.getElementById('tokenProgress').style.width = progress + '%';
-    
-    updateMiniChart(data.daily_records || []);
-    
-  } catch (err) {
-    console.error('加载统计数据失败:', err);
-  }
-}
-
-function updateMiniChart(records) {
-  if (!records || records.length === 0) return;
-  
-  const maxCount = Math.max(...records.map(r => r.count), 1);
-  const bars = document.querySelectorAll('#reqChart .mini-bar');
-  
-  records.forEach((record, index) => {
-    if (bars[index]) {
-      bars[index].style.height = (record.count / maxCount * 100) + '%';
-      bars[index].className = index === records.length - 1 ? 'mini-bar highlight' : 'mini-bar';
-    }
-  });
-}
-
-async function checkHealth() {
-  try {
-    const res = await fetch('/api/health');
-    const data = await res.json();
-    
-    const dot = document.getElementById('statusDot');
-    const tooltipStatus = document.getElementById('tooltipStatus');
-    const tooltipLatency = document.getElementById('tooltipLatency');
-    
-    switch (data.status_color) {
-      case 'green':
-        dot.className = 'status-dot';
-        tooltipStatus.textContent = '在线';
-        break;
-      case 'orange':
-        dot.className = 'status-dot orange';
-        tooltipStatus.textContent = '限流';
-        break;
-      case 'red':
-        dot.className = 'status-dot red';
-        tooltipStatus.textContent = '离线';
-        break;
-    }
-    
-    tooltipLatency.textContent = data.latency ? data.latency + 'ms' : '-';
-    
-  } catch (err) {
-    document.getElementById('statusDot').className = 'status-dot red';
-  }
-}
-
-function toggleStatusTooltip() {
-  document.getElementById('statusTooltip').classList.toggle('show');
-}
-
-function exportConfig() {
-  const config = {
-    apiKey: document.getElementById('apiKeyInput').value,
-    apiUrl: document.getElementById('apiUrlInput').value,
-    model: document.getElementById('modelSelect').value,
-    exportedAt: new Date().toISOString()
-  };
-  const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'ai_config.json';
-  a.click();
-}
-
-function resetKey() {
-  if (!confirm('确定要重置 API Key 吗？')) return;
-  document.getElementById('apiKeyInput').value = '';
-  document.getElementById('apiKeyInput').classList.remove('success', 'error');
-  localStorage.removeItem(API_KEY_STORAGE);
-}
-
-function showLogs() {
-  document.getElementById('modalTitle').textContent = '📋 系统日志';
-  document.getElementById('modalBody').innerHTML = `
-    <h4 style="color: var(--text-main); margin-bottom: 12px;">AI 对话日志</h4>
-    <p>所有会话记录、Token 消耗统计已记录在服务器端。</p>
-    <h4 style="color: var(--text-main); margin-bottom: 12px; margin-top: 16px;">硬件设备日志</h4>
-    <p>设备上下线事件、连接状态变更已记录。</p>
-    <h4 style="color: var(--text-main); margin-bottom: 12px; margin-top: 16px;">API 调用日志</h4>
-    <p>所有 API 请求、错误信息已记录，支持关键词检索。</p>
-  `;
-  document.getElementById('modalOverlay').classList.add('show');
-}
-
-function showModelConfig() {
-  document.getElementById('modalTitle').textContent = '⚙️ 模型参数配置';
-  document.getElementById('modalBody').innerHTML = `
-    <div style="margin-bottom: 16px;">
-      <label style="display:block;font-size:13px;color:var(--text-sub);margin-bottom:8px;">Temperature (随机性)</label>
-      <input type="range" min="0" max="2" step="0.1" value="0.7" style="width:100%;margin-bottom:4px;">
-      <span style="font-size:12px;color:var(--accent-cyan);">0.7</span>
-    </div>
-    <div style="margin-bottom: 16px;">
-      <label style="display:block;font-size:13px;color:var(--text-sub);margin-bottom:8px;">Max Tokens (输出上限)</label>
-      <input type="number" value="1024" style="width:100%;padding:8px;border-radius:8px;background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);color:#fff;">
-    </div>
-    <div style="margin-bottom: 16px;">
-      <label style="display:block;font-size:13px;color:var(--text-sub);margin-bottom:8px;">Top P</label>
-      <input type="range" min="0" max="1" step="0.1" value="0.7" style="width:100%;margin-bottom:4px;">
-      <span style="font-size:12px;color:var(--accent-cyan);">0.7</span>
-    </div>
-    <div style="display:flex;gap:12px;margin-bottom:16px;">
-      <label class="switch" style="display:flex;align-items:center;gap:8px;">
-        <input type="checkbox" checked>
-        <span style="font-size:13px;">启用思考模式</span>
-      </label>
-    </div>
-    <div style="border-top:1px solid var(--glass-border);padding-top:16px;">
-      <label style="display:block;font-size:13px;color:var(--text-sub);margin-bottom:12px;">参数模板</label>
-      <div style="display:flex;gap:8px;">
-        <button class="btn btn-secondary" style="padding:6px 12px;font-size:12px;">🎨 创作</button>
-        <button class="btn btn-secondary" style="padding:6px 12px;font-size:12px;">💻 代码</button>
-        <button class="btn btn-secondary" style="padding:6px 12px;font-size:12px;">🎯 精准问答</button>
-      </div>
-    </div>
-  `;
-  document.getElementById('modalOverlay').classList.add('show');
-}
-
-function showDoc(type) {
-  const docs = {
-    esp32: {
-      title: '📱 ESP32 设备接入教程',
-      content: `<h4 style="color: var(--text-main); margin-bottom: 12px;">1. 注册设备</h4>
-        <p>在「硬件设备管理」页面注册设备，获取设备码。</p>
-        <h4 style="color: var(--text-main); margin-bottom: 12px;">2. ESP32 代码示例</h4>
-        <pre><code>#include &lt;HTTPClient.h&gt;
-
-void sendChat(String deviceCode, String message) {
-  HTTPClient http;
-  http.begin("http://your-server:8002/chat");
-  http.addHeader("Content-Type", "application/json");
-  
-  String payload = "{\"device_code\":\"" + deviceCode + "\",\"messages\":[{\"role\":\"user\",\"content\":\"" + message + "\"}]}";
-  int httpCode = http.POST(payload);
-  
-  if (httpCode == HTTP_CODE_OK) {
-    String response = http.getString();
-    Serial.println(response);
-  }
-  http.end();
-}</code></pre>
-        <h4 style="color: var(--text-main); margin-bottom: 12px;">3. 设备码格式</h4>
-        <p>设备码为 8 位十六进制字符串，如：<code>FF0958EC</code></p>`
-    },
-    skills: {
-      title: '🧠 技能说明',
-      content: `<h4 style="color: var(--text-main); margin-bottom: 12px;">工具类技能</h4>
-        <ul style="margin-left:20px;color:var(--text-sub);margin-bottom:16px;">
-          <li><code>get_time</code> - 获取当前系统时间</li>
-          <li><code>calculate</code> - 数学计算</li>
-          <li><code>get_weather</code> - 获取城市天气信息</li>
-        </ul>
-        <h4 style="color: var(--text-main); margin-bottom: 12px;">情感响应技能</h4>
-        <ul style="margin-left:20px;color:var(--text-sub);margin-bottom:16px;">
-          <li><code>anger_response</code> - 愤怒情绪响应</li>
-          <li><code>cheerful_response</code> - 开心情绪响应</li>
-          <li><code>disgust_response</code> - 厌恶情绪响应</li>
-          <li><code>fear_response</code> - 恐惧情绪响应</li>
-          <li><code>happy_response</code> - 快乐情绪响应</li>
-          <li><code>sad_response</code> - 悲伤情绪响应</li>
-          <li><code>surprise_response</code> - 惊讶情绪响应</li>
-        </ul>
-        <h4 style="color: var(--text-main); margin-bottom: 12px;">技能配置</h4>
-        <p>每个技能支持配置：启用状态、自动触发、触发关键词等。</p>`
-    },
-    api: {
-      title: '📡 OpenAI 兼容接口文档',
-      content: `<h4 style="color: var(--text-main); margin-bottom: 12px;">POST /chat</h4>
-        <p>流式聊天接口，兼容 OpenAI API 格式。</p>
-        <pre><code>{
-  "messages": [{"role": "user", "content": "你好"}],
-  "api_key": "your-api-key",
-  "api_url": "https://open.bigmodel.cn/api/paas/v4/chat/completions",
-  "model": "glm-5.1",
-  "device_code": "可选的设备码"
-}</code></pre>
-        <h4 style="color: var(--text-main); margin-bottom: 12px;">GET /api/stats</h4>
-        <p>获取系统统计数据。</p>
-        <h4 style="color: var(--text-main); margin-bottom: 12px;">GET /api/health</h4>
-        <p>健康检查接口。</p>
-        <h4 style="color: var(--text-main); margin-bottom: 12px;">POST /api/devices/register</h4>
-        <p>注册新设备。</p>`
-    }
-  };
-  
-  const doc = docs[type];
-  document.getElementById('modalTitle').textContent = doc.title;
-  document.getElementById('modalBody').innerHTML = doc.content;
-  document.getElementById('modalOverlay').classList.add('show');
-}
-
-function closeModal() {
-  document.getElementById('modalOverlay').classList.remove('show');
-}
-
-function toggleUserMenu() {
-  const menu = document.getElementById('userMenu');
-  menu.classList.toggle('show');
-}
-
-document.addEventListener('click', function(event) {
-  const menu = document.getElementById('userMenu');
-  const profile = document.getElementById('userProfile');
-  if (menu && !menu.contains(event.target) && !profile.contains(event.target)) {
-    menu.classList.remove('show');
-  }
-});
-
-async function logout() {
-  if (!confirm('确定要登出吗？')) return;
-  try {
-    await fetch('/auth/logout', { method: 'POST' });
-  } catch (error) {
-    console.error('登出失败:', error);
-  }
-  localStorage.removeItem('access_token');
-  localStorage.removeItem('user_id');
-  localStorage.removeItem('username');
-  localStorage.removeItem('email');
-  localStorage.removeItem('is_superuser');
-  window.location.href = '/login';
-}
-
-async function loadUserInfo() {
-  const token = localStorage.getItem('access_token');
-  if (!token) return;
-  
-  try {
-    const response = await fetch('/auth/me', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (response.ok) {
-      const user = await response.json();
-      const userName = user.username;
-      const userRole = user.is_superuser ? '超级管理员' : '普通用户';
-      document.getElementById('userName').textContent = userName;
-      document.getElementById('userAvatar').textContent = userName.charAt(0).toUpperCase();
-      document.getElementById('userRole').textContent = userRole;
-      document.getElementById('menuUserName').textContent = userName;
-      document.getElementById('menuAvatar').textContent = userName.charAt(0).toUpperCase();
-      document.getElementById('menuUserRole').textContent = userRole;
-      localStorage.setItem('is_superuser', user.is_superuser);
-      
-      // 超级管理员显示管理账号入口
-      if (user.is_superuser) {
-        document.getElementById('menuManageAccount').style.display = 'flex';
-      }
-    }
-  } catch (error) {
-    console.error('加载用户信息失败:', error);
-  }
-}
-
-let usersList = [];
-let usersConfigMap = {};
-
-function showUserManager() {
-  document.getElementById('userModalOverlay').classList.add('show');
-  loadUsers();
-  loadAllUserConfigs();
-}
-
-async function loadAllUserConfigs() {
-  const token = localStorage.getItem('access_token');
-  try {
-    const response = await fetch('/auth/admin/user-configs', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (response.ok) {
-      const configs = await response.json();
-      configs.forEach(c => {
-        usersConfigMap[c.user_id] = c;
-      });
-      renderUserList();
-    }
-  } catch (e) {
-    console.error('加载用户配置失败:', e);
-  }
-}
-
-function closeUserManager() {
-  document.getElementById('userModalOverlay').classList.remove('show');
-}
-
-function viewUserConfig(userId) {
-  const config = usersConfigMap[userId];
-  if (!config) {
-    alert('该用户暂无配置');
-    return;
-  }
-  const user = usersList.find(u => u.id === userId);
-  const customModelsStr = Array.isArray(config.custom_models) 
-    ? config.custom_models.map(m => `${m.name} (${m.id})`).join(', ') 
-    : '无';
-  
-  document.getElementById('modalTitle').textContent = `📋 ${user?.username || '用户'} 的配置`;
-  document.getElementById('modalBody').innerHTML = `
-    <div class="tooltip-row"><span class="tooltip-label">默认模型</span><span class="tooltip-value">${getModelDisplayName(config.default_model)}</span></div>
-    <div class="tooltip-row"><span class="tooltip-label">心情</span><span class="tooltip-value">${config.mood || '-'}</span></div>
-    <div class="tooltip-row"><span class="tooltip-label">API URL</span><span class="tooltip-value" style="font-size:11px;">${config.api_url || '-'}</span></div>
-    <div class="tooltip-row"><span class="tooltip-label">API Key</span><span class="tooltip-value" style="font-size:11px;">${config.api_key ? '***' + config.api_key.slice(-4) : '-'}</span></div>
-    <div class="tooltip-row"><span class="tooltip-label">自定义模型</span><span class="tooltip-value" style="font-size:11px;">${customModelsStr}</span></div>
-  `;
-  document.getElementById('modalOverlay').classList.add('show');
-  document.getElementById('userModalOverlay').classList.remove('show');
-}
-
-async function loadUsers() {
-  const token = localStorage.getItem('access_token');
-  try {
-    const response = await fetch('/auth/users', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (response.ok) {
-      usersList = await response.json();
-      renderUserList();
-    }
-  } catch (error) {
-    console.error('加载用户列表失败:', error);
-  }
-}
-
-function renderUserList() {
-  const tbody = document.getElementById('usersTableBody');
-  tbody.innerHTML = '';
-  
-  usersList.forEach(user => {
-    const userConfig = usersConfigMap[user.id] || {};
-    const row = document.createElement('tr');
-    const apiKeyDisplay = userConfig.api_key ? '***' + userConfig.api_key.slice(-4) : '-';
-    row.innerHTML = `
-      <td style="color:var(--text-sub);font-size:11px;">${user.id}</td>
-      <td><strong>${user.username}</strong></td>
-      <td style="color:var(--text-sub);">${user.email}</td>
-      <td><span class="status-badge ${user.is_active ? 'active' : 'inactive'}">${user.is_active ? '激活' : '禁用'}</span></td>
-      <td><span class="role-badge ${user.is_superuser ? 'admin' : 'user'}">${user.is_superuser ? '超级管理员' : '普通用户'}</span></td>
-      <td style="color:var(--accent-cyan);font-size:12px;">${userConfig.default_model ? getModelDisplayName(userConfig.default_model) : '-'}</td>
-      <td style="color:var(--text-sub);font-size:11px;font-family:monospace;">${apiKeyDisplay}</td>
-      <td style="color:var(--text-sub);font-size:11px;">${user.created_at ? new Date(user.created_at).toLocaleString('zh-CN') : '-'}</td>
-      <td>
-        <button onclick="editUser(${user.id})" class="btn-action">编辑</button>
-        <button onclick="viewUserConfig(${user.id})" class="btn-action" style="background:rgba(114,224,224,0.1);color:var(--accent-cyan);">配置</button>
-        <button onclick="deleteUserConfirm(${user.id}, '${user.username}')" class="btn-action danger">删除</button>
-      </td>
-    `;
-    tbody.appendChild(row);
-  });
-}
-
-async function deleteUserConfirm(userId, username) {
-  if (!confirm(`确定要删除用户 "${username}" 吗？此操作不可撤销。`)) return;
-  
-  const token = localStorage.getItem('access_token');
-  try {
-    const response = await fetch(`/auth/users/${userId}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (response.ok) {
-      alert('用户删除成功');
-      loadUsers();
-    } else {
-      const data = await response.json();
-      alert(data.detail || '删除失败');
-    }
-  } catch (error) {
-    console.error('删除用户失败:', error);
-    alert('删除失败');
-  }
-}
-
-function editUser(userId) {
-  const user = usersList.find(u => u.id === userId);
-  if (!user) return;
-  
-  document.getElementById('editUserId').value = user.id;
-  document.getElementById('editUsername').value = user.username;
-  document.getElementById('editEmail').value = user.email;
-  document.getElementById('editIsActive').checked = user.is_active;
-  document.getElementById('editIsSuperuser').checked = user.is_superuser;
-  
-  document.getElementById('userModalOverlay').classList.remove('show');
-  document.getElementById('editUserModalOverlay').classList.add('show');
-}
-
-async function saveUserEdit() {
-  const userId = document.getElementById('editUserId').value;
-  const username = document.getElementById('editUsername').value;
-  const email = document.getElementById('editEmail').value;
-  const isActive = document.getElementById('editIsActive').checked;
-  const isSuperuser = document.getElementById('editIsSuperuser').checked;
-  
-  const token = localStorage.getItem('access_token');
-  try {
-    const response = await fetch(`/auth/users/${userId}`, {
-      method: 'PUT',
-      headers: { 
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: new URLSearchParams({
-        username,
-        email,
-        is_active: isActive,
-        is_superuser: isSuperuser
-      })
-    });
-    if (response.ok) {
-      alert('用户信息更新成功');
-      document.getElementById('editUserModalOverlay').classList.remove('show');
-      showUserManager();
-    } else {
-      const data = await response.json();
-      alert(data.detail || '更新失败');
-    }
-  } catch (error) {
-    console.error('更新用户失败:', error);
-    alert('更新失败');
-  }
-}
-
-function closeEditUserModal() {
-  document.getElementById('editUserModalOverlay').classList.remove('show');
-}
-</script>
-
+<!-- ===== 弹窗：用户管理 ===== -->
 <div id="userModalOverlay" class="modal-overlay">
   <div class="modal-content user-mgmt-modal">
     <div class="modal-header">
       <div>
         <h2>👥 用户管理</h2>
-        <span style="font-size:12px;color:var(--text-sub);">管理所有注册用户与配置</span>
+        <span class="stat-sub-text-sm" style="margin-bottom:0">管理所有注册用户与配置</span>
       </div>
       <button class="modal-close" onclick="closeUserManager()">×</button>
     </div>
@@ -1908,8 +425,7 @@ function closeEditUserModal() {
               <th>操作</th>
             </tr>
           </thead>
-          <tbody id="usersTableBody">
-          </tbody>
+          <tbody id="usersTableBody"></tbody>
         </table>
       </div>
     </div>
@@ -1919,12 +435,13 @@ function closeEditUserModal() {
   </div>
 </div>
 
+<!-- ===== 弹窗：编辑用户 ===== -->
 <div id="editUserModalOverlay" class="modal-overlay">
   <div class="modal-content edit-user-modal">
     <div class="modal-header">
       <div>
         <h2>✏️ 编辑用户</h2>
-        <span style="font-size:12px;color:var(--text-sub);">修改用户信息与权限</span>
+        <span class="stat-sub-text-sm" style="margin-bottom:0">修改用户信息与权限</span>
       </div>
       <button class="modal-close" onclick="closeEditUserModal()">×</button>
     </div>
@@ -1956,150 +473,6 @@ function closeEditUserModal() {
   </div>
 </div>
 
-<style>
-.user-mgmt-modal {
-  max-width: 1100px;
-}
-.edit-user-modal {
-  max-width: 480px;
-}
-.users-table-new {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  font-size: 13px;
-}
-.users-table-new th {
-  background: rgba(255,255,255,0.06);
-  padding: 14px 12px;
-  text-align: left;
-  font-weight: 600;
-  color: var(--accent-cyan);
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border-bottom: 2px solid rgba(135, 232, 232, 0.2);
-  white-space: nowrap;
-}
-.users-table-new td {
-  padding: 12px;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  color: var(--text-main);
-  font-size: 13px;
-  white-space: nowrap;
-}
-.users-table-new tr:hover td {
-  background: rgba(135, 232, 232, 0.06);
-}
-.users-table-new .role-badge {
-  padding: 3px 10px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 500;
-}
-.role-badge.admin {
-  background: rgba(255, 200, 221, 0.15);
-  color: var(--accent-pink);
-}
-.role-badge.user {
-  background: rgba(135, 232, 232, 0.12);
-  color: var(--accent-cyan);
-}
-.status-badge {
-  padding: 3px 10px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 500;
-}
-.status-badge.active {
-  background: rgba(74, 222, 128, 0.12);
-  color: var(--success);
-}
-.status-badge.inactive {
-  background: rgba(255, 107, 107, 0.12);
-  color: var(--danger);
-}
-.users-table-new .btn-action {
-  padding: 5px 12px;
-  font-size: 11px;
-  border-radius: 8px;
-  border: 1px solid var(--glass-border);
-  background: rgba(255,255,255,0.05);
-  color: var(--text-sub);
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-right: 4px;
-}
-.users-table-new .btn-action:hover {
-  background: rgba(135, 232, 232, 0.15);
-  border-color: var(--accent-cyan);
-  color: var(--accent-cyan);
-}
-.users-table-new .btn-action.danger {
-  border-color: rgba(255, 107, 107, 0.2);
-}
-.users-table-new .btn-action.danger:hover {
-  background: rgba(255, 107, 107, 0.15);
-  border-color: var(--danger);
-  color: var(--danger);
-}
-.form-check-group {
-  padding: 8px 0;
-}
-.form-check-label {
-  display: flex !important;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  color: var(--text-main) !important;
-  font-size: 14px !important;
-}
-.form-checkbox {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--accent-cyan);
-  cursor: pointer;
-}
-.users-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-.users-table th, .users-table td {
-  padding: 10px;
-  text-align: left;
-  border-bottom: 1px solid var(--glass-border);
-}
-.users-table th {
-  background: rgba(0,0,0,0.2);
-  font-weight: 600;
-  color: var(--text-sub);
-}
-.users-table tr:hover {
-  background: rgba(0,0,0,0.1);
-}
-.form-group {
-  margin-bottom: 16px;
-}
-.form-group label {
-  display: block;
-  margin-bottom: 6px;
-  color: var(--text-sub);
-  font-size: 13px;
-}
-.form-input {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--glass-border);
-  border-radius: 8px;
-  background: rgba(0,0,0,0.2);
-  color: var(--text-main);
-  font-size: 14px;
-  outline: none;
-}
-.form-input:focus {
-  border-color: var(--accent-cyan);
-}
-</style>
+<script src="/static/js/index.js"></script>
 </body>
 </html>

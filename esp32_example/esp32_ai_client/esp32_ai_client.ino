@@ -116,8 +116,8 @@ void setupWiFi() {
 
 // ============ 发送聊天消息 ============
 String sendChatMessage(const char* message) {
-  // 构建请求体
-  StaticJsonDocument<512> requestDoc;
+  // 构建请求体（使用 DynamicJsonDocument 支持较大消息）
+  DynamicJsonDocument requestDoc(2048);
   requestDoc["device_code"] = DEVICE_CODE;
   requestDoc["model"] = "glm-5.1";
   requestDoc["max_tokens"] = 512;
@@ -133,7 +133,7 @@ String sendChatMessage(const char* message) {
   userMsg["role"] = "user";
   userMsg["content"] = message;
   
-  char jsonBuffer[512];
+  char jsonBuffer[2048];
   serializeJson(requestDoc, jsonBuffer);
   
   Serial.println("发送请求到服务器...");

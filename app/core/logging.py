@@ -34,7 +34,7 @@ def setup_logging(log_level: str = "INFO", log_dir: Optional[str] = None):
     
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
-    console_handler.setLevel(logging.INFO)
+    console_handler.setLevel(getattr(logging, log_level.upper()))
     logger.addHandler(console_handler)
     
     file_handler = RotatingFileHandler(

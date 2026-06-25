@@ -495,55 +495,6 @@ button:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important
 
       <div class="collapse-card">
         <div class="card-header" onclick="toggleCard(this)">
-          <h2>⚙️ 生成参数</h2>
-          <span class="card-toggle">−</span>
-        </div>
-        <div class="card-body open">
-          <div class="row-two">
-            <div class="field">
-              <label>Temperature 随机性</label>
-              <div class="slider-wrap">
-                <input type="range" id="tempSlider" min="0" max="2" step="0.1" value="0.7">
-                <span class="slider-val" id="tempVal">0.7</span>
-              </div>
-            </div>
-            <div class="field">
-              <label>Max Tokens 输出上限</label>
-              <input type="number" id="maxTokens" value="1024" min="64" max="8192">
-            </div>
-          </div>
-          <div class="row-two">
-            <div class="field">
-              <label>Top P</label>
-              <div class="slider-wrap">
-                <input type="range" id="topPSlider" min="0" max="1" step="0.1" value="0.7">
-                <span class="slider-val" id="topPVal">0.7</span>
-              </div>
-            </div>
-            <div class="field">
-              <label>Top K</label>
-              <input type="number" id="topK" value="50" min="1" max="100">
-            </div>
-          </div>
-          <div class="field">
-            <label>频率惩罚 Frequency Penalty</label>
-            <div class="slider-wrap">
-              <input type="range" id="freqSlider" min="-2" max="2" step="0.1" value="0.5">
-              <span class="slider-val" id="freqVal">0.5</span>
-            </div>
-          </div>
-          <div class="switch-row">
-            <span>启用模型思考标签 &lt;think&gt;</span>
-            <label class="switch">
-              <input type="checkbox" id="enableThink">
-              <span class="slider-switch"></span>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <div class="collapse-card">
-        <div class="card-header" onclick="toggleCard(this)">
           <h2>💭 小福宝的心情</h2>
           <span class="card-toggle">−</span>
         </div>
@@ -551,7 +502,7 @@ button:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important
           <div class="field">
             <label>选择小福宝的心情</label>
             <div class="mood-grid" id="moodGrid">
-              <div class="mood-card active" data-mood="happy" onclick="selectMood(this)">
+              <div class="mood-card" data-mood="happy" onclick="selectMood(this)">
                 <div class="mood-emoji">😊</div>
                 <div class="mood-name">开心</div>
                 <div class="mood-skill">happy_mood</div>
@@ -682,6 +633,28 @@ async function checkLogin() {
   }
 }
 
+/* ===== API Key 脱敏检测与完整 Key 恢复 =====
+ * 后端 GET /auth/config 出于安全返回脱敏值（如 "20ea25...jZeR"），不能直接用于真实请求。
+ * 首页 navigateTo() 会把完整 key 同时写入 localStorage('ai_platform_api_key')
+ * 和 localStorage('ai_chat_config').key，这里从中恢复完整 key。
+ */
+function isMaskedKey(key) {
+  // mask_api_key() 对长 key 返回 "abcdef...7890"，对短 key 返回 "***"
+  return !key || typeof key !== 'string' || key.includes('...') || key === '***';
+}
+
+function getFullApiKeyFromStorage() {
+  // 来源1：ai_platform_api_key（首页 navigateTo / validateKey 写入）
+  var localKey = localStorage.getItem('ai_platform_api_key') || '';
+  if (!isMaskedKey(localKey)) return localKey;
+  // 来源2：ai_chat_config.key（首页 navigateTo 写入的副本）
+  try {
+    var cfg = JSON.parse(localStorage.getItem('ai_chat_config') || '{}');
+    if (cfg.key && !isMaskedKey(cfg.key)) return cfg.key;
+  } catch (e) { /* ignore parse error */ }
+  return '';
+}
+
 async function loadUserConfig() {
   const token = localStorage.getItem('access_token');
   try {
@@ -691,7 +664,18 @@ async function loadUserConfig() {
     
     if (response.ok) {
       const userConfig = await response.json();
-      currentApiKey = userConfig.api_key || localStorage.getItem('ai_platform_api_key') || '';
+      
+      // 【修复】API Key 优先级：localStorage 完整 key > ai_chat_config.key > 后端脱敏值（仅判断是否已配置）
+      // 后端 GET /auth/config 返回 mask_api_key() 脱敏值（如 "20ea25...jZeR"），直接使用会导致鉴权失败。
+      const storedFullKey = getFullApiKeyFromStorage();
+      if (storedFullKey) {
+        currentApiKey = storedFullKey;
+      } else if (!isMaskedKey(userConfig.api_key)) {
+        currentApiKey = userConfig.api_key;
+      } else {
+        currentApiKey = '';
+      }
+      
       currentApiUrl = userConfig.api_url || localStorage.getItem('ai_platform_api_url') || DEFAULT_API_URL;
       currentMood = userConfig.mood || localStorage.getItem('selected_mood') || 'happy';
       
@@ -723,13 +707,18 @@ async function loadUserConfig() {
         }
       }
       
-      localStorage.setItem('ai_platform_api_key', currentApiKey);
+      // 【修复】只在 currentApiKey 是完整 key（非脱敏）时才写回 localStorage，
+      // 避免把脱敏值 "20ea25...jZeR" 污染到 localStorage 覆盖原有完整 key。
+      if (currentApiKey && !isMaskedKey(currentApiKey)) {
+        localStorage.setItem('ai_platform_api_key', currentApiKey);
+      }
       localStorage.setItem('ai_platform_api_url', currentApiUrl);
       localStorage.setItem('selected_mood', currentMood);
     }
   } catch (error) {
     console.error('加载用户配置失败:', error);
-    currentApiKey = localStorage.getItem('ai_platform_api_key') || '';
+    // 【修复】catch 也使用 getFullApiKeyFromStorage()，避免读到被旧 bug 污染的脱敏值
+    currentApiKey = getFullApiKeyFromStorage();
     currentApiUrl = localStorage.getItem('ai_platform_api_url') || DEFAULT_API_URL;
     currentMood = localStorage.getItem('selected_mood') || 'happy';
     // 从 localStorage 恢复模型（即使后端请求失败也能正确设置）
@@ -755,14 +744,13 @@ async function saveConfigToBackend(configData) {
   const token = localStorage.getItem('access_token');
   if (!token) return;
   try {
-    const params = new URLSearchParams();
-    Object.entries(configData).forEach(([k, v]) => {
-      if (v !== undefined && v !== null) params.append(k, v);
-    });
     await fetch('/auth/config', {
       method: 'PUT',
-      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params.toString()
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(configData)
     });
   } catch (e) {
     console.error('保存配置到后端失败:', e);
@@ -772,6 +760,7 @@ async function saveConfigToBackend(configData) {
 async function saveModel() {
   const model = document.getElementById('modelSelect')?.value;
   if (!model) return;
+  localStorage.setItem('ai_platform_model', model);
   await saveConfigToBackend({ default_model: model });
 }
 
@@ -965,18 +954,6 @@ function toggleCard(el) {
   icon.textContent = body.classList.contains("open") ? "−" : "+";
 }
 
-const tempSlider = document.getElementById("tempSlider");
-const tempVal = document.getElementById("tempVal");
-tempSlider.oninput = () => tempVal.textContent = tempSlider.value;
-
-const topPSlider = document.getElementById("topPSlider");
-const topPVal = document.getElementById("topPVal");
-topPSlider.oninput = () => topPVal.textContent = topPSlider.value;
-
-const freqSlider = document.getElementById("freqSlider");
-const freqVal = document.getElementById("freqVal");
-freqSlider.oninput = () => freqVal.textContent = freqSlider.value;
-
 function showToast(text) {
   const toast = document.getElementById("toast");
   toast.textContent = text;
@@ -1097,12 +1074,6 @@ async function sendMessage() {
     api_key: currentApiKey,
     api_url: currentApiUrl,
     model: selectedModel,
-    max_tokens: Number(document.getElementById("maxTokens").value),
-    temperature: Number(tempSlider.value),
-    top_p: Number(topPSlider.value),
-    top_k: Number(document.getElementById("topK").value),
-    frequency_penalty: Number(freqSlider.value),
-    enable_think: document.getElementById("enableThink").checked,
     enabled_tools: enabledTools,
     mood: currentMood
   };
@@ -1140,7 +1111,7 @@ async function sendMessage() {
           }
           if (obj.tool_result) {
             let toolMsg = `${obj.tool_result.result}`;
-            toolMsg = toolMsg.replace(/[^\u4e00-\u9fa50-9:\s]/g, '');
+            // 仅移除内部调试标记，保留 emoji、中文、标点等用户可见内容
             toolMsg = toolMsg.replace(/工具调用\s*\[.*?\]\s*[:：]?\s*/g, '');
             if (!fullResp) {
               fullResp = toolMsg;
@@ -1238,7 +1209,7 @@ async function selectMood(cardEl) {
   };
   const emoji = emojiMap[mood] || '';
 
-  addMessage('system', `${emoji} 心情已切换为【${moodLabel}】，后续回复将以该语气进行`, new Date().toTimeString().slice(0, 5), false);
+  addMessage('assist', `${emoji} 心情已切换为【${moodLabel}】，后续回复将以该语气进行`, new Date().toTimeString().slice(0, 5), false);
 }
 
 function restoreMood() {

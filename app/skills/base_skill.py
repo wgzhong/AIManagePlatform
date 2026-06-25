@@ -6,24 +6,23 @@ Skill 基类模块
 
 import os
 import re
+import logging
 from typing import Dict, Any, Optional, List
 
+logger = logging.getLogger(__name__)
 
 class BaseSkill:
     """Skill 基类"""
 
-    # 技能基本信息
+    # 技能基本信息（子类通过类属性覆盖，实例化时在 __init__ 中初始化）
     name: str = ""
     description: str = ""
-    parameters: Dict[str, Any] = {}
     icon: str = "🔧"
     category: str = "通用"
 
     # 高级配置选项
     enabled: bool = True
     auto_trigger: bool = False
-    trigger_keywords: List[str] = []
-    # 是否为直接工具（执行后不需要 LLM 二次总结，直接返结果）
     is_direct_tool: bool = False
 
     # System Prompt（可从 md 文件加载）
@@ -32,6 +31,32 @@ class BaseSkill:
 
     # skill 资源目录（子类通过相对路径引用）
     _skill_dir: Optional[str] = None
+
+    def __init__(self, **kwargs):
+        # 初始化可变默认值 —— 优先 kwargs，其次类属性，最后默认值
+        # parameters 和 trigger_keywords 需要浅拷贝避免所有实例共享同一引用
+        for key in ("parameters", "trigger_keywords"):
+            default: Any = {} if key == "parameters" else []
+            if key in kwargs:
+                setattr(self, key, kwargs[key])
+            elif hasattr(self.__class__, key):
+                val = getattr(self.__class__, key)
+                if val is not None:
+                    setattr(self, key, val.copy() if isinstance(val, (dict, list)) else val)
+                else:
+                    setattr(self, key, default)
+            else:
+                setattr(self, key, default)
+        # 非可变类型的属性直接从类属性继承
+        for key in ("name", "description", "icon", "category", "enabled",
+                     "auto_trigger", "is_direct_tool", "system_prompt",
+                     "mood_system_prompt", "_skill_dir"):
+            if key in kwargs:
+                setattr(self, key, kwargs[key])
+            elif hasattr(self.__class__, key):
+                val = getattr(self.__class__, key)
+                if not isinstance(val, (dict, list)):
+                    setattr(self, key, val)
 
     def run(self, args: Dict[str, Any]) -> str:
         """
@@ -79,7 +104,7 @@ class BaseSkill:
                 skill_dir = os.path.dirname(module_path)
                 return skill_dir
         except Exception:
-            pass
+            logger.exception("获取 skill 目录失败: %s", module_name)
 
         return None
 
@@ -120,6 +145,7 @@ class BaseSkill:
                 return match.group(2).strip()
             return content.strip()
         except Exception:
+            logger.exception("加载 md 文件失败: %s", skill_path)
             return ""
 
     def _save_md_file(self, filename: str, content: str) -> bool:
@@ -143,6 +169,7 @@ class BaseSkill:
                 f.write(content)
             return True
         except Exception:
+            logger.exception("保存 md 文件失败: %s", md_path)
             return False
 
     def get_system_prompt(self) -> str:
@@ -205,6 +232,7 @@ class BaseSkill:
                     f.write(new_content)
                 return True
             except Exception:
+                logger.exception("保存 system prompt 失败: %s", skill_path)
                 return False
         
         return self._save_md_file("skill.md", content)
@@ -270,6 +298,7 @@ class MdSkill(BaseSkill):
     """从 md 文件加载的 Skill"""
 
     def __init__(self, md_path: str):
+        super().__init__()
         self._skill_path = md_path
         self._load_from_frontmatter()
 
@@ -287,7 +316,7 @@ class MdSkill(BaseSkill):
                 frontmatter = match.group(1)
                 self._parse_frontmatter(frontmatter)
         except Exception:
-            pass
+            logger.exception("加载 MdSkill frontmatter 失败: %s", self._skill_path)
 
     def _parse_frontmatter(self, frontmatter: str):
         """解析 YAML frontmatter"""
@@ -318,6 +347,7 @@ class MdSkill(BaseSkill):
         except ImportError:
             self._simple_parse(frontmatter)
         except Exception:
+            logger.exception("YAML frontmatter 解析失败，回退到简单解析")
             self._simple_parse(frontmatter)
 
     def _simple_parse(self, frontmatter: str):

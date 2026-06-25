@@ -4,34 +4,34 @@
 # ============================================================
 
 # --- Web 框架 ---
-fastapi>=0.100.0
-uvicorn[standard]>=0.23.0
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
 
 # --- HTTP 客户端（HTTP/2 连接复用） ---
-httpx[http2]>=0.24.0
-h2>=4.0.0
+httpx[http2]==0.28.1
+h2==4.1.0
 
 # --- 数据校验与配置 ---
-pydantic>=2.0.0
-pydantic-settings>=2.0.0
-orjson>=3.9.0
+pydantic==2.10.4
+pydantic-settings==2.7.1
+email-validator==2.2.0
+orjson==3.10.12
 
 # --- 数据库 ORM ---
-sqlalchemy>=1.4.0
+sqlalchemy==2.0.36
 
 # --- 用户认证 ---
-python-jose[cryptography]>=3.3.0
-passlib[bcrypt]>=1.7.4
-bcrypt>=4.0.0
+python-jose[cryptography]==3.3.0
+bcrypt==4.2.1
 
 # --- YAML 解析（Skill markdown frontmatter） ---
-PyYAML>=6.0
+PyYAML==6.0.2
 
 # --- 定时任务调度 ---
-APScheduler>=3.10
+APScheduler==3.10.4
 
 # --- 接口限流 ---
-slowapi>=0.1.9
+slowapi==0.1.9
 
 # --- 加密（API Key 存储保护，可选但推荐） ---
-cryptography>=41.0.0
+cryptography==44.0.0

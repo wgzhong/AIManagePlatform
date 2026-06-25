@@ -1,28 +1,43 @@
 """
 加密工具模块
 提供 Fernet 对称加密，用于保护存储于磁盘的 API Key 等敏感数据。
-加密密钥从环境变量 ENCRYPTION_KEY 或 ADMIN_TOKEN 派生。
-若未配置则回退为明文模式（打印警告日志）。
+加密密钥从配置项 ENCRYPTION_KEY 派生（回退到 ADMIN_TOKEN）。
+若两者都未配置则回退为明文模式（打印警告日志）。
+
+⚠️ 配置统一走 settings，不直接读 os.environ（详见 P0-1 修复）。
+   密钥派生使用 PBKDF2HMAC + 固定 salt（防止字典攻击），替代旧的单层 SHA256。
 """
+
 import base64
-import hashlib
 import logging
-import os
+
+from app.core.config import get_effective_encryption_key
 
 logger = logging.getLogger(__name__)
 
-# 从环境变量获取加密种子，未配置则为空（明文模式）
-_ENCRYPTION_SEED = os.environ.get("ENCRYPTION_KEY") or os.environ.get("ADMIN_TOKEN", "")
+# 从配置派生加密种子
+_ENCRYPTION_SEED = get_effective_encryption_key()
 
 _fernet = None
 if _ENCRYPTION_SEED:
     try:
         from cryptography.fernet import Fernet
-        # 用 SHA256 将任意长度种子派生为 32 字节，再 base64 编码为 Fernet key
-        key_bytes = hashlib.sha256(_ENCRYPTION_SEED.encode("utf-8")).digest()
+        from cryptography.hazmat.primitives import hashes
+        from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
+        # 用 PBKDF2HMAC 派生 32 字节密钥（10w 次迭代，防止暴力破解）
+        # salt 固定值：本应用是单租户部署，无需每实例不同 salt；
+        # 若改为多租户场景，应改为每实例随机 salt 并持久化。
+        kdf = PBKDF2HMAC(
+            algorithm=hashes.SHA256(),
+            length=32,
+            salt=b"aimanageplatform-fernet-salt-v1",
+            iterations=100_000,
+        )
+        key_bytes = kdf.derive(_ENCRYPTION_SEED.encode("utf-8"))
         fernet_key = base64.urlsafe_b64encode(key_bytes)
         _fernet = Fernet(fernet_key)
-        logger.info("API Key 加密已启用")
+        logger.info("API Key 加密已启用（PBKDF2HMAC 派生密钥）")
     except ImportError:
         logger.warning("cryptography 库未安装，API Key 将明文存储。安装: pip install cryptography")
 else:

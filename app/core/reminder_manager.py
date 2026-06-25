@@ -27,29 +27,33 @@ class ReminderManager:
         self.scheduler = BackgroundScheduler()
         self.reminders: Dict[str, Dict[str, Any]] = {}
         self._data_path = os.path.join(os.path.dirname(__file__), '../../data/reminders.json')
+        self._save_lock = threading.Lock()
+        self._reminders_lock = threading.Lock()
         self._load_reminders()
         self._sse_subscribers: List[queue.Queue] = []
         self._sse_lock = threading.Lock()
-        self._notification_queue = queue.Queue()
+        self._notification_queue = queue.Queue(maxsize=1000)
         self._worker_thread = None
         self._running = False
 
     def _load_reminders(self):
-        """从文件加载提醒"""
+        """从文件加载提醒（线程安全）"""
         if os.path.exists(self._data_path):
             try:
-                with open(self._data_path, 'r', encoding='utf-8') as f:
-                    self.reminders = json.load(f)
+                with self._save_lock:
+                    with open(self._data_path, 'r', encoding='utf-8') as f:
+                        self.reminders = json.load(f)
             except Exception as e:
                 logger.warning("加载提醒数据失败: %s", e)
                 self.reminders = {}
 
     def _save_reminders(self):
-        """保存提醒到文件"""
+        """保存提醒到文件（线程安全）"""
         try:
             os.makedirs(os.path.dirname(self._data_path), exist_ok=True)
-            with open(self._data_path, 'w', encoding='utf-8') as f:
-                json.dump(self.reminders, f, ensure_ascii=False, indent=2)
+            with self._save_lock:
+                with open(self._data_path, 'w', encoding='utf-8') as f:
+                    json.dump(self.reminders, f, ensure_ascii=False, indent=2)
         except Exception as e:
             logger.warning("保存提醒数据失败: %s", e)
 
@@ -112,23 +116,70 @@ class ReminderManager:
         logger.info("已调度提醒: %s, 触发时间: %s", reminder_id, trigger_time)
 
     def _trigger_reminder(self, reminder_id: str):
-        """触发提醒"""
-        if reminder_id in self.reminders:
-            self.reminders[reminder_id]['status'] = 'triggered'
-            self.reminders[reminder_id]['triggered_count'] += 1
+        """触发提醒，并处理重复调度"""
+        with self._reminders_lock:
+            if reminder_id not in self.reminders:
+                return
+            reminder = self.reminders[reminder_id]
+            reminder['status'] = 'triggered'
+            reminder['triggered_count'] += 1
             self._save_reminders()
 
+        reminder_ref = self.reminders.get(reminder_id)
+        if reminder_ref:
+            message = {
+                'type': 'reminder',
+                'id': reminder_ref['id'],
+                'message': reminder_ref['message'],
+                'trigger_time': reminder_ref['trigger_time'],
+                'created_at': reminder_ref['created_at']
+            }
+            logger.info("放入通知队列: %s", message)
+            try:
+                self._notification_queue.put(message, timeout=1.0)
+            except queue.Full:
+                logger.warning("通知队列已满，丢弃提醒: %s", reminder_id)
+
+        # 处理重复提醒
+        self._reschedule_if_repeating(reminder_id)
+
+    def _reschedule_if_repeating(self, reminder_id: str):
+        """如果提醒配置了重复，重新调度下一次触发"""
+        with self._reminders_lock:
             reminder = self.reminders.get(reminder_id)
-            if reminder:
-                message = {
-                    'type': 'reminder',
-                    'id': reminder['id'],
-                    'message': reminder['message'],
-                    'trigger_time': reminder['trigger_time'],
-                    'created_at': reminder['created_at']
-                }
-                logger.info("放入通知队列: %s", message)
-                self._notification_queue.put(message)
+            if not reminder:
+                return
+            if reminder.get('repeat_type', 'once') == 'once':
+                return
+            if reminder.get('repeat_count', 0) > 0 and reminder.get('triggered_count', 0) >= reminder.get('repeat_count', 0):
+                return
+
+            old_time = datetime.fromisoformat(reminder['trigger_time'])
+            interval = reminder.get('repeat_interval', 0)
+            if interval <= 0:
+                return
+
+            repeat_type = reminder.get('repeat_type', 'once')
+            if repeat_type == 'minutes':
+                next_time = old_time + timedelta(minutes=interval)
+            elif repeat_type == 'hours':
+                next_time = old_time + timedelta(hours=interval)
+            elif repeat_type == 'days':
+                next_time = old_time + timedelta(days=interval)
+            else:
+                return
+
+            # 跳过已过去的时间
+            now = datetime.now()
+            while next_time <= now:
+                next_time += timedelta(minutes=interval) if repeat_type == 'minutes' else (
+                    timedelta(hours=interval) if repeat_type == 'hours' else timedelta(days=interval))
+
+            reminder['trigger_time'] = next_time.isoformat()
+            reminder['status'] = 'pending'
+            self._save_reminders()
+            self._schedule_reminder(reminder_id, next_time)
+            logger.info("重复提醒已重新调度: %s, 下次触发: %s", reminder_id, next_time)
 
     def _notify_all_subscribers(self, message: dict):
         """通知所有 SSE 订阅者（线程安全）"""
@@ -171,7 +222,7 @@ class ReminderManager:
 
     def set_reminder(self, message: str, trigger_time: datetime, repeat_type: str = 'once', 
                      repeat_interval: int = 0, repeat_count: int = 0) -> str:
-        """设置提醒"""
+        """设置提醒（线程安全）"""
         reminder_id = str(uuid.uuid4())[:8]
 
         reminder = {
@@ -186,8 +237,9 @@ class ReminderManager:
             'triggered_count': 0
         }
 
-        self.reminders[reminder_id] = reminder
-        self._save_reminders()
+        with self._reminders_lock:
+            self.reminders[reminder_id] = reminder
+            self._save_reminders()
         self._schedule_reminder(reminder_id, trigger_time)
 
         return reminder_id
@@ -208,12 +260,16 @@ class ReminderManager:
         return self.set_reminder(message, trigger_time)
 
     def cancel_reminder(self, reminder_id: str) -> bool:
-        """取消提醒"""
-        if reminder_id in self.reminders:
-            self.scheduler.remove_job(f"reminder_{reminder_id}", jobstore=None)
-            self.reminders[reminder_id]['status'] = 'cancelled'
-            self._save_reminders()
-            return True
+        """取消提醒（线程安全）"""
+        with self._reminders_lock:
+            if reminder_id in self.reminders:
+                try:
+                    self.scheduler.remove_job(f"reminder_{reminder_id}")
+                except Exception:
+                    logger.exception("移除 APScheduler job 失败: reminder_%s", reminder_id)
+                self.reminders[reminder_id]['status'] = 'cancelled'
+                self._save_reminders()
+                return True
         return False
 
     def get_reminder(self, reminder_id: str) -> Optional[Dict[str, Any]]:

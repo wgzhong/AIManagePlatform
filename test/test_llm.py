@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 def test_llm_infer_import():
     """测试 LLM 推理模块导入"""
     print("=== LLM 推理模块测试 ===")
-    from core.llm_infer import llm_infer, stream_chat_request
+    from app.core.llm_infer import llm_infer, stream_chat_request
 
     assert llm_infer is not None, "llm_infer 应该存在"
     assert stream_chat_request is not None, "stream_chat_request 应该存在"
@@ -23,15 +23,15 @@ def test_llm_infer_import():
 def test_llm_client():
     """测试 LLM 客户端配置"""
     print("=== LLM 客户端配置测试 ===")
-    from core.llm_infer import llm_infer
-    from core.config import config
+    from app.core.llm_infer import llm_infer
+    from app.core.config import config
 
-    assert llm_infer.default_url == config.DEFAULT_URL, "默认 URL 应该匹配"
-    assert llm_infer.default_model, "应该有默认模型"
+    assert llm_infer._api_url == config.DEFAULT_URL, "默认 URL 应该匹配"
+    assert config.DEFAULT_MODEL, "应该有默认模型"
 
     print(f"[OK] LLM 客户端配置正确")
-    print(f"  - URL: {llm_infer.default_url}")
-    print(f"  - Model: {llm_infer.default_model}")
+    print(f"  - URL: {llm_infer._api_url}")
+    print(f"  - Model: {config.DEFAULT_MODEL}")
     print()
 
 

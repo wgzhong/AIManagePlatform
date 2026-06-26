@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>Skills 配置 - AIManagePlatform</title>
-<!-- v9-wrap-fix-20260626-1650 -->
+<!-- v11-owner-fix-20260626-1716 -->
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -30,7 +30,7 @@ body{font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-s
 
 .page-container{max-width:1440px;margin:0 auto;padding:24px 28px 48px;height:calc(100vh - 56px);display:flex;flex-direction:column;overflow:hidden}
 
-.page-header{position:sticky;top:56px;z-index:99;background:var(--bg-deep);display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-top:4px;flex-shrink:0}
+.page-header{position:relative;z-index:99;background:var(--bg-deep);display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-top:4px;flex-shrink:0}
 .page-header h2{font-size:20px;font-weight:700;display:flex;align-items:center;gap:10px}
 .skill-count-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:rgba(135,232,232,.12);color:var(--accent-cyan)}
 .btn-add{padding:9px 20px;border-radius:var(--radius-md);background:linear-gradient(135deg,#72e0e0,#c084fc);border:none;color:#111;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
@@ -39,7 +39,10 @@ body{font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-s
 .main-grid{display:flex;flex-direction:row;gap:0;flex:1;min-height:0;overflow:hidden}
 
 /* ═══ Left List Panel ═══ */
-.list-panel{width:50%;min-width:280px;border-right:2px solid rgba(255,107,107,.35);min-height:0;overflow:hidden;display:flex;flex-direction:column;flex-shrink:0;background:linear-gradient(180deg,rgba(10,10,31,.95) 0%,rgba(8,8,25,1) 100%);padding-top:8px}
+.list-panel{width:50%;min-width:280px;border-right:2px solid rgba(255,107,107,.35);min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;flex-shrink:0;background:linear-gradient(180deg,rgba(10,10,31,.95) 0%,rgba(8,8,25,1) 100%);padding-top:8px}
+.list-panel::-webkit-scrollbar{width:4px}
+.list-panel::-webkit-scrollbar-thumb{background:rgba(135,232,232,.2);border-radius:3px}
+.list-panel::-webkit-scrollbar-track{background:transparent}
 
 /* ═══ 系统技能 Section 视觉包装 ═══ */
 .sec-wrapper {
@@ -47,7 +50,6 @@ body{font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-s
   border-radius: var(--radius-lg);
   border: 1px solid rgba(135,232,232,.12);
   background: linear-gradient(180deg, rgba(135,232,232,.04) 0%, rgba(10,10,31,.95) 100%);
-  overflow: hidden;
 }
 .sec-header{
   display:flex;align-items:center;gap:10px;
@@ -72,7 +74,6 @@ body{font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-s
   border-radius: var(--radius-lg);
   border: 1px solid rgba(167,139,250,.15);
   background: linear-gradient(180deg, rgba(167,139,250,.05) 0%, rgba(10,10,31,.95) 100%);
-  overflow: hidden;
 }
 #secUserHeader {
   background: linear-gradient(90deg, rgba(167,139,250,.08) 0%, transparent 60%);
@@ -447,6 +448,18 @@ body{font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-s
       return {'Authorization':'Bearer '+t,'Content-Type':'application/json'};
     } catch(e) { return {'Content-Type':'application/json'}; }
   }
+  // 获取当前用户 ID（用于判断是否为技能贡献者）
+  function getCurrentUid() {
+    try { var uid = localStorage.getItem('user_id'); return uid ? String(uid) : null; }
+    catch(e) { return null; }
+  }
+  // 判断当前用户是否是某技能的所有者/贡献者
+  function isMySkill(s) {
+    if (!s || !s.owner_id) return false;
+    var uid = getCurrentUid();
+    if (!uid) return false;
+    return String(s.owner_id) === uid;
+  }
   function toast(msg, type) {
     var el = document.createElement('div');
     el.className = 'toast toast-'+(type||'ok'); el.textContent = msg;
@@ -518,7 +531,9 @@ body{font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-s
       else if (s.source === 'private') bh += '<span class="tag tag-private">私人</span>';
     }
     var oi = s.owner_name ? '<span class="owner-badge">by ' + esc(s.owner_name) + '</span>' : '';
-    var sd = BUILTINS.indexOf(s.name) === -1 && !s.readonly && s.category !== '情感响应';
+    var isMineCard = isMySkill(s);
+    // 删除按钮：非内建技能 + （非只读 或 是自己的贡献技能）+ 非情感响应
+    var sd = BUILTINS.indexOf(s.name) === -1 && (s.category !== '情感响应') && (!s.readonly || isMineCard);
 
     // Card class variants
     var extraClass = '';
@@ -561,7 +576,8 @@ body{font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-s
     for (var i=0;i<skills.length;i++) { if(skills[i].name===name) { s=skills[i]; break; } }
     if (!s) { toast('技能未找到: '+name, 'err'); return; }
     cur = s; cur.source = cur.source || 'global';
-    var ro = s.readonly === true;
+    var isMine = isMySkill(s);
+    var ro = s.readonly === true && !isMine;  // 贡献技能的所有者可编辑，其他人只读
 
     $('editorPane').classList.remove('hidden');
     $('emptyPanel').classList.add('hidden');
@@ -578,24 +594,57 @@ body{font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-s
     if (ro) { enterReadonlyMode(s,name); return; }
     exitReadonlyMode();
 
+    // ── 贡献/取消贡献开关 ──
+    // 私人技能 或 自己贡献的技能 → 显示贡献开关
     var cr=$('contribRow'), cc=$('contribCheck');
-    if(cur.source==='private'){cr.style.display='';cc.checked=!!s.is_contributed;}else{cr.style.display='none';}
+    if(cur.source==='private' || (cur.source==='contributed' && isMine)){
+      cr.style.display='';
+      cc.checked=!!s.is_contributed;
+      // 更新贡献标签文案
+      var cl=cr.querySelector('.contrib-label span:last-child');
+      if(cl){
+        cl.textContent = cur.source==='private'
+          ? '贡献到全局技能库（其他用户可见）'
+          : '保持贡献（其他用户可查看）';
+      }
+    } else { cr.style.display='none'; }
+
     setTog('togEn',s.enabled); setTog('togAuto',s.auto_trigger);
     renderKw(s.trigger_keywords||[]);
 
-    // Load detail into right panel
+    // ── Load detail into right panel ──
     if (cur.source === 'private') {
+      // 私人技能 → 从 user-skills API 加载
       try {
         $('taPrompt').value = '⏳ 正在加载私人技能内容...';
         var r = await fetch('/api/user-skills/'+encodeURIComponent(name)+'/raw-md', {headers:hdr()});
-        console.log('[v8] user-skill raw-md response:', r.status);
+        console.log('[v10] user-skill raw-md response:', r.status);
         if(r.ok){var d=await r.json();var p=parseMdFrontmatter(d.raw_content||'');original.system_prompt=p.system_prompt||'';$('taPrompt').value=p.system_prompt||'(暂无内容)';}
         else { var errD = await r.json().catch(function(){}); $('taPrompt').value = '// 加载失败 (HTTP '+r.status+')\n'+((errD&&errD.detail)||''); }
       }catch(e){console.error('load user raw-md:',e);$('taPrompt').value='// 加载异常: '+e.message;}
       $('filePath').textContent = '(私人技能，仅存于数据库)';
       var st=$('fileStatus');st.className='status-dot saved';st.textContent='已保存';
+    } else if (cur.source === 'contributed' && isMine) {
+      // 自己贡献的技能 → 从 user-skills API 加载（可编辑）
+      try {
+        $('taPrompt').value = '⏳ 正在加载你的贡献技能...';
+        var r2 = await fetch('/api/user-skills/'+encodeURIComponent(name)+'/raw-md', {headers:hdr()});
+        console.log('[v10] my-contributed raw-md response:', r2.status);
+        if(r2.ok){
+          var d2=await r2.json();
+          var p2=parseMdFrontmatter(d2.raw_content||'');
+          original.system_prompt=p2.system_prompt||'';
+          $('taPrompt').value=p2.system_prompt||'(暂无内容)';
+        } else {
+          var errD2 = await r2.json().catch(function(){});
+          $('taPrompt').value = '// 加载失败 (HTTP '+r2.status+')\n'+((errD2&&errD2.detail)||'');
+        }
+      }catch(e){console.error('load my contributed raw-md:',e);$('taPrompt').value='// 加载异常: '+e.message;}
+      $('filePath').textContent = '(你的贡献技能，可编辑)';
+      var st2=$('fileStatus');st2.className='status-dot saved';st2.textContent='贡献模式（可编辑）';
+      await loadRawMd(name);
     } else {
-      // Global skill: load system-prompt
+      // Global skill（系统内置 / 他人的贡献）→ 从 skills API 加载
       $('filePath').textContent = 'skills/'+(s.category||'custom')+'/'+s.name+'/skill.md';
       
       try {
@@ -705,9 +754,15 @@ body{font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-s
   }
 
   // ── Save Operations ──
+  // 判断是否应该用 user-skills API（私人技能 或 自己贡献的技能）
+  function useUserSkillApi() {
+    if (!cur) return false;
+    return cur.source === 'private' || (cur.source === 'contributed' && isMySkill(cur));
+  }
+
   window.savePrompt=async function(){
     if(!cur)return;
-    var ct=$('taPrompt').value,isP=cur.source==='private';
+    var ct=$('taPrompt').value, isP=useUserSkillApi();
     var url=isP?'/api/user-skills/'+cur.name:'/api/skills/'+cur.name+'/system-prompt';
     var m=isP?'PUT':'POST';
     try{var r=await fetch(url,{method:m,headers:hdr(),body:JSON.stringify({content:ct})});
@@ -719,7 +774,7 @@ body{font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-s
 
   window.saveRaw=async function(){
     if(!cur)return;
-    var ct=$('taRaw').value,isP=cur.source==='private';
+    var ct=$('taRaw').value, isP=useUserSkillApi();
     var url=isP?'/api/user-skills/'+cur.name+'/raw-md':'/api/skills/'+cur.name+'/raw-md';
     try{var r=await fetch(url,{method:'POST',headers:hdr(),body:JSON.stringify({content:ct})});
       var d=await r.json().catch(function(){});
@@ -729,7 +784,7 @@ body{font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-s
 
   window.saveConfig=async function(){
     if(!cur)return;
-    var isP=cur.source==='private';
+    var isP=useUserSkillApi();
     var cfgB=JSON.stringify({enabled:cur.enabled,auto_trigger:cur.auto_trigger,trigger_keywords:cur.trigger_keywords});
     var cfgUrl=isP?'/api/user-skills/'+cur.name:'/api/skills/'+cur.name+'/config';
     var cfgM=isP?'PUT':'POST';
@@ -745,14 +800,26 @@ body{font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-s
     delTarget=name;var s=null;
     for(var i=0;i<skills.length;i++){if(skills[i].name===name){s=skills[i];break;}}
     delTargetSource=s?s.source:'global';
-    $('delConfirmMsg').textContent='确定删除「'+name+'」吗？'+(delTargetSource==='private'?'（仅从你的账户删除）':'将永久删除该技能');
+    var isMine = s ? isMySkill(s) : false;
+    // 判断删除类型和提示文案
+    var msg = '确定删除「'+name+'」吗？';
+    if (delTargetSource === 'private' || (delTargetSource === 'contributed' && isMine)) {
+      msg += '\n（将同时取消贡献并从你的账户删除）';
+    } else {
+      msg += '\n将永久删除该技能';
+    }
+    $('delConfirmMsg').textContent = msg;
     $('delConfirmBg').classList.add('open');
   };
   window.closeDelConfirm=function(ev){if(ev&&ev.target!=$('delConfirmBg'))return;$('delConfirmBg').classList.remove('open');delTarget=null;};
   
   $('delConfirmOkBtn').addEventListener('click',async function(){
     if(!delTarget)return;
-    var isP=delTargetSource==='private',url=isP?'/api/user-skills/'+delTarget:'/api/skills/'+delTarget;
+    // 找到技能对象判断是否是自己的
+    var delSkill=null;
+    for(var i=0;i<skills.length;i++){if(skills[i].name===delTarget){delSkill=skills[i];break;}}
+    var isP=delTargetSource==='private'||(delTargetSource==='contributed'&&delSkill&&isMySkill(delSkill));
+    var url=isP?'/api/user-skills/'+delTarget:'/api/skills/'+delTarget;
     try{var r=await fetch(url,{method:'DELETE',headers:hdr()});
       var d=await r.json().catch(function(){});
       if(r.ok){toast(d.message||'已删除','ok');closeDelConfirm();
@@ -788,7 +855,9 @@ body{font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-s
   };
 
   window.toggleContrib=async function(){
-    if(!cur||cur.source!=='private')return;
+    if(!cur) return;
+    // 私人技能 或 自己贡献的技能 → 可以切换贡献状态
+    if(cur.source!=='private' && !(cur.source==='contributed'&&isMySkill(cur))) return;
     var doC=$('contribCheck').checked;
     try{var r=await fetch('/api/user-skills/'+cur.name+'/contribute',{method:doC?'POST':'DELETE',headers:hdr()});
       var dt=await r.json().catch(function(){});

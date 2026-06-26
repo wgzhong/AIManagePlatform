@@ -7,9 +7,8 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>Skills 配置 - AIManagePlatform</title>
-<!-- v6-final-20260626-1526 - 彻底修复版 -->
+<!-- v9-wrap-fix-20260626-1650 -->
 <style>
-/* ═══ Reset & Base ═══ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg-deep:#0a0a1f;--bg-card:rgba(255,255,255,.04);--bg-card-hover:rgba(255,255,255,.07);
@@ -20,187 +19,206 @@
   --radius-lg:16px;--radius-md:12px;--radius-sm:8px;
 }
 html,body{height:100%}
-body{
-  font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
-  background:var(--bg-deep);color:var(--text-primary);overflow-x:hidden;
-}
+body{font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg-deep);color:var(--text-primary);overflow-x:hidden}
 
-/* ═══ Nav ═══ */
-.top-nav{
-  position:sticky;top:0;z-index:100;
-  background:rgba(10,10,31,.92);backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--border-subtle);padding:0 28px;height:56px;
-  display:flex;align-items:center;justify-content:space-between;
-}
-.nav-brand{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:700;
-  background:linear-gradient(120deg,var(--accent-cyan),var(--accent-pink));
-  -webkit-background-clip:text;color:transparent;}
+.top-nav{position:sticky;top:0;z-index:100;background:rgba(10,10,31,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border-subtle);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;}
+.nav-brand{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:700;background:linear-gradient(120deg,var(--accent-cyan),var(--accent-pink));-webkit-background-clip:text;color:transparent;}
 .nav-links{display:flex;gap:4px}
-.nav-link{padding:7px 16px;border-radius:var(--radius-sm);background:transparent;
-  border:none;color:var(--text-secondary);font-size:13px;cursor:pointer;transition:all .2s}
+.nav-link{padding:7px 16px;border-radius:var(--radius-sm);background:transparent;border:none;color:var(--text-secondary);font-size:13px;cursor:pointer;transition:all .2s;text-decoration:none}
 .nav-link:hover{color:var(--text-primary);background:rgba(255,255,255,.06)}
 .nav-link.active{background:rgba(135,232,232,.14);color:var(--accent-cyan)}
 
-/* ═══ Page Container ═══ */
-.page-container{
-  max-width:1440px;margin:0 auto;padding:24px 28px 48px;
-  height:calc(100vh - 56px);
-  display:flex;flex-direction:column;overflow:hidden;
-}
+.page-container{max-width:1440px;margin:0 auto;padding:24px 28px 48px;height:calc(100vh - 56px);display:flex;flex-direction:column;overflow:hidden}
 
-/* ═══ Header (sticky) ═══ */
-.page-header{
-  position:sticky;top:56px;z-index:99;background:var(--bg-deep);
-  display:flex;justify-content:space-between;align-items:center;
-  margin-bottom:16px;padding-top:4px;flex-shrink:0;
-}
+.page-header{position:sticky;top:56px;z-index:99;background:var(--bg-deep);display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-top:4px;flex-shrink:0}
 .page-header h2{font-size:20px;font-weight:700;display:flex;align-items:center;gap:10px}
-.skill-count-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;
-  background:rgba(135,232,232,.12);color:var(--accent-cyan);vertical-align:middle;margin-left:6px}
-.btn-add{padding:9px 20px;border-radius:var(--radius-md);
-  background:linear-gradient(135deg,#72e0e0,#c084fc);border:none;color:#111;
-  font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;
-  display:flex;align-items:center;gap:6px}
+.skill-count-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:rgba(135,232,232,.12);color:var(--accent-cyan)}
+.btn-add{padding:9px 20px;border-radius:var(--radius-md);background:linear-gradient(135deg,#72e0e0,#c084fc);border:none;color:#111;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
 .btn-add:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(114,224,224,.25)}
 
-/* ═══ Main Layout: Flex 50/50 ═══ */
-.main-grid{
-  display:flex;flex-direction:row;gap:0;flex:1;min-height:0;overflow:hidden;
-}
+.main-grid{display:flex;flex-direction:row;gap:0;flex:1;min-height:0;overflow:hidden}
 
-.list-panel{
-  width:50%;min-width:260px;
-  border-right:2px solid rgba(255,107,107,.45);
-  min-height:0;overflow:hidden;
-  display:flex;flex-direction:column;
-  flex-shrink:0;
+/* ═══ Left List Panel ═══ */
+.list-panel{width:50%;min-width:280px;border-right:2px solid rgba(255,107,107,.35);min-height:0;overflow:hidden;display:flex;flex-direction:column;flex-shrink:0;background:linear-gradient(180deg,rgba(10,10,31,.95) 0%,rgba(8,8,25,1) 100%);padding-top:8px}
+
+/* ═══ 系统技能 Section 视觉包装 ═══ */
+.sec-wrapper {
+  margin: 0 8px 8px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(135,232,232,.12);
+  background: linear-gradient(180deg, rgba(135,232,232,.04) 0%, rgba(10,10,31,.95) 100%);
+  overflow: hidden;
 }
 .sec-header{
-  display:flex;align-items:center;gap:8px;
-  padding:12px 16px 8px;
+  display:flex;align-items:center;gap:10px;
+  padding:14px 18px 10px;
   cursor:pointer;user-select:none; flex-shrink:0;
-  transition:opacity .2s;
+  transition:all .2s;
+  border-bottom:1px solid var(--border-subtle);
+  background:linear-gradient(90deg,rgba(135,232,232,.08) 0%,transparent 60%);
 }
-.sec-header:hover{opacity:.85}
-.sec-icon{font-size:16px;width:22px;text-align:center}
-.sec-title{font-size:14px;font-weight:600;color:var(--text-primary)}
-.sec-count{
-  font-size:11px;font-weight:500;padding:1px 8px;border-radius:10px;
-  background:rgba(135,232,232,.12);color:var(--accent-cyan)
-}
+.sec-header:hover{background:linear-gradient(90deg,rgba(135,232,232,.08) 0%,transparent 60%)}
+.sec-icon{font-size:18px;width:24px;text-align:center}
+.sec-title{font-size:15px;font-weight:700;color:var(--text-primary);letter-spacing:.3px}
+.sec-count{font-size:11px;font-weight:600;padding:2px 10px;border-radius:12px;background:rgba(135,232,232,.15);color:var(--accent-cyan);min-width:28px;text-align:center}
 .sec-arrow{margin-left:auto;font-size:11px;color:var(--text-secondary);transition:transform .25s ease}
 .sec-header.collapsed .sec-arrow{transform:rotate(-90deg)}
-.sec-body{
-  overflow-y:auto;padding:0 10px 10px;display:flex;flex-direction:column;gap:5px;
-  min-height:0;flex:1;
+
+/* 系统技能列表区域 - 由 .sec-wrapper 提供包裹背景 */
+
+/* ═══ 用户技能 Section 视觉区分 ═══ */
+.sec-wrapper-user {
+  margin: 0 8px 8px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(167,139,250,.15);
+  background: linear-gradient(180deg, rgba(167,139,250,.05) 0%, rgba(10,10,31,.95) 100%);
+  overflow: hidden;
 }
+#secUserHeader {
+  background: linear-gradient(90deg, rgba(167,139,250,.08) 0%, transparent 60%);
+  border-top: none;
+}
+#secUserHeader:hover {
+  background: linear-gradient(90deg, rgba(167,139,250,.1) 0%, transparent 60%);
+}
+#secUserHeader .sec-icon { color: #a78bfa; }
+#secUserHeader .sec-title { color: #c4b5fd; }
+#secUserHeader .sec-count { 
+  background: rgba(167,139,250,.18) !important; 
+  color: #c4b5fd !important; 
+}
+
+/* Section Body */
+.sec-body{overflow-y:auto;padding:8px 12px 12px;display:flex;flex-direction:column;gap:4px;min-height:0;flex:1}
 .sec-body::-webkit-scrollbar{width:3px}
 .sec-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px}
 .sec-body.hidden{display:none!important}
+
+/* ═══ Skill Cards — 美化版 ═══ */
+.scard{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 14px;border-radius:var(--radius-md);
+  background:rgba(255,255,255,.025);border:1px solid transparent;
+  cursor:pointer;transition:all .2s ease;position:relative;
+  margin-bottom:2px;
+}
+.scard:hover{background:var(--bg-card-hover);border-color:rgba(255,255,255,.1);transform:translateX(3px)}
+.scard.selected{background:rgba(135,232,232,.1);border-color:var(--border-active);box-shadow:0 0 20px rgba(135,232,232,.08)}
+
+/* 图标区域 */
+.scard-icon{
+  width:40px;height:40px;border-radius:10px;
+  background:linear-gradient(135deg,rgba(135,232,232,.12),rgba(167,139,250,.08));
+  border:1px solid rgba(135,232,232,.15);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;flex-shrink:0;
+}
+.scard.selected .scard-icon{
+  border-color:var(--accent-cyan);
+  box-shadow:0 0 12px rgba(135,232,232,.2);
+}
+
+.scard-body{flex:1;min-width:0}
+.scard-name{font-size:13.5px;font-weight:700;color:var(--accent-cyan);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;letter-spacing:.2px}
+.scard-desc{font-size:11.5px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;margin-top:2px}
+.scard-tags{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;align-items:center}
+
+.tag{font-size:9px;font-weight:600;padding:2px 7px;border-radius:5px;letter-spacing:.3px;text-transform:uppercase}
+.tag-cat-tool   {background:linear-gradient(135deg,rgba(114,224,224,.15),rgba(114,224,224,.05));color:#72e0e0;border:1px solid rgba(114,224,224,.15)}
+.tag-cat-mood    {background:linear-gradient(135deg,rgba(255,200,221,.15),rgba(255,200,221,.05));color:#ffc8dd;border:1px solid rgba(255,200,221,.15)}
+.tag-cat-custom  {background:linear-gradient(135deg,rgba(130,210,130,.15),rgba(130,210,130,.05));color:#82d282;border:1px solid rgba(130,210,130,.15)}
+.tag-cat-other   {background:rgba(255,255,255,.05);color:var(--text-secondary)}
+.tag-on {background:linear-gradient(135deg,rgba(94,214,138,.18),rgba(94,214,138,.05));color:var(--success);border:1px solid rgba(94,214,138,.2)}
+.tag-off{background:linear-gradient(135deg,rgba(255,107,107,.12),rgba(255,107,107,.03));color:var(--danger);border:1px solid rgba(255,107,107,.15)}
+.tag-auto{background:linear-gradient(135deg,rgba(245,200,66,.15),rgba(245,200,66,.03));color:var(--warn);border:1px solid rgba(245,200,66,.2)}
+.tag-private{background:linear-gradient(135deg,rgba(124,77,255,.18),rgba(124,77,255,.04))!important;color:#c4b5fd!important;border:1px solid rgba(167,139,250,.25)!important}
+.tag-public{background:linear-gradient(135deg,rgba(94,214,138,.15),rgba(94,214,138,.03))!important;color:#7ed992!important;border:1px solid rgba(126,217,146,.2)!important}
+
+/* 用户技能卡片特别样式 - 美化版 */
+.scard-user {
+  background: linear-gradient(90deg, rgba(167,139,250,.1) 0%, rgba(255,255,255,.03) 100%);
+  border-left: 4px solid rgba(167,139,250,.5);
+  box-shadow: 0 2px 8px rgba(167,139,250,.08);
+  position: relative;
+  overflow: hidden;
+}
+.scard-user::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(167,139,250,.3), transparent 80%);
+}
+.scard-user:hover {
+  border-left-color: #a78bfa;
+  background: linear-gradient(90deg, rgba(167,139,250,.18) 0%, rgba(255,255,255,.05) 100%);
+  box-shadow: 0 4px 16px rgba(167,139,250,.15);
+  transform: translateX(4px) scale(1.01);
+}
+.scard-contributed {
+  background: linear-gradient(90deg, rgba(126,217,146,.08) 0%, rgba(255,255,255,.03) 100%);
+  border-left: 4px solid rgba(126,217,146,.4);
+  box-shadow: 0 2px 8px rgba(126,217,146,.06);
+}
+.scard-contributed:hover {
+  border-left-color: var(--success);
+  background: linear-gradient(90deg, rgba(126,217,146,.14) 0%, rgba(255,255,255,.05) 100%);
+  box-shadow: 0 4px 16px rgba(126,217,146,.12);
+  transform: translateX(4px) scale(1.01);
+}
+
+/* 用户技能图标特殊样式 */
+.scard-user .scard-icon {
+  background: linear-gradient(135deg, rgba(167,139,250,.2), rgba(167,139,250,.05));
+  border-color: rgba(167,139,250,.3);
+}
+.scard-contributed .scard-icon {
+  background: linear-gradient(135deg, rgba(126,217,146,.18), rgba(126,217,146,.04));
+  border-color: rgba(126,217,146,.25);
+}
+
+.scard-actions{display:flex;flex-direction:column;gap:3px;opacity:0;transition:opacity .2s;flex-shrink:0}
+.scard:hover .scard-actions{opacity:1}
+.scard-btn-del{
+  width:26px;height:26px;border-radius:7px;border:none;
+  background:rgba(255,107,107,.08);color:var(--danger);font-size:12px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;
+  border:1px solid transparent;
+}
+.scard-btn-del:hover{background:rgba(255,107,107,.18);transform:scale(1.1);border-color:rgba(255,107,107,.3)}
+
+/* Owner info badge */
+.owner-badge{font-size:10px;color:var(--text-secondary);opacity:.7;margin-left:4px}
 
 .editor-panel{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
 .right-pane{flex:1;overflow-y:auto;min-height:0;display:flex;flex-direction:column}
 .right-pane.hidden{display:none!important}
 .right-empty{flex:1;display:flex;align-items:center;justify-content:center}
-.empty-state{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:60px 20px;text-align:center;
-}
-.empty-icon{font-size:48px;opacity:.35;margin-bottom:12px}
-.empty-text{font-size:14px;color:var(--text-secondary)}
-.editor-inner{padding:20px;flex:1;display:flex;flex-direction:column}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center}
+.empty-icon{font-size:52px;opacity:.25;margin-bottom:16px}
+.empty-text{font-size:14px;color:var(--text-secondary);max-width:260px;line-height:1.6}
+.editor-inner{padding:24px;flex:1;display:flex;flex-direction:column}
 
-.scard{
-  display:flex;align-items:center;gap:12px;
-  padding:10px 12px;border-radius:var(--radius-md);
-  background:rgba(255,255,255,.02);border:1px solid transparent;
-  cursor:pointer;transition:all .2s ease;position:relative;
-}
-.scard:hover{background:var(--bg-card-hover);border-color:rgba(255,255,255,.1)}
-.scard.selected{background:rgba(135,232,232,.07);border-color:var(--border-active)}
-.scard-icon{
-  width:36px;height:36px;border-radius:9px;
-  background:rgba(135,232,232,.08);
-  display:flex;align-items:center;justify-content:center;
-  font-size:18px;flex-shrink:0;
-}
-.scard-body{flex:1;min-width:0}
-.scard-name{
-  font-size:13px;font-weight:600;color:var(--accent-cyan);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35;
-}
-.scard-desc{
-  font-size:11px;color:var(--text-secondary);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;margin-top:1px;
-}
-.scard-tags{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
-.tag{
-  font-size:9px;font-weight:600;padding:1px 6px;border-radius:4px;
-  letter-spacing:.2px;text-transform:uppercase;
-}
-.tag-cat-tool   {background:rgba(114,224,224,.1);color:#72e0e0}
-.tag-cat-mood    {background:rgba(255,200,221,.1);color:#ffc8dd}
-.tag-cat-custom  {background:rgba(130,210,130,.1);color:#82d282}
-.tag-cat-other   {background:rgba(255,255,255,.06);color:var(--text-secondary)}
-.tag-on {background:rgba(94,214,138,.1);color:var(--success)}
-.tag-off{background:rgba(255,107,107,.1);color:var(--danger)}
-.tag-auto{background:rgba(245,200,66,.1);color:var(--warn)}
-.tag-private{background:rgba(124,77,255,.15)!important;color:#a78bfa!important}
-.tag-public{background:rgba(94,214,138,.12)!important;color:var(--success)!important}
-
-.scard-actions{display:flex;flex-direction:column;gap:3px;opacity:0;transition:opacity .2s;flex-shrink:0}
-.scard:hover .scard-actions{opacity:1}
-.scard-btn-del{
-  width:24px;height:24px;border-radius:6px;border:none;
-  background:rgba(255,107,107,.08);color:var(--danger);font-size:11px;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;
-}
-.scard-btn-del:hover{background:rgba(255,107,107,.2);transform:scale(1.1)}
-
-.editor-title-row{
-  display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-shrink:0;
-}
-.editor-skill-name{font-size:17px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:8px}
-.editor-skill-desc{font-size:12px;color:var(--text-secondary);margin-top:3px}
-.tab-bar{display:flex;gap:6px;margin-bottom:12px;flex-shrink:0}
-.tab-btn{
-  padding:7px 16px;border-radius:var(--radius-sm);
-  border:1px solid var(--border-subtle);background:transparent;
-  color:var(--text-secondary);font-size:12px;font-weight:500;
-  cursor:pointer;transition:all .15s;
-}
+.editor-title-row{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;flex-shrink:0}
+.editor-skill-name{font-size:18px;font-weight:800;color:var(--text-primary);display:flex;align-items:center;gap:10px;letter-spacing:.3px}
+.editor-skill-desc{font-size:12.5px;color:var(--text-secondary);margin-top:4px;line-height:1.5;max-width:500px}
+.tab-bar{display:flex;gap:6px;margin-bottom:14px;flex-shrink:0}
+.tab-btn{padding:8px 18px;border-radius:var(--radius-sm);border:1px solid var(--border-subtle);background:transparent;color:var(--text-secondary);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s}
 .tab-btn:hover{border-color:rgba(255,255,255,.15);color:var(--text-primary)}
 .tab-btn.active{background:rgba(135,232,232,.1);border-color:var(--accent-cyan);color:var(--accent-cyan)}
 
-.code-editor{
-  width:100%;min-height:300px;flex:1;min-height:0;
-  padding:16px;border-radius:var(--radius-md);
-  background:rgba(0,0,0,.35);border:1px solid var(--border-subtle);
-  color:var(--text-primary);font-size:13px;
-  font-family:"Cascadia Code","Fira Code",Consolas,monospace;
-  line-height:1.65;resize:none;
-  transition:border-color .2s;
-}
+.code-editor{width:100%;min-height:300px;flex:1;min-height:0;padding:16px;border-radius:var(--radius-md);background:rgba(0,0,0,.35);border:1px solid var(--border-subtle);color:var(--text-primary);font-size:13px;font-family:"Cascadia Code","Fira Code",Consolas,"Noto Sans Mono CJK SC",monospace;line-height:1.7;resize:none;transition:border-color .2s}
 .code-editor:focus{outline:none;border-color:var(--accent-cyan)}
-.code-editor[readonly]{opacity:.7;cursor:not-allowed}
+.code-editor[readonly]{opacity:.65;cursor:not-allowed}
 
-.file-meta{
-  display:flex;justify-content:space-between;align-items:center;
-  margin-top:8px;padding:8px 12px;
-  background:rgba(0,0,0,.2);border-radius:var(--radius-sm);
-  font-size:11px;color:var(--text-secondary);flex-shrink:0;
-}
+.file-meta{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding:10px 14px;background:rgba(0,0,0,.22);border-radius:var(--radius-sm);font-size:11px;color:var(--text-secondary);flex-shrink:0;border:1px solid var(--border-subtle)}
 .file-meta-path{font-family:monospace;word-break:break-all}
-.status-dot{padding:2px 9px;border-radius:5px;font-weight:500}
+.status-dot{padding:2px 10px;border-radius:6px;font-weight:600;font-size:10px}
 .status-dot.saved{background:rgba(94,214,138,.12);color:var(--success)}
 .status-dot.default{background:rgba(255,200,221,.12);color:var(--accent-pink)}
 
-.action-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;flex-shrink:0}
-.btn{
-  padding:8px 16px;border-radius:var(--radius-sm);
-  border:1px solid transparent;font-size:12px;font-weight:500;
-  cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .15s;
-}
+.action-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;flex-shrink:0}
+.btn{padding:9px 18px;border-radius:var(--radius-sm);border:1px solid transparent;font-size:12px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .15s}
 .btn-primary{background:linear-gradient(135deg,#72e0e0,#a78bfa);color:#111;font-weight:600}
 .btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(114,224,224,.2)}
 .btn-outline{background:transparent;border-color:var(--border-subtle);color:var(--text-secondary)}
@@ -210,135 +228,65 @@ body{
 .btn-accent{background:transparent;border-color:rgba(135,232,232,.25);color:var(--accent-cyan)}
 .btn-accent:hover{background:rgba(135,232,232,.08)}
 
-.config-block{
-  margin-top:20px;padding-top:18px;border-top:1px solid var(--border-subtle);flex-shrink:0;
-}
-.config-block-title{font-size:14px;font-weight:600;margin-bottom:12px}
-.config-toggles{display:flex;gap:12px;margin-bottom:14px}
-.cfg-item{
-  display:flex;align-items:center;gap:10px;
-  padding:10px 16px;background:rgba(0,0,0,.18);border-radius:var(--radius-sm);
-}
-.tog{
-  position:relative;width:40px;height:23px;
-  background:rgba(255,255,255,.1);border-radius:12px;
-  cursor:pointer;flex-shrink:0;transition:background .25s;
-}
-.tog.on{background:var(--accent-cyan)}
-.tog::after{
-  content:'';position:absolute;width:19px;height:19px;
-  background:#fff;border-radius:50%;top:2px;left:2px;
-  transition:transform .25s cubic-bezier(.4,2,.2,1);
-  box-shadow:0 1px 3px rgba(0,0,0,.3);
-}
-.tog.on::after{transform:translateX(17px)}
-.cfg-label{font-size:12px;color:var(--text-secondary);font-weight:500}
+.config-block{margin-top:22px;padding-top:18px;border-top:1px solid var(--border-subtle);flex-shrink:0}
+.config-block-title{font-size:14px;font-weight:700;margin-bottom:14px;color:var(--text-primary)}
+.config-toggles{display:flex;gap:14px;margin-bottom:16px}
+.cfg-item{display:flex;align-items:center;gap:10px;padding:12px 18px;background:rgba(0,0,0,.2);border-radius:var(--radius-sm);border:1px solid var(--border-subtle)}
+.tog{position:relative;width:42px;height:24px;background:rgba(255,255,255,.1);border-radius:12px;cursor:pointer;flex-shrink:0;transition:background .25s;border:1px solid rgba(255,255,255,.06)}
+.tog.on{background:var(--accent-cyan);border-color:rgba(135,232,232,.3)}
+.tog::after{content:'';position:absolute;width:20px;height:20px;background:#fff;border-radius:50%;top:1px;left:1px;transition:transform .25s cubic-bezier(.4,2,.2,1);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.tog.on::after{transform:translateX(18px)}
+.cfg-label{font-size:12.5px;color:var(--text-secondary);font-weight:500}
 
-.kw-section-title{font-size:12px;color:var(--text-secondary);margin-bottom:8px}
+.kw-section-title{font-size:12px;color:var(--text-secondary);margin-bottom:10px;font-weight:500}
 .kw-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
-.kw-chip{
-  padding:4px 11px;border-radius:6px;font-size:11px;
-  background:rgba(135,232,232,.09);color:var(--accent-cyan);
-  display:inline-flex;align-items:center;gap:5px;
-}
-.kw-x{cursor:pointer;opacity:.45;font-size:13px}
-.kw-x:hover{opacity:1;color:var(--danger)}
-.kw-input{
-  width:100%;padding:9px 12px;border-radius:var(--radius-sm);
-  background:rgba(0,0,0,.28);border:1px solid var(--border-subtle);
-  color:var(--text-primary);font-size:12px;outline:none;transition:border-color .15s;
-}
-.kw-input:focus{border-color:var(--accent-cyan)}
-.kw-input::placeholder{color:rgba(255,255,255,.15)}
+.kw-chip{padding:4px 12px;border-radius:7px;font-size:11px;background:rgba(135,232,232,.09);color:var(--accent-cyan);display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(135,232,232,.1)}
+.kw-x{cursor:pointer;opacity:.45;font-size:13px}.kw-x:hover{opacity:1;color:var(--danger)}
+.kw-input{width:100%;padding:10px 14px;border-radius:var(--radius-sm);background:rgba(0,0,0,.28);border:1px solid var(--border-subtle);color:var(--text-primary);font-size:12px;outline:none;transition:border-color .15s}
+.kw-input:focus{border-color:var(--accent-cyan)}.kw-input::placeholder{color:rgba(255,255,255,.13)}
 .kw-input[readonly]{opacity:.5;cursor:not-allowed}
 
-.contrib-row{margin:4px 0;padding:6px 12px;background:rgba(135,232,232,.06);border-radius:8px}
+.contrib-row{margin:6px 0;padding:8px 14px;background:linear-gradient(135deg,rgba(135,232,232,.06),rgba(167,139,250,.04));border-radius:10px;border:1px solid rgba(135,232,232,.1)}
 .contrib-label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-secondary);cursor:pointer;user-select:none}
 .contrib-label input[type=checkbox]{accent-color:var(--accent-cyan);width:16px;height:16px;cursor:pointer}
 
-.modal-bg{
-  position:fixed;inset:0;z-index:2000;
-  background:rgba(0,0,0,.65);backdrop-filter:blur(8px);
-  display:none;justify-content:center;align-items:center;
-}
+.modal-bg{position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);display:none;justify-content:center;align-items:center}
 .modal-bg.open{display:flex}
-.modal-win{
-  background:#13132e;border:1px solid var(--border-subtle);
-  border-radius:var(--lg);width:520px;max-width:90vw;
-  max-height:85vh;overflow-y:auto;
-  box-shadow:0 30px 80px rgba(0,0,0,.5);
-  animation:modalIn .25s ease;
-}
+.modal-win{background:#13132e;border:1px solid var(--border-subtle);border-radius:var(--lg);width:520px;max-width:90vw;max-height:85vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.5);animation:modalIn .25s ease}
 @keyframes modalIn{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
 .modal-head{display:flex;justify-content:space-between;align-items:center;padding:20px 24px 0}
 .modal-head h3{font-size:17px;font-weight:600}
-.modal-close-btn{
-  width:30px;height:30px;border-radius:50%;
-  border:none;background:rgba(255,255,255,.06);color:var(--text-secondary);
-  font-size:18px;cursor:pointer;
-}
+.modal-close-btn{width:30px;height:30px;border-radius:50%;border:none;background:rgba(255,255,255,.06);color:var(--text-secondary);font-size:18px;cursor:pointer}
 .modal-close-btn:hover{background:rgba(255,255,255,.12);color:var(--text-primary)}
 .modal-body{padding:16px 24px 24px}
-.fg{margin-bottom:14px}
-.fg label{display:block;font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px}
-.fi{
-  width:100%;padding:9px 12px;border-radius:var(--radius-sm);
-  background:rgba(0,0,0,.28);border:1px solid var(--border-subtle);
-  color:var(--text-primary);font-size:13px;outline:none;font-family:inherit;transition:border-color .15s;
-}
-.fi:focus{border-color:var(--accent-cyan)}
-textarea.fi{min-height:100px;font-family:"Cascadia Code","Fira Code",Consolas,monospace;line-height:1.55;resize:vertical}
-select.fi{appearance:none;cursor:pointer}
+.fg{margin-bottom:14px} .fg label{display:block;font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px}
+.fi{width:100%;padding:9px 12px;border-radius:var(--radius-sm);background:rgba(0,0,0,.28);border:1px solid var(--border-subtle);color:var(--text-primary);font-size:13px;outline:none;font-family:inherit;transition:border-color .15s}
+.fi:focus{border-color:var(--accent-cyan)} textarea.fi{min-height:100px;font-family:"Cascadia Code","Fira Code",Consolas,monospace;line-height:1.55;resize:vertical}
 .fg-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .chk-row{display:flex;gap:10px}
 .chk-item{display:flex;align-items:center;gap:8px;padding:9px 14px;background:rgba(0,0,0,.15);border-radius:var(--radius-sm)}
 .chk-item input[type=checkbox]{accent-color:var(--accent-cyan);cursor:pointer}
 .chk-item label{font-size:12px;color:var(--text-primary);cursor:pointer}
-.modal-foot{
-  display:flex;justify-content:flex-end;gap:8px;
-  padding-top:16px;border-top:1px solid var(--border-subtle);margin-top:4px;
-}
+.modal-foot{display:flex;justify-content:flex-end;gap:8px;padding-top:16px;border-top:1px solid var(--border-subtle);margin-top:4px}
 
-.confirm-bg{
-  position:fixed;inset:0;z-index:2500;
-  background:rgba(0,0,0,.65);backdrop-filter:blur(8px);
-  display:none;justify-content:center;align-items:center;
-}
+.confirm-bg{position:fixed;inset:0;z-index:2500;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);display:none;justify-content:center;align-items:center}
 .confirm-bg.open{display:flex}
-.confirm-box{
-  background:#13132e;border:1px solid var(--border-subtle);
-  border-radius:var(--lg);padding:28px 32px;width:400px;max-width:90vw;
-  box-shadow:0 20px 60px rgba(0,0,0,.5);
-  animation:modalIn .25s ease;
-}
+.confirm-box{background:#13132e;border:1px solid var(--border-subtle);border-radius:var(--lg);padding:28px 32px;width:400px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:modalIn .25s ease}
 .confirm-box h3{font-size:16px;font-weight:600;margin-bottom:8px}
 .confirm-box p{font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px}
 .confirm-btns{display:flex;justify-content:flex-end;gap:8px}
 
-.toast{
-  position:fixed;bottom:20px;right:20px;z-index:3000;
-  padding:10px 20px;border-radius:var(--md);
-  font-size:13px;font-weight:500;
-  animation:toastIn .3s ease;box-shadow:0 8px 24px rgba(0,0,0,.3);
-}
-.toast-ok{background:rgba(94,214,138,.92);color:#fff}
-.toast-err{background:rgba(255,107,107,.92);color:#fff}
+.toast{position:fixed;bottom:20px;right:20px;z-index:3000;padding:10px 22px;border-radius:10px;font-size:13px;font-weight:500;animation:toastIn .3s ease;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.toast-ok{background:linear-gradient(135deg,rgba(94,214,138,.95),rgba(72,216,138,.85));color:#fff}.toast-err{background:linear-gradient(135deg,rgba(255,107,107,.95),rgba(255,82,82,.85));color:#fff}
 @keyframes toastIn{from{transform:translateX(40px);opacity:0}to{transform:none;opacity:1}}
 
-@media(max-width:900px){
-  .main-grid{flex-direction:column}
-  .list-panel{width:100%;border-right:none;border-bottom:2px solid rgba(255,107,107,.45);max-height:45vh}
-  .editor-panel{flex:1;min-height:40vh}
-  .config-toggles{flex-direction:column}
-  .fg-row{grid-template-columns:1fr}
-}
+@media(max-width:900px){.main-grid{flex-direction:column}.list-panel{width:100%;border-right:none;border-bottom:2px solid rgba(255,107,107,.35);max-height:45vh}.editor-panel{flex:1;min-height:40vh}.config-toggles{flex-direction:column}.fg-row{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 
-<!-- NAV -->
 <nav class="top-nav">
-  <div class="nav-brand">🧠 AIManagePlatform</div>
+  <div class="nav-brand">AIManagePlatform</div>
   <div class="nav-links">
     <a href="/" class="nav-link">首页</a>
     <a href="/chat" class="nav-link">聊天</a>
@@ -347,39 +295,49 @@ select.fi{appearance:none;cursor:pointer}
   </div>
 </nav>
 
-<!-- PAGE -->
 <div class="page-container">
 
 <div class="page-header">
-  <h2>🧠 技能配置中心<span class="skill-count-badge" id="countBadge">0 个技能</span></h2>
+  <h2>技能配置中心<span class="skill-count-badge" id="countBadge">加载中...</span></h2>
   <button class="btn-add" onclick="openCreateModal()">＋ 添加自定义技能</button>
 </div>
 
 <div class="main-grid">
   <!-- LEFT PANEL -->
   <div class="list-panel">
+
+    <!-- ═══ 系统技能 Section ═══ -->
+    <div class="sec-wrapper">
     <div class="sec-header" id="secSysHeader" onclick="toggleSec('sys')">
-      <span class="sec-icon">⚙️</span><span class="sec-title">系统技能</span>
-      <span class="sec-count" id="sysCount">0</span><span class="sec-arrow">▼</span>
+      <span class="sec-icon">⚙️</span><span class="sec-title">系统内置技能</span>
+      <span class="sec-count" id="sysCount">-</span><span class="sec-arrow">▼</span>
     </div>
     <div class="sec-body" id="secSysBody">
-      <div style="padding:30px 0;text-align:center;color:var(--text-secondary);font-size:12px;">⏳ 正在连接服务器...</div>
+      <div id="loadingIndicator" style="padding:30px 0;text-align:center;">
+        <div style="font-size:13px;color:var(--accent-cyan);">正在连接服务器...</div>
+        <div style="font-size:10px;color:var(--text-secondary);margin-top:6px;">v9-wrap-fix</div>
+      </div>
+    </div>
     </div>
 
+    <!-- ═══ 用户技能 Section ═══ -->
+    <div class="sec-wrapper-user">
     <div class="sec-header" id="secUserHeader" onclick="toggleSec('user')">
-      <span class="sec-icon">👤</span><span class="sec-title">用户技能</span>
-      <span class="sec-count" id="userCount">0</span><span class="sec-arrow">▼</span>
+      <span class="sec-icon">👤</span><span class="sec-title">我的自定义技能</span>
+      <span class="sec-count" id="userCount">-</span><span class="sec-arrow">▼</span>
     </div>
     <div class="sec-body" id="secUserBody">
-      <div style="padding:30px 0;text-align:center;color:var(--text-secondary);font-size:12px;">⏳ 等待系统技能加载...</div>
+      <div style="padding:30px 0;text-align:center;color:var(--text-secondary);font-size:12px;">等待系统技能加载完成...</div>
+    </div>
     </div>
   </div>
 
-  <!-- RIGHT PANEL -->
+  <!-- RIGHT PANEL: Editor -->
   <div class="editor-panel" id="rightPanel">
     <div class="right-pane" id="emptyPanel">
       <div class="right-empty"><div class="empty-state">
-        <div class="empty-icon">👈</div><div class="empty-text">从左侧列表选择一个技能进行查看和编辑</div>
+        <div class="empty-icon">👈</div>
+        <div class="empty-text">从左侧选择一个技能<br/>查看详情与编辑配置</div>
       </div></div>
     </div>
 
@@ -391,30 +349,25 @@ select.fi{appearance:none;cursor:pointer}
             <div class="editor-skill-desc" id="edDesc"></div>
           </div>
           <div class="contrib-row" id="contribRow" style="display:none;">
-            <label class="contrib-label"><input type="checkbox" id="contribCheck" onchange="toggleContrib()"><span>🌍 贡献到全局技能库（其他用户可见）</span></label>
+            <label class="contrib-label"><input type="checkbox" id="contribCheck" onchange="toggleContrib()"><span>贡献到全局技能库（其他用户可见）</span></label>
           </div>
         </div>
-
         <div class="tab-bar">
-          <button class="tab-btn active" id="tabPrompt" onclick="switchTab('prompt')">✏️ System Prompt</button>
-          <button class="tab-btn" id="tabRaw" onclick="switchTab('raw')">📄 Raw MD 完整文件</button>
+          <button class="tab-btn active" id="tabPrompt" onclick="switchTab('prompt')">System Prompt</button>
+          <button class="tab-btn" id="tabRaw" onclick="switchTab('raw')">📄 Raw MD 源码</button>
         </div>
-
         <textarea class="code-editor" id="taPrompt" placeholder="选择一个技能后，其 System Prompt 将显示在这里..."></textarea>
         <textarea class="code-editor" id="taRaw" style="display:none;" placeholder="加载中..."></textarea>
-
         <div class="file-meta">
           <span class="file-meta-path" id="filePath">—</span>
           <span class="status-dot default" id="fileStatus">默认值</span>
         </div>
-
         <div class="action-row" id="actionRowMain">
           <button class="btn btn-primary" onclick="savePrompt()">💾 保存 Prompt</button>
-          <button class="btn btn-accent" id="btnSaveRaw" style="display:none;" onclick="saveRaw()">📄 保存 Raw MD</button>
+          <button class="btn btn-accent" id="btnSaveRaw" style="display:none;" onclick="saveRaw()">保存 Raw MD</button>
           <button class="btn btn-outline" onclick="resetPrompt()">↩ 重置</button>
-          <button class="btn btn-danger" id="editorDelBtn" style="display:none;" onclick="confirmDel(cur?.name)">🗑️ 删除此技能</button>
+          <button class="btn btn-danger" id="editorDelBtn" style="display:none;" onclick="confirmDel(cur?.name)">删除此技能</button>
         </div>
-
         <div class="config-block" id="configBlock">
           <div class="config-block-title">⚙️ 技能配置</div>
           <div class="config-toggles">
@@ -425,7 +378,6 @@ select.fi{appearance:none;cursor:pointer}
           <div class="kw-list" id="kwList"></div>
           <input class="kw-input" id="kwInput" placeholder="输入关键词后按 Enter 添加" onkeydown="addKw(event)">
         </div>
-
         <div class="action-row" style="margin-top:16px" id="actionRowSaveCfg">
           <button class="btn btn-primary" onclick="saveConfig()">✅ 保存所有配置</button>
         </div>
@@ -438,7 +390,7 @@ select.fi{appearance:none;cursor:pointer}
 <!-- CREATE MODAL -->
 <div class="modal-bg" id="createModal" onclick="closeCreateModal(event)">
   <div class="modal-win" onclick="event.stopPropagation()">
-    <div class="modal-head"><h3>🛠️ 添加自定义技能</h3><button class="modal-close-btn" onclick="closeCreateModal()">×</button></div>
+    <div class="modal-head"><h3>添加自定义技能</h3><button class="modal-close-btn" onclick="closeCreateModal()">×</button></div>
     <div class="modal-body">
       <div class="fg"><label>技能名称 *</label><input class="fi" id="cName" placeholder="英文/数字/下划线/连字符"></div>
       <div class="fg"><label>描述 *</label><input class="fi" id="cDesc" placeholder="简要描述功能"></div>
@@ -447,13 +399,13 @@ select.fi{appearance:none;cursor:pointer}
       <div class="fg"><label>System Prompt</label><textarea class="fi" id="cPrompt" placeholder="编写技能的 system prompt..."></textarea></div>
       <div class="chk-row fg"><div class="chk-item"><input type="checkbox" id="cOn" checked><label>启用</label></div>
         <div class="chk-item"><input type="checkbox" id="cAuto"><label>自动触发</label></div>
-        <div class="chk-item"><input type="checkbox" id="cContrib"><label>🌍 同时贡献到全局技能库</label></div></div>
+        <div class="chk-item"><input type="checkbox" id="cContrib"><label>同时贡献到全局技能库</label></div></div>
       <div class="fg"><label>触发关键词</label><div style="display:flex;gap:8px;margin-bottom:6px;"><input class="fi" id="cKwIn" placeholder="关键词" style="flex:1"><button class="btn btn-outline" onclick="addCKw()" style="padding:8px 14px;">添加</button></div>
         <div class="kw-list" id="cKwList"></div></div>
     </div>
     <div class="foot modal-body" style="padding-top:0;padding-bottom:0;">
       <button class="btn btn-outline" onclick="closeCreateModal()">取消</button>
-      <button class="btn btn-primary" onclick="doCreate()">✅ 创建</button>
+      <button class="btn btn-primary" onclick="doCreate()">创建</button>
     </div>
   </div>
 </div>
@@ -461,231 +413,432 @@ select.fi{appearance:none;cursor:pointer}
 <!-- DELETE CONFIRM -->
 <div class="confirm-bg" id="delConfirmBg" onclick="closeDelConfirm(event)">
   <div class="confirm-box" onclick="event.stopPropagation()">
-    <h3>🗑️ 确认删除技能</h3>
+    <h3>确认删除技能</h3>
     <p id="delConfirmMsg">确定要删除这个技能吗？此操作不可恢复。</p>
     <div class="confirm-btns"><button class="btn btn-outline" onclick="closeDelConfirm()">取消</button><button class="btn btn-danger" id="delConfirmOkBtn">确认删除</button></div>
   </div>
 </div>
 
 <script>
-// ══════════════════════════════════════════════════
-//  v6-final — Skills Page 最终修复版
-//  保证：任何情况下都不会卡死，每步都有可见反馈
-// ══════════════════════════════════════════════════
+// ═══ v9-wrap-fix ═══ 系统技能包裹 + 公开只读端点 ═══
+(function() {
+  'use strict';
 
-window.addEventListener('error',function(e){console.error('[JS错误]',e.message,e.lineno)});
-window.addEventListener('unhandledrejection',function(e){console.error('[Promise错误]',e.reason)});
+  var skills = [], cur = null, _loaded = false;
+  var BUILTINS = ["get_time","calculate","get_weather","happy_mood","sad_mood","angry_mood",
+    "fear_mood","disgust_mood","surprise_mood","cheerful_mood","mood"];
+  var original = {}, cKeywords = [];
 
-let skills=[],cur=null;
-const BUILTINS=new Set(["get_time","calculate","get_weather","happy_mood","sad_mood","angry_mood","fear_mood","disgust_mood","surprise_mood","cheerful_mood","mood"]);
-let original={},cKeywords=[],_inited=false,_retryCount=0;
+  var $ = function(id) { return document.getElementById(id); };
+  var countBadge = $('countBadge'), secSysBody = $('secSysBody'), secUserBody = $('secUserBody');
+  var sysCount = $('sysCount'), userCount = $('userCount');
 
-// ── 立即执行（证明 JS 在运行）──
-(function(){
-  try{
-    var b=document.getElementById('countBadge');if(b)b.textContent='⏳ 初始化中...';
-    var s=document.getElementById('secSysBody');
-    if(s)s.innerHTML='<div style="padding:30px 0;text-align:center;color:var(--accent-cyan);font-size:13px;">✅ JavaScript 已执行，正在检查登录状态...</div>';
-    console.log('[v6] Immediate init OK:',new Date().toLocaleTimeString());
-  }catch(e){console.error('[v6] init err:',e);}
-})();
+  // ── Utils ──
+  function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  function escJs(s) {
+    // 返回可用于 inline onclick="pick(X)" 的安全 JS 字符串字面量
+    // 用单引号包裹，转义内部的单引号和反斜杠
+    var v = (s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    return "'" + v + "'";
+  }
+  function hdr() {
+    try { var t = localStorage.getItem('access_token');
+      if (!t) return {'Content-Type':'application/json'};
+      return {'Authorization':'Bearer '+t,'Content-Type':'application/json'};
+    } catch(e) { return {'Content-Type':'application/json'}; }
+  }
+  function toast(msg, type) {
+    var el = document.createElement('div');
+    el.className = 'toast toast-'+(type||'ok'); el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(function() { el.style.opacity='0'; el.transition='opacity .3s'; }, 2200);
+    setTimeout(function() { el.remove(); }, 2600);
+  }
+  function setStatus(msg) { if (countBadge) countBadge.textContent = msg; }
 
-function hdr(){try{var t=localStorage.getItem('access_token');if(!t)return{'Content-Type':'application/json'};return{'Authorization':'Bearer '+t,'Content-Type':'application/json'}}catch(e){return{'Content-Type':'application/json'}}}
-function fetchWithTimeout(url,opt,ms){ms=ms||8000;var c=new AbortController(),t=setTimeout(function(){try{c.abort();}catch(e){}},ms);opt=opt||{};opt.signal=c.signal;return fetch(url,opt).finally(function(){clearTimeout(t);});}
+  // ── Load Skills ──
+  function loadSkills() {
+    if (_loaded) return;
+    setStatus('请求中...');
 
-function setStatus(msg){
-  var e=document.getElementById('countBadge');if(e)e.textContent=msg;console.log('[v6]',msg);
-}
-function setBody(sysMsg,userMsg){
-  var sb=document.getElementById('secSysBody'),ub=document.getElementById('secUserBody');
-  if(sb)sb.innerHTML='<div style="padding:30px 0;text-align:center;color:var(--text-secondary);font-size:12px;">'+sysMsg+'</div>';
-  if(ub&&userMsg)ub.innerHTML='<div style="padding:30px 0;text-align:center;color:var(--text-secondary);font-size:12px;">'+userMsg+'</div>';
-}
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/api/skills/merged?t='+Date.now(), true);
+    xhr.timeout = 10000;
+    xhr.setRequestHeader('Accept', 'application/json');
+    try { var t = localStorage.getItem('access_token'); if (t) xhr.setRequestHeader('Authorization', 'Bearer '+t); } catch(e){}
 
-function showAuthError(){
-  setStatus('🔒 需要重新登录','');
-  var sb=document.getElementById('secSysBody'),ub=document.getElementById('secUserBody');
-  if(sb)sb.innerHTML='<div style="padding:50px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px;"><div style="font-size:48px;">🔑</div><div style="font-size:18px;color:#ff6b6b;font-weight:700;">登录已过期</div><div style="font-size:13px;color:var(--text-secondary);max-width:380px;line-height:1.7;">服务器重启或长时间未操作后，登录状态会失效。<br/>请点击下方按钮重新登录。</div><button onclick="doReLogin()" style="padding:12px 32px;border-radius:12px;background:linear-gradient(135deg,#72e0e0,#a78bfa);color:#111;border:none;font-size:15px;font-weight:700;cursor:pointer;">🔑 重新登录</button></div>';
-  if(ub)ub.innerHTML='';
-}
-function showError(msg){
-  setStatus('❌ 加载失败',msg);
-  var sb=document.getElementById('secSysBody'),ub=document.getElementById('secUserBody');
-  if(sb)sb.innerHTML='<div style="padding:40px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;"><div style="font-size:40px;">⚠️</div><div style="font-size:15px;color:#ff6b6b;font-weight:600;">技能加载失败</div><div style="font-size:12px;color:var(--text-secondary);max-width:380px;line-height:1.6;word-break:break-all;">'+esc(msg)+'</div><div style="display:flex;gap:10px;"><button onclick="location.reload()" style="padding:9px 20px;border-radius:8px;background:rgba(135,232,232,.15);color:#87e8e8;border:1px solid rgba(135,232,232,.3);cursor:pointer;font-size:12px;">🔄 刷新</button><button onclick="doReLogin()" style="padding:9px 20px;border-radius:8px;background:rgba(255,107,107,.1);color:#ff6b6b;border:1px solid rgba(255,107,107,.2);cursor:pointer;font-size:12px;">🔑 重登</button></div></div>';
-  if(ub)ub.innerHTML='';
-}
-function doReLogin(){localStorage.removeItem('access_token');localStorage.removeItem('refresh_token');window.location.replace('/login');}
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        try {
+          var data = JSON.parse(xhr.responseText);
+          skills = data.skills || [];
+          var sysS = skills.filter(function(s) { return s.source !== 'private' && !s.readonly; });
+          var usrS = skills.filter(function(s) { return s.source === 'private' || s.readonly; });
 
-function loadSkills(){
-  if(_inited)return;_inited=true;
-  setStatus('⏳ 正在连接服务器...','');
-  setBody('<div style="color:var(--accent-cyan);">⏳ 发送请求到服务器...</div>','等待中...');
-  var t0=Date.now();
-  console.log('[v6] fetch start, token=',!!localStorage.getItem('access_token'));
+          setStatus(skills.length + ' 个技能');
+          sysCount.textContent = sysS.length;
+          userCount.textContent = usrS.length;
 
-  fetchWithTimeout('/api/skills/merged',{headers:hdr()},8000)
-    .then(function(r){
-      var ms=((Date.now()-t0)/1000).toFixed(1);console.log('[v6] response:',r.status,ms+'s');
-      if(!r.ok){
-        if(r.status===401){showAuthError();return Promise.reject(new Error('401'));}
-        throw new Error('HTTP '+r.status);
+          renderSection(secSysBody, sysS, false);
+          renderSection(secUserBody, usrS, true);
+
+          _loaded = true;
+          toast('已加载 ' + skills.length + ' 个技能', 'ok');
+        } catch(e) { showError('数据解析异常: ' + e.message); }
+      } else { showError('HTTP ' + xhr.status); }
+    };
+    xhr.onerror = function() { showError('网络连接失败'); };
+    xhr.ontimeout = function() { showError('请求超时（10秒）'); };
+    xhr.send();
+  }
+
+  function showError(msg) {
+    setStatus('失败');
+    secSysBody.innerHTML =
+      '<div style="padding:40px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;">'+
+      '<div style="font-size:36px;">⚠️</div>'+
+      '<div style="font-size:14px;color:#ff6b6b;font-weight:600;">技能加载失败</div>'+
+      '<div style="font-size:12px;color:var(--text-secondary);max-width:340px;">'+esc(msg)+'</div>'+
+      '<button onclick="location.reload()" style="margin-top:12px;padding:9px 20px;border-radius:8px;background:rgba(135,232,232,.15);color:var(--accent-cyan);border:1px solid rgba(135,232,232,.25);cursor:pointer;font-size:12px;">刷新页面</button></div>';
+    secUserBody.innerHTML = '';
+  }
+
+  // ── Card Rendering ──
+  function tagCatClass(cat) {
+    var m = {'工具':'tag-cat-tool','情感响应':'tag-cat-mood','自定义':'tag-cat-custom'};
+    return m[cat] || 'tag-cat-other';
+  }
+
+  function cardHtml(s, isUser) {
+    // Badge tags
+    var bh = '';
+    if (isUser) {
+      if (s.readonly) bh += '<span class="tag tag-public">公开</span>';
+      else if (s.is_contributed) bh += '<span class="tag" style="background:linear-gradient(135deg,rgba(135,232,232,.12),rgba(167,139,250,.08));color:var(--accent-cyan);border:1px solid rgba(135,232,232,.15);">已贡献</span>';
+      else if (s.source === 'private') bh += '<span class="tag tag-private">私人</span>';
+    }
+    var oi = s.owner_name ? '<span class="owner-badge">by ' + esc(s.owner_name) + '</span>' : '';
+    var sd = BUILTINS.indexOf(s.name) === -1 && !s.readonly && s.category !== '情感响应';
+
+    // Card class variants
+    var extraClass = '';
+    if (isUser) extraClass = s.readonly ? ' scard-contributed' : ' scard-user';
+
+    return '<div class="scard'+extraClass+(cur&&cur.name===s.name?' selected':'')+'" data-name="'+esc(s.name)+'">'+
+      '<div class="scard-icon">'+esc(s.icon||'🔧')+'</div>'+
+      '<div class="scard-body">'+
+        '<div class="scard-name">'+esc(s.name)+'</div>'+
+        '<div class="scard-desc">'+esc(s.description||'')+oi+'</div>'+
+        '<div class="scard-tags">'+
+          '<span class="tag '+tagCatClass(s.category)+'">'+esc(s.category||'通用')+'</span>'+bh+
+          '<span class="tag '+(s.enabled?'tag-on':'tag-off')+'">'+(s.enabled?'ON':'OFF')+'</span>'+
+          (s.auto_trigger?'<span class="tag tag-auto">AUTO</span>':'')+
+        '</div>'+
+      '</div>'+
+      (sd?'<div class="scard-actions"><button class="scard-btn-del" title="删除">✕</button></div>':'')+
+      '</div>';
+  }
+
+  function renderSection(container, list, isU) {
+    if (!list.length) {
+      container.innerHTML = '<div style="padding:30px 0;text-align:center;color:var(--text-secondary);font-size:12px;">'+
+        (isU?'暂无自定义技能 — 点击右上角「添加」创建第一个':'暂无系统技能')+'</div>';
+      return;
+    }
+    container.innerHTML = list.map(function(s) { return cardHtml(s, isU); }).join('');
+  }
+
+  window.toggleSec = function(which) {
+    var h = $(which==='sys'?'secSysHeader':'secUserHeader');
+    var b = $(which==='sys'?'secSysBody':'secUserBody');
+    if(h) h.classList.toggle('collapsed');
+    if(b) b.classList.toggle('hidden');
+  };
+
+  // ── Pick Skill & Load Detail ──
+  window.pick = async function(name) {
+    var s = null;
+    for (var i=0;i<skills.length;i++) { if(skills[i].name===name) { s=skills[i]; break; } }
+    if (!s) { toast('技能未找到: '+name, 'err'); return; }
+    cur = s; cur.source = cur.source || 'global';
+    var ro = s.readonly === true;
+
+    $('editorPane').classList.remove('hidden');
+    $('emptyPanel').classList.add('hidden');
+    $('edName').textContent = (s.icon||'🔧') + '  ' + s.name;
+    $('edDesc').textContent = s.description || '';
+
+    // 显示加载状态
+    $('taPrompt').value = '⏳ 正在加载技能内容...';
+    $('taRaw').value = '⏳ 正在加载...';
+    $('filePath').textContent = '加载中...';
+    $('fileStatus').className = 'status-dot default';
+    $('fileStatus').textContent = '加载中';
+
+    if (ro) { enterReadonlyMode(s,name); return; }
+    exitReadonlyMode();
+
+    var cr=$('contribRow'), cc=$('contribCheck');
+    if(cur.source==='private'){cr.style.display='';cc.checked=!!s.is_contributed;}else{cr.style.display='none';}
+    setTog('togEn',s.enabled); setTog('togAuto',s.auto_trigger);
+    renderKw(s.trigger_keywords||[]);
+
+    // Load detail into right panel
+    if (cur.source === 'private') {
+      try {
+        $('taPrompt').value = '⏳ 正在加载私人技能内容...';
+        var r = await fetch('/api/user-skills/'+encodeURIComponent(name)+'/raw-md', {headers:hdr()});
+        console.log('[v8] user-skill raw-md response:', r.status);
+        if(r.ok){var d=await r.json();var p=parseMdFrontmatter(d.raw_content||'');original.system_prompt=p.system_prompt||'';$('taPrompt').value=p.system_prompt||'(暂无内容)';}
+        else { var errD = await r.json().catch(function(){}); $('taPrompt').value = '// 加载失败 (HTTP '+r.status+')\n'+((errD&&errD.detail)||''); }
+      }catch(e){console.error('load user raw-md:',e);$('taPrompt').value='// 加载异常: '+e.message;}
+      $('filePath').textContent = '(私人技能，仅存于数据库)';
+      var st=$('fileStatus');st.className='status-dot saved';st.textContent='已保存';
+    } else {
+      // Global skill: load system-prompt
+      $('filePath').textContent = 'skills/'+(s.category||'custom')+'/'+s.name+'/skill.md';
+      
+      try {
+        var r2 = await fetch('/api/skills/'+encodeURIComponent(name)+'/system-prompt?t='+Date.now(), {headers:hdr()});
+        console.log('[v8] system-prompt response:', r2.status, r2.statusText);
+        if (!r2.ok) {
+          var errBody = await r2.text();
+          console.error('[v8] system-prompt error:', errBody);
+          throw new Error('HTTP '+r2.status+' '+r2.statusText);
+        }
+        var pd = await r2.json();
+        console.log('[v8] system-prompt loaded, length:', (pd.system_prompt||'').length);
+        original.system_prompt = pd.system_prompt || '';
+        $('taPrompt').value = pd.system_prompt || '(该技能暂无 System Prompt 内容)';
+        
+        var st2 = $('fileStatus');
+        st2.className = pd.has_md_files ? 'status-dot saved' : 'status-dot default';
+        st2.textContent = pd.has_md_files ? '已保存到 MD 文件' : '默认值（内建）';
+      } catch(e) {
+        console.error('[v8] load prompt error:', e.message);
+        $('taPrompt').value = '// ⚠️ 加载失败\n\n错误: '+e.message+'\n\n请检查：\n1. 是否已登录（token 是否有效）\n2. 浏览器控制台查看详细错误\n3. 后端服务是否正常运行';
+        $('fileStatus').className = 'status-dot default';
+        $('fileStatus').textContent = '加载失败';
       }
-      setStatus('⏳ 解析数据...','');setBody('解析数据...','');
-      return r.json();
-    })
-    .then(function(d){
-      skills=d.skills||[];
-      var sysS=skills.filter(function(s){return s.source!=='private'&&!s.readonly;});
-      var usrS=skills.filter(function(s){return s.source==='private'||s.readonly;});
-      console.log('[v6] DONE! total='+skills.length+' sys='+sysS.length+' usr='+usrS.length);
-      setStatus(skills.length+' 个技能','');
-      document.getElementById('sysCount').textContent=sysS.length;
-      document.getElementById('userCount').textContent=usrS.length;
-      document.getElementById('countBadge').textContent=skills.length+' 个技能';
-      renderSection('secSysBody',sysS,false);
-      renderSection('secUserBody',usrS,true);
-      toast('✅ 已加载 '+skills.length+' 个技能','ok');
-    })
-    .catch(function(e){
-      var ms=((Date.now()-t0)/1000).toFixed(1);console.error('[v6] FAIL ('+ms+'s):',e.name,e.message);
-      if(e.message==='401')return;
-      var msg=e.name==='AbortError'?'请求超时（8秒无响应）。可能原因：1) 服务器未启动 2) 网络不通':(e.message||'未知网络错误');
-      if(_retryCount<2){_retry++;_inited=false;setStatus('⏳ 重试第 '+(_retryCount+1)+' 次...','');setBody('连接失败，正在重试...','');setTimeout(loadSkills,1500);return;}
-      showError(msg+' (已重试2次)');
+      await loadRawMd(name);
+    }
+
+    // Delete button
+    var db = $('editorDelBtn');
+    if(db){var cd=BUILTINS.indexOf(s.name)===-1&&!s.readonly&&s.category!=='情感响应';db.style.display=cd?'':'none';}
+    reRenderList();
+  };
+
+  function enterReadonlyMode(s,name){
+    $('contribRow').style.display='none';$('actionRowMain').style.display='none';
+    $('actionRowSaveCfg').style.display='none';$('configBlock').style.display='none';
+    var tp=$('taPrompt'),tr=$('taRaw');tp.readOnly=true;tp.style.opacity='.65';tr.readOnly=true;tr.style.opacity='.65';
+    var te=$('togEn'),ta=$('togAuto');te.style.pointerEvents='none';te.style.opacity='.4';
+    ta.style.pointerEvents='none';ta.style.opacity='.4';
+    $('kwInput').readOnly=true;$('kwInput').style.opacity='.5';
+    setTog('togEn',s.enabled);setTog('togAuto',s.auto_trigger);renderKw(s.trigger_keywords||[]);
+    $('filePath').textContent=(s.owner_name||'其他人')+' 的贡献技能 [只读]';
+    var st=$('fileStatus');st.className='status-dot saved';st.textContent='只读模式';
+    
+    // Also try to load read-only prompt content
+    try {
+      fetch('/api/skills/'+name+'/system-prompt?t='+Date.now(),{headers:hdr()})
+        .then(function(r){if(r.ok)return r.json();throw new Error(r.status);})
+        .then(function(pd){original.system_prompt=pd.system_prompt||'';$('taPrompt').value=pd.system_prompt||'';})
+        .catch(function(){});
+      fetch('/api/skills/'+name+'/raw-md?t='+Date.now(),{headers:hdr()})
+        .then(function(r){if(r.ok)return r.json();throw new Error();})
+        .then(function(d){$('taRaw').value=d.raw_content||'';})
+        .catch(function(){});
+    } catch(e){}
+    
+    reRenderList();
+  }
+
+  function exitReadonlyMode(){
+    $('contribRow').style.display='';$('actionRowMain').style.display='';
+    $('actionRowSaveCfg').style.display='';$('configBlock').style.display='';
+    var tp=$('taPrompt'),tr=$('taRaw');
+    tp.readOnly=false;tr.readOnly=false;tp.style.opacity='';tr.style.opacity='';
+    var te=$('togEn'),ta=$('togAuto');
+    te.style.pointerEvents='';te.style.opacity='';ta.style.pointerEvents='';ta.style.opacity='';
+    $('kwInput').readOnly=false;$('kwInput').style.opacity='';
+  }
+
+  async function loadRawMd(name){
+    var el=$('taRaw');
+    try{
+      var r=await fetch('/api/skills/'+name+'/raw-md?t='+Date.now(),{headers:hdr()});
+      if(r.ok){var d=await r.json();el.value=d.raw_content||'';cur._hasMd=!!d.raw_content;}
+      else{el.value='// 该技能为内建 Python 技能，无 MD 源文件可编辑';cur._hasMd=false;}
+    }catch(e){el.value='// 加载失败: '+e.message;}
+  }
+
+  window.switchTab=function(which){
+    var tp=$('taPrompt'),tr=$('taRaw'),tb=$('tabPrompt'),tR=$('tabRaw'),bR=$('btnSaveRaw');
+    if(which==='raw'){tp.style.display='none';tr.style.display='block';tb.classList.remove('active');tR.classList.add('active');bR.style.display='';}
+    else{tp.style.display='block';tr.style.display='none';tb.classList.add('active');tR.classList.remove('active');bR.style.display='none';}
+  };
+
+  function setTog(id,on){var el=$(id);if(el)el.classList.toggle('on',!!on);}
+  window.flipEn=function(){if(cur){cur.enabled=!cur.enabled;setTog('togEn',cur.enabled);}};
+  window.flipAuto=function(){if(cur){cur.auto_trigger=!cur.auto_trigger;setTog('togAuto',cur.auto_trigger);}};
+
+  function renderKw(arr){
+    $('kwList').innerHTML=arr.map(function(k,i){return '<span class="kw-chip">'+esc(k)+'<span class="kw-x" onclick="rmKw('+i+')">×</span></span>';}).join('');
+  }
+  window.addKw=function(ev){
+    if(ev.key==='Enter'){
+      var v=$('kwInput').value.trim();
+      if(v&&cur){if(!cur.trigger_keywords)cur.trigger_keywords=[];
+        if(cur.trigger_keywords.indexOf(v)<0){cur.trigger_keywords.push(v);renderKw(cur.trigger_keywords);}
+        $('kwInput').value='';
+      }
+    }
+  };
+  window.rmKw=function(i){if(cur&&cur.trigger_keywords){cur.trigger_keywords.splice(i,1);renderKw(cur.triggerKeywords);}};
+
+  function reRenderList(){
+    var sysS=skills.filter(function(s){return s.source!=='private'&&!s.readonly;});
+    var usrS=skills.filter(function(s){return s.source==='private'||s.readonly;});
+    renderSection(secSysBody,sysS,false);renderSection(secUserBody,usrS,true);
+  }
+
+  // ── Save Operations ──
+  window.savePrompt=async function(){
+    if(!cur)return;
+    var ct=$('taPrompt').value,isP=cur.source==='private';
+    var url=isP?'/api/user-skills/'+cur.name:'/api/skills/'+cur.name+'/system-prompt';
+    var m=isP?'PUT':'POST';
+    try{var r=await fetch(url,{method:m,headers:hdr(),body:JSON.stringify({content:ct})});
+      if(r.ok)toast('Prompt 已保存','ok');
+      else{var d=await r.json().catch(function(){});toast('保存失败:'+(d.detail||r.status),'err');}
+    }catch(e){toast(e.message,'err');}
+  };
+  window.resetPrompt=function(){$('taPrompt').value=original.system_prompt||'';};
+
+  window.saveRaw=async function(){
+    if(!cur)return;
+    var ct=$('taRaw').value,isP=cur.source==='private';
+    var url=isP?'/api/user-skills/'+cur.name+'/raw-md':'/api/skills/'+cur.name+'/raw-md';
+    try{var r=await fetch(url,{method:'POST',headers:hdr(),body:JSON.stringify({content:ct})});
+      var d=await r.json().catch(function(){});
+      if(r.ok)toast(d.message||'已保存','ok');else toast(d.detail||'失败','err');
+    }catch(e){toast(e.message,'err');}
+  };
+
+  window.saveConfig=async function(){
+    if(!cur)return;
+    var isP=cur.source==='private';
+    var cfgB=JSON.stringify({enabled:cur.enabled,auto_trigger:cur.auto_trigger,trigger_keywords:cur.trigger_keywords});
+    var cfgUrl=isP?'/api/user-skills/'+cur.name:'/api/skills/'+cur.name+'/config';
+    var cfgM=isP?'PUT':'POST';
+    try{var r=await fetch(cfgUrl,{method:cfgM,headers:hdr(),body:cfgB});
+      if(r.ok){toast('配置已保存','ok');if(!isP)window.savePrompt();}
+      else{var d=await r.json().catch(function(){});toast('失败:'+(d.detail||r.status),'err');}
+    }catch(e){toast(e.message,'err');}
+  };
+
+  // ── Delete ──
+  var delTarget=null,delTargetSource='global';
+  window.confirmDel=function(name){
+    delTarget=name;var s=null;
+    for(var i=0;i<skills.length;i++){if(skills[i].name===name){s=skills[i];break;}}
+    delTargetSource=s?s.source:'global';
+    $('delConfirmMsg').textContent='确定删除「'+name+'」吗？'+(delTargetSource==='private'?'（仅从你的账户删除）':'将永久删除该技能');
+    $('delConfirmBg').classList.add('open');
+  };
+  window.closeDelConfirm=function(ev){if(ev&&ev.target!=$('delConfirmBg'))return;$('delConfirmBg').classList.remove('open');delTarget=null;};
+  
+  $('delConfirmOkBtn').addEventListener('click',async function(){
+    if(!delTarget)return;
+    var isP=delTargetSource==='private',url=isP?'/api/user-skills/'+delTarget:'/api/skills/'+delTarget;
+    try{var r=await fetch(url,{method:'DELETE',headers:hdr()});
+      var d=await r.json().catch(function(){});
+      if(r.ok){toast(d.message||'已删除','ok');closeDelConfirm();
+        if(cur&&cur.name===delTarget){cur=null;$('editorPane').classList.add('hidden');$('emptyPanel').classList.remove('hidden');}
+        loadSkills();}
+      else toast(d.detail||d.message||'删除失败','err');
+    }catch(e){toast(e.message,'err');}
+  });
+
+  // ── Create Modal ──
+  window.openCreateModal=function(){
+    $('createModal').classList.add('open');
+    $('cName').value='';$('cDesc').value='';$('cIcon').value='🔧';$('cCat').value='自定义';
+    $('cPrompt').value='';$('cOn').checked=true;$('cAuto').checked=false;cKeywords=[];renderCKw();
+  };
+  window.closeCreateModal=function(ev){if(ev&&ev.target!=$('createModal'))return;$('createModal').classList.remove('open');};
+  function renderCKw(){$('cKwList').innerHTML=cKeywords.map(function(k,i){return '<span class="kw-chip">'+esc(k)+'<span class="kw-x" onclick="rmCKw('+i+')×</span></span>';}).join('');}
+  window.addCKw=function(){var v=$('cKwIn').value.trim();if(v&&cKeywords.indexOf(v)<0){cKeywords.push(v);renderCKw();}$('cKwIn').value='';$('cKwIn').focus();};
+  window.rmCKw=function(i){cKeywords.splice(i,1);renderCKw();};
+  document.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.id==='cKwIn'){e.preventDefault();window.addCKw();}});
+
+  window.doCreate=async function(){
+    var name=$('cName').value.trim(),desc=$('cDesc').value.trim(),icon=$('cIcon').value.trim()||'🔧';
+    var cat=$('cCat').value,prompt=$('cPrompt').value.trim(),en=$('cOn').checked,auto=$('cAuto').checked,doCont=$('cContrib').checked;
+    if(!name){toast('请输入名称','err');return;}if(!desc){toast('请输入描述','err');return;}
+    try{var r=await fetch('/api/user-skills?contribute='+doCont,{method:'POST',headers:hdr(),
+      body:JSON.stringify({name:name,description:desc,icon:icon,category:cat,
+        system_prompt:prompt,enabled:en,auto_trigger:auto,trigger_keywords:cKeywords})});
+      var d=await r.json().catch(function(){});
+      if(r.ok){toast(d.message||'创建成功','ok');closeCreateModal();loadSkills();}
+      else toast(d.detail||d.message||'创建失败','err');
+    }catch(e){toast(e.message,'err');}
+  };
+
+  window.toggleContrib=async function(){
+    if(!cur||cur.source!=='private')return;
+    var doC=$('contribCheck').checked;
+    try{var r=await fetch('/api/user-skills/'+cur.name+'/contribute',{method:doC?'POST':'DELETE',headers:hdr()});
+      var dt=await r.json().catch(function(){});
+      if(r.ok){toast(dt.message||(doC?'已贡献':'已取消'),'ok');await loadSkills();pick(cur.name);}
+      else{toast(dt.detail||'操作失败','err');$('contribCheck').checked=!doC;}
+    }catch(e){toast(e.message,'err');$('contribCheck').checked=!doC;}
+  };
+
+  function parseMdFrontmatter(content){
+    var r={description:'',category:'自定义',icon:'🔧',enabled:true,auto_trigger:false,trigger_keywords:[],system_prompt:''};
+    if(!content||content.indexOf('---')!==0) return r;
+    var parts=content.split('---');
+    if(parts.length<3){r.system_prompt=(parts[1]||'').trim();return r;}
+    r.system_prompt=parts[2].trim();
+    parts[1].split('\n').forEach(function(line){
+      var s=line.trim();if(!s||s.indexOf('#')===0)return;
+      var i=s.indexOf(':');if(i<0)return;
+      var k=s.substring(0,i).trim(),v=s.substring(i+1).trim();
+      if(k==='description')r.description=v;else if(k==='category')r.category=v;
+      else if(k==='icon')r.icon=v;else if(k==='enabled')r.enabled=v.toLowerCase()==='true';
+      else if(k==='auto_trigger')r.auto_trigger=v.toLowerCase()==='true';
+      else if(k==='trigger_keywords'){try{r.trigger_keywords=JSON.parse(v);}catch(e){}}
     });
-}
+    return r;
+  }
 
-function toggleSec(w){var h=document.getElementById(w==='sys'?'secSysHeader':'secUserHeader'),b=document.getElementById(w==='sys'?'secSysBody':'secUserBody');h.classList.toggle('collapsed');b.classList.toggle('hidden');}
+  // ═══ 事件委托：技能卡片点击 ═══
+  ['secSysBody','secUserBody'].forEach(function(id){
+    var el=$(id); if(!el) return;
+    el.addEventListener('click',function(e){
+      // 删除按钮
+      var del=e.target.closest('.scard-btn-del');
+      if(del){var card=del.closest('.scard');if(card){window.confirmDel(card.getAttribute('data-name'));} return;}
+      // 技能卡片点击
+      var card=e.target.closest('.scard');
+      if(card){var nm=card.getAttribute('data-name');if(nm) window.pick(nm);}
+    });
+  });
 
-function tagCatClass(c){var m={'工具':'tag-cat-tool','情感响应':'tag-cat-mood','自定义':'tag-cat-custom'};return m[c]||'tag-cat-other';}
+  // ═══ 启动 ═══
+  console.log('[v9] Script start', new Date().toLocaleTimeString());
+  if($('loadingIndicator')){
+    $('loadingIndicator').innerHTML=
+      '<div style="font-size:13px;color:var(--accent-cyan);padding:20px 0;">✅ v8 页面就绪</div>'+
+      '<div style="font-size:10px;color:var(--text-secondary);">'+new Date().toLocaleTimeString()+'</div>';
+  }
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',loadSkills);}
+  else { loadSkills(); }
 
-function cardHtml(s,isUser){
-  var bh='';
-  if(isUser){if(s.readonly)bh+='<span class="tag tag-public">🌐 公开</span>';else if(s.is_contributed)bh+='<span class="tag" style="background:rgba(135,232,232,0.12);color:var(--accent-cyan);">🌍 已贡献</span>';else if(s.source==='private')bh+='<span class="tag tag-private">🔒 私人</span>';}
-  var oi=s.owner_name?' · '+s.owner_name:'';
-  var sd=!BUILTINS.has(s.name)&&!s.readonly&&s.category!=='情感响应';
-  return '<div class="scard'+(cur&&cur.name===s.name?' selected':'')+'" onclick="pick(\''+esc(s.name)+'\')"><div class="scard-icon">'+esc(s.icon||'🔧')+'</div><div class="scard-body"><div class="scard-name">'+esc(s.name)+'</div><div class="scard-desc">'+esc(s.description||'')+oi+'</div><div class="scard-tags"><span class="tag '+tagCatClass(s.category)+'">'+esc(s.category||'通用')+'</span>'+bh+'<span class="tag '+(s.enabled?'tag-on':'tag-off')+'">'+(s.enabled?'ON':'OFF')+'</span>'+(s.auto_trigger?'<span class="tag tag-auto">AUTO</span>':'')+'</div></div>'+(sd?'<div class="scard-actions"><button class="scard-btn-del" onclick="event.stopPropagation();confirmDel(\''+esc(s.name)+'\')" title="删除此技能">✕</button></div>':'')+'</div>';
-}
-
-function renderSection(cid,list,isU){
-  var el=document.getElementById(cid);
-  if(!list.length){el.innerHTML='<div style="padding:30px 0;text-align:center;color:var(--text-secondary);font-size:12px;">'+(isU?'暂无用户技能 — 创建私人技能或查看他人贡献':'暂无系统技能')+'</div>';return;}
-  el.innerHTML=list.map(function(s){return cardHtml(s,isU)}).join('');
-}
-function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
-
-function parseMdFrontmatter(content){
-  var r={description:'',category:'自定义',icon:'🔧',enabled:true,auto_trigger:false,trigger_keywords:[],system_prompt:''};
-  if(!content||content.indexOf('---')!==0)return r;
-  var parts=content.split('---');
-  if(parts.length<3){r.system_prompt=(parts[1]||'').trim();return r;}
-  r.system_prompt=parts[2].trim();
-  parts[1].split('\n').forEach(function(line){var s=line.trim();if(!s||s.indexOf('#')===0)return;var i=s.indexOf(':');if(i<0)return;var k=s.substring(0,i).trim(),v=s.substring(i+1).trim();
-    if(k==='description')r.description=v;else if(k==='category')r.category=v;else if(k==='icon')r.icon=v;
-    else if(k==='enabled')r.enabled=v.toLowerCase()==='true';else if(k==='auto_trigger')r.auto_trigger=v.toLowerCase()==='true';
-    else if(k==='trigger_keywords'){try{r.trigger_keywords=JSON.parse(v);}catch(e){}}});
-  return r;
-}
-
-async function toggleContrib(){if(!cur||cur.source!=='private')return;var d=document.getElementById('contribCheck').checked,n=cur.name;
-  try{var r=await fetch('/api/user-skills/'+n+'/contribute',{method:d?'POST':'DELETE',headers:hdr()});
-    var dt=await r.json().catch(function(){return{};});if(r.ok){toast(dt.message||(d?'✅ 已贡献':'✅ 已取消'),'ok');await loadSkills();pick(n);}else{toast(dt.detail||'操作失败','err');document.getElementById('contribCheck').checked=!d;}}catch(e){toast('❌ '+e.message,'err');document.getElementById('contribCheck').checked=!d;}}
-
-async function pick(name){var s=skills.find(function(x){return x.name===name;});if(!s)return;cur=s;s.source=s.source||'global';var ro=s.readonly===true;
-  document.getElementById('editorPane').classList.remove('hidden');document.getElementById('emptyPanel').classList.add('hidden');
-  document.getElementById('edName').textContent=(s.icon||'🔧')+'  '+s.name;document.getElementById('edDesc').textContent=s.description||'';
-  if(ro){enterReadonlyMode(s,name);return;}
-  exitReadonlyMode();
-  var cr=document.getElementById('contribRow'),cc=document.getElementById('contribCheck');
-  if(cur.source==='private'){cr.style.display='';cc.checked=!!s.is_contributed;}else{cr.style.display='none';}
-  setTog('togEn',s.enabled);setTog('togAuto',s.auto_trigger);renderKw(s.trigger_keywords||[]);
-  if(cur.source==='private'){await loadRawMd(name);try{var r=await fetch('/api/user-skills/'+name+'/raw-md',{headers:hdr()});if(r.ok){var d=await r.json();var p=parseMdFrontmatter(d.raw_content||'');original.system_prompt=p.system_prompt||'';document.getElementById('taPrompt').value=p.system_prompt||'';}}catch(e){}
-    document.getElementById('filePath').textContent='(私人技能，仅存数据库)';var st=document.getElementById('fileStatus');st.className='status-dot saved';st.textContent='已保存到数据库';
-  }else{try{var r2=await fetch('/api/skills/'+name+'/system-prompt',{headers:hdr()});if(!r2.ok)throw new Error(r2.status);var pd=await r2.json();original.system_prompt=pd.system_prompt||'';document.getElementById('taPrompt').value=pd.system_prompt||'';var hasM=pd.has_md_files?pd.has_md_files.system_prompt:false;var st2=document.getElementById('fileStatus');st2.className='status-dot '+(hasM?'saved':'default');st2.textContent=hasM?'已保存到 MD':'默认值';try{var fr=await fetch('/api/skills/'+name+'/file-path',{headers:hdr()});if(fr.ok){var fd=await fr.json();cur._dir=fd.skill_dir}}catch(e){}document.getElementById('filePath').textContent=(cur._dir||'skills/'+s.category+'/'+s.name)+'/skill.md';}catch(e){console.error('load prompt err:',e);toast('加载失败:'+e.message,'err')}await loadRawMd(name);}
-  var db=document.getElementById('editorDelBtn');if(db){var cd=!BUILTINS.has(s.name)&&!s.readonly&&s.category!=='情感响应';db.style.display=cd?'':'none';}
-  var sk=skills.filter(function(x){return x.source!=='private'&&!s.readonly;});var uk=skills.filter(function(x){return x.source==='private'||x.readonly;});
-  renderSection('secSysBody',sk,false);renderSection('secUserBody',uk,true);}
-
-function enterReadonlyMode(s,name){
-  document.getElementById('contribRow').style.display='none';document.getElementById('actionRowMain').style.display='none';document.getElementById('actionRowSaveCfg').style.display='none';document.getElementById('configBlock').style.display='none';
-  var tp=document.getElementById('taPrompt'),tr=document.getElementById('taRaw');tp.readOnly=true;tp.style.opacity='.7';tr.readOnly=true;tr.style.opacity='.7';
-  var te=document.getElementById('togEn'),ta=document.getElementById('togAuto');te.style.pointerEvents='none';te.style.opacity='.4';ta.style.pointerEvents='none';ta.style.opacity='.4';
-  document.getElementById('kwInput').readOnly=true;document.getElementById('kwInput').style.opacity='.5';
-  setTog('togEn',s.enabled);setTog('togAuto',s.auto_trigger);renderKw(s.trigger_keywords||[]);
-  try{var r=await fetch('/api/skills/'+name+'/system-prompt',{headers:hdr()});if(r.ok){var pd=await r.json();original.system_prompt=pd.system_prompt||'';document.getElementById('taPrompt').value=pd.system_prompt||'';}}catch(e){}
-  try{await loadRawMd(name);}catch(e){}
-  document.getElementById('filePath').textContent=(s.owner_name||'其他用户')+' 的贡献技能';var st=document.getElementById('fileStatus');st.className='status-dot saved';st.textContent='👤 只读';
-  renderSection('secSysBody',skills.filter(function(x){return x.source!=='private'&&!x.readonly;}),false);
-  renderSection('secUserBody',skills.filter(function(x){return x.source==='private'||x.readonly;}),true);
-}
-
-function exitReadonlyMode(){
-  document.getElementById('contribRow').style.display='';document.getElementById('actionRowMain').style.display='';document.getElementById('actionRowSaveCfg').style.display='';document.getElementById('configBlock').style.display='';
-  var tp=document.getElementById('taPrompt'),tr=document.getElementById('taRaw');tp.readOnly=false;tr.readOnly=false;tr.style.opacity='';tp.style.opacity='';
-  var te=document.getElementById('togEn'),ta=document.getElementById('togAuto');te.style.pointerEvents='';te.style.opacity='';ta.style.pointerEvents='';ta.style.opacity='';
-  document.getElementById('kwInput').readOnly=false;document.getElementById('kwInput').style.opacity='';
-}
-
-async function loadRawMd(name){var el=document.getElementById('taRaw');try{var r=await fetchWithTimeout('/api/skills/'+name+'/raw-md',{headers:hdr()},10000);if(r.ok){var d=await r.json();el.value=d.raw_content||'';cur._hasMd=!!d.raw_content;}else{el.value='// 该技能为内建 Python 技能，无 skill.md 文件可编辑';cur._hasMd=false;}}catch(e){el.value='// 加载失败: '+esc(e.message);}}
-
-function switchTab(w){var tp=document.getElementById('taPrompt'),tr=document.getElementById('taRaw'),tb=document.getElementById('tabPrompt'),tR=document.getElementById('tabRaw'),bR=document.getElementById('btnSaveRaw');
-  if(w==='raw'){tp.style.display='none';tr.style.display='block';tb.classList.remove('active');tR.classList.add('active');bR.style.display='';}
-  else{tp.style.display='block';tr.style.display='none';tb.classList.add('active');tR.classList.remove('active');bR.style.display='none';}}
-
-function setTog(id,on){document.getElementById(id).classList.toggle('on',!!on);}
-function flipEn(){if(cur){cur.enabled=!cur.enabled;setTog('togEn',cur.enabled);}}
-function flipAuto(){if(cur){cur.auto_trigger=!cur.auto_trigger;setTog('togAuto',cur.auto_trigger);}}
-function renderKw(arr){document.getElementById('kwList').innerHTML=arr.map(function(k,i){return '<span class="kw-chip">'+esc(k)+'<span class="kw-x" onclick="rmKw('+i+')">×</span></span>';}).join('');}
-function addKw(ev){if(ev.key==='Enter'){var v=document.getElementById('kwInput').value.trim();if(v&&cur){if(!cur.trigger_keywords)cur.trigger_keywords=[];if(cur.trigger_keywords.indexOf(v)<0){cur.trigger_keywords.push(v);renderKw(cur.trigger_keywords);}document.getElementById('kwInput').value='';}}}
-function rmKw(i){if(cur&&cur.trigger_keywords){cur.trigger_keywords.splice(i,1);renderKw(cur.trigger_keywords);}}
-
-async function savePrompt(){if(!cur)return;var ct=document.getElementById('taPrompt').value,isP=cur.source==='private',url=isP?'/api/user-skills/'+cur.name:'/api/skills/'+cur.name+'/system-prompt',m=isP?'PUT':'POST',body=isP?JSON.stringify({system_prompt:ct}):JSON.stringify({content:ct});
-  try{var r=await fetch(url,{method:m,headers:hdr(),body});if(r.ok){toast('✅ Prompt 已保存','ok');if(!isP){var st=document.getElementById('fileStatus');st.className='status-dot saved';st.textContent='已保存到 MD';}}else{var d=await r.json().catch(function(){return{};});toast('❌ 保存失败: '+(d.detail||r.status),'err');}}catch(e){toast('❌ '+e.message,'err');}}
-function resetPrompt(){document.getElementById('taPrompt').value=original.system_prompt||'';}
-
-async function saveRaw(){if(!cur)return;var ct=document.getElementById('taRaw').value,isP=cur.source==='private',url=isP?'/api/user-skills/'+cur.name+'/raw-md':'/api/skills/'+cur.name+'/raw-md';
-  try{var r=await fetch(url,{method:'POST',headers:hdr(),body:JSON.stringify({content:ct})});var d=await r.json().catch(function(){return{};});if(r.ok)toast(d.message||'✅ 已保存','ok');else toast(d.detail||'❌ 失败','err');}catch(e){toast('❌ '+e.message,'err');}}
-
-async function saveConfig(){if(!cur)return;var isP=cur.source==='private',cfgB=JSON.stringify({enabled:cur.enabled,auto_trigger:cur.auto_trigger,trigger_keywords:cur.trigger_keywords}),cfgUrl=isP?'/api/user-skills/'+cur.name:'/api/skills/'+cur.name+'/config',cfgM=isP?'PUT':'POST';
-  try{var r=await fetch(cfgUrl,{method:cfgM,headers:hdr(),body:cfgB});if(r.ok){toast('✅ 配置已保存','ok');if(!isP)await savePrompt();}else{var d=await r.json().catch(function(){return{};});toast('❌ 保存失败: '+(d.detail||r.status),'err');}}catch(e){toast('❌ '+e.message,'err');}}
-
-var delTarget=null,delTargetSource='global';
-function confirmDel(name){delTarget=name||null;var s=skills.find(function(x){return x.name===name;});delTargetSource=s?s.source:'global';
-  document.getElementById('delConfirmMsg').textContent='确定要删除技能「'+name||cur?cur.name:''+'」吗？'+(delTargetSource==='private'?'（私人技能，仅从你的账户删除）':'将永久删除该技能的文件和配置。');
-  document.getElementById('delConfirmBg').classList.add('open');
-}
-function closeDelConfirm(ev){if(ev&&ev.target!==document.getElementById('delConfirmBg'))return;document.getElementById('delConfirmBg').classList.remove('open');delTarget=null;}
-document.getElementById('delConfirmOkBtn').addEventListener('click',async function(){if(!delTarget)return;var isP=delTargetSource==='private',url=isP?'/api/user-skills/'+delTarget:'/api/skills/'+delTarget;
-  try{var r=await fetch(url,{method:'DELETE',headers:hdr()});var d=await r.json().catch(function(){return{};});if(r.ok){toast(d.message||'已删除','ok');closeDelConfirm();if(cur&&cur.name===delTarget){cur=null;document.getElementById('editorPane').classList.add('hidden');document.getElementById('emptyPanel').classList.remove('hidden');}await loadSkills();}else toast(d.detail||d.message||'❌ 删除失败','err');}catch(e){toast('❌ '+e.message,'err');}});
-
-function openCreateModal(){document.getElementById('createModal').classList.add('open');document.getElementById('cName').value='';document.getElementById('cDesc').value='';document.getElementById('cIcon').value='🔧';document.getElementById('cCat').value='自定义';document.getElementById('cPrompt').value='';document.getElementById('cOn').checked=true;document.getElementById('cAuto').checked=false;cKeywords=[];renderCKw();}
-function closeCreateModal(ev){if(ev&&ev.target!==document.getElementById('createModal'))return;document.getElementById('createModal').classList.remove('open');}
-function renderCKw(){document.getElementById('cKwList').innerHTML=cKeywords.map(function(k,i){return '<span class="kw-chip">'+esc(k)+'<span class="kw-x" onclick="rmCKw('+i+')">×</span></span>';}).join('');}
-function addCKw(){var v=document.getElementById('cKwIn').value.trim();if(v&&cKeywords.indexOf(v)<0){cKeywords.push(v);renderCKw();}document.getElementById('cKwIn').value='';document.getElementById('cKwIn').focus();}
-function rmCKw(i){cKeywords.splice(i,1);renderCKw();}
-document.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.id==='cKwIn'){e.preventDefault();addCKw();}});
-
-async function doCreate(){var name=document.getElementById('cName').value.trim(),desc=document.getElementById('cDesc').value.trim(),icon=document.getElementById('cIcon').value.trim()||'🔧',cat=document.getElementById('cCat').value,prompt=document.getElementById('cPrompt').value.trim(),en=document.getElementById('cOn').checked,auto=document.getElementById('cAuto').checked,doCont=document.getElementById('cContrib').checked;
-  if(!name){toast('请输入技能名称','err');return;}if(!desc){toast('请输入描述','err');return;}
-  try{var r=await fetch('/api/user-skills?contribute='+doCont,{method:'POST',headers:hdr(),body:JSON.stringify({name:name,description:desc,icon:icon,category:cat,system_prompt:prompt,enabled:en,auto_trigger:auto,trigger_keywords:cKeywords})});var d=await r.json().catch(function(){return{};});if(r.ok){toast(d.message||'✅ 创建成功','ok');closeCreateModal();await loadSkills();}else toast(d.detail||d.message||'❌ 创建失败','err');}catch(e){toast('❌ '+e.message,'err');}}
-
-function toast(msg,type){var el=document.createElement('div');el.className='toast toast-'+(type||'ok');el.textContent=msg;document.body.appendChild(el);setTimeout(function(){el.style.opacity='0';el.transition='opacity .3s';},2200);setTimeout(function(){el.remove();},2600);}
-
-// ═══ INIT ═══
-document.addEventListener('DOMContentLoaded',function(){
-  console.log('[v6] DOMContentLoaded fired');
-  var hasToken=false;try{hasToken=!!localStorage.getItem('access_token');}catch(e){}
-  console.log('[v6] token exists:',hasToken);
-  if(!hasToken){setStatus('🔒 未登录','');setBody('未检测到登录信息，即将跳转登录页...','');setTimeout(function(){window.location.replace('/login');},1000);return;}
-  setStatus('⏳ 开始加载技能数据...','');loadSkills();
-
-  // Background auth check
-  (function(){var t;try{t=localStorage.getItem('access_token');}catch(e){}if(!t)return;
-    fetch('/auth/me',{headers:{'Authorization':'Bearer '+t}}).then(function(r){if(!r.ok)console.log('[v6] bg auth fail');}).catch(function(){});})();
-});
-
-// Backup init for edge cases
-if(document.readyState==='complete'){setTimeout(function(){if(!_inited){console.log('[v6] backup init');_inited=false;loadSkills();}},300);}
+})();
 </script>
 </body>
 </html>

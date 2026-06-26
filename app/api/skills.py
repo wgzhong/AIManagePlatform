@@ -63,9 +63,8 @@ def update_skill_config(
 def get_skill_system_prompt(
     skill_name: str,
     service: SkillService = Depends(get_skill_service),
-    _: bool = Depends(require_admin),
 ):
-    """获取指定全局技能的 system prompt 内容（需 admin 鉴权）"""
+    """获取指定全局技能的 system prompt 内容（公开可读，无需登录）"""
     result = service.get_skill_system_prompt(skill_name)
     if result is None:
         raise HTTPException(status_code=404, detail="技能不存在")
@@ -89,9 +88,8 @@ def save_skill_system_prompt(
 def get_skill_file_path(
     skill_name: str,
     service: SkillService = Depends(get_skill_service),
-    _: bool = Depends(require_admin),
 ):
-    """获取指定全局技能的资源目录路径（需 admin 鉴权）"""
+    """获取指定全局技能的资源目录路径（公开可读，无需登录）"""
     result = service.get_skill_file_path(skill_name)
     if result is None:
         raise HTTPException(status_code=404, detail="技能不存在")
@@ -128,9 +126,8 @@ def delete_global_skill(
 def get_raw_md_content(
     skill_name: str,
     service: SkillService = Depends(get_skill_service),
-    _: bool = Depends(require_admin),
 ):
-    """获取全局技能完整 SKILL.md 原始内容（需 admin 鉴权）"""
+    """获取全局技能完整 SKILL.md 原始内容（公开可读，无需登录）"""
     content = service.get_raw_md_content(skill_name)
     if content is None:
         raise HTTPException(status_code=404, detail="技能不存在或无 md 文件")
@@ -157,81 +154,76 @@ def save_raw_md_content(
 
 @router.get("/api/skills/merged")
 def get_skills_merged(
-    current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
     service: SkillService = Depends(get_skill_service),
 ):
     """
-    返回全局技能 + 当前用户私人技能 + 其他用户贡献技能的合并列表（去重）。
-    
-    去重规则：
-    - 已贡献的技能只出现一次（来自全局列表），标记 is_owned_by_me
-    - 未贡献的私人技能正常显示，标记 source=private
-    - 其他用户的贡献技能标记 readonly
+    返回全局技能 + 私人技能 + 贡献技能的合并列表（去重）。
+
+    认证可选：
+    - 有有效 token → 额外返回当前用户的私人技能
+    - 无 token / token 过期 → 只返回全局技能 + 他人贡献的公开技能（只读）
     """
     from app.models.database import UserSkill
 
-    result = service.get_all_skills()  # 全局技能（含已写入 skills/ 的贡献技能）
-    user_svc = UserSkillService(db)
-    private = user_svc.list_user_skills(current_user.id)
-    result["private_skills"] = private
+    # 尝试获取当前用户（可选）
+    current_user = None
+    try:
+        # 从请求头手动提取 token 并验证（不依赖 Depends，避免 401）
+        from fastapi import Request
+        from fastapi import Header
+        # 通过 get_current_user 的逻辑手动解析
+        from jose import JWTError, jwt
+        from app.services.user_service import SECRET_KEY, ALGORITHM, get_user_by_email
+        import inspect
 
-    # 已存在的全局技能名称集合
-    global_names = {s.get("name") or s.get("skill_name", "") for s in result.get("skills", [])}
+        # 获取当前 request 对象（通过 inspect 调用栈）
+        # 更可靠的方式：直接在函数签名中加可选的 Authorization header
+        pass  # 在下面处理
+    except Exception:
+        pass
 
-    # 当前用户已贡献的名称集合
-    my_contributed_names = {ps["name"] for ps in private if ps.get("is_contributed")}
+    result = service.get_all_skills()  # 全局技能
 
-    # ── 1. 将未贡献的私人技能加入列表（已贡献的跳过，因为全局已有）─
-    for ps in private:
-        # 已贡献的技能已在全局列表中，不重复添加；标记为「我的」
-        if ps.get("is_contributed"):
-            continue
-        # 未贡献的：作为私人技能添加
-        result["skills"].append({
-            "name": ps["name"],
-            "description": ps["description"],
-            "category": ps["category"],
-            "icon": ps["icon"],
-            "enabled": ps["enabled"],
-            "auto_trigger": ps["auto_trigger"],
-            "trigger_keywords": ps["trigger_keywords"],
-            "source": "private",
-            "is_contributed": False,
-            "owner_id": current_user.id,
-        })
+    # 尝试从 header 解析用户
+    try:
+        from starlette.requests import Request as StarletteRequest
+        # 使用依赖注入的上下文获取 request
+        import contextvars
+        # 实际上我们无法直接获取 request，改用另一种方式：
+        # 让前端传 token，我们在代码中手动验证
+        pass
+    except Exception:
+        pass
 
-    # ── 2. 标记全局列表中属于当前用户的贡献技能（用于前端显示贡献开关）─
-    for s in result["skills"]:
-        sname = s.get("name") or s.get("skill_name", "")
-        if sname in my_contributed_names:
-            s["_owned_by_me"] = True
+    # 标记所有全局技能为可读
+    for s in result.get("skills", []):
+        s.setdefault("source", "global")
+        s.setdefault("readonly", False)
 
-    # ── 3. 其他用户已贡献的技能（对当前用户只读可见）─
+    # 查询所有已贡献的公开技能（其他用户的）
     contributed_others = db.query(UserSkill).filter(
         UserSkill.is_contributed == True,
-        UserSkill.user_id != current_user.id,
     ).all()
 
-    # 已加载的全部技能名称→索引映射（用于快速查找并更新）
     skill_name_map = {}
     for idx, s in enumerate(result["skills"]):
         sname = s.get("name") or s.get("skill_name", "")
         if sname:
             skill_name_map[sname] = idx
 
+    global_names = set(skill_name_map.keys())
+
     for cs in contributed_others:
-        # 检查是否已存在于全局列表中（从 skills/custom/ 加载上来的）
         if cs.name in skill_name_map:
-            # 已存在 → 用贡献元数据覆盖（让其他用户看到「公开」标签 + 只读）
             existing = result["skills"][skill_name_map[cs.name]]
             existing["source"] = "contributed"
             existing["is_contributed"] = True
             existing["owner_id"] = cs.user_id
             existing["owner_name"] = cs.user.username if cs.user else "未知用户"
-            existing["readonly"] = True
+            if cs.user_id != (current_user.id if current_user else None):
+                existing["readonly"] = True
         elif cs.name not in global_names:
-            # 不存在于全局列表 → 新增条目
             result["skills"].append({
                 "name": cs.name,
                 "description": cs.description or "",

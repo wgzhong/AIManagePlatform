@@ -8,7 +8,7 @@ JWT 双令牌机制：
 """
 
 from datetime import timedelta
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
@@ -17,7 +17,7 @@ from app.models.database import get_db
 from app.services.user_service import (
     create_user, authenticate_user,
     create_access_token, create_refresh_token,
-    verify_refresh_token, get_user_by_email,
+    verify_refresh_token, get_user_by_email, get_user_by_username,
     ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS,
 )
 from app.api.auth_deps import get_current_user
@@ -25,6 +25,7 @@ from app.schemas.auth import (
     UserCreate, RegisterResponse, TokenResponse, UserPublic,
     RefreshTokenRequest, RefreshTokenResponse, MessageResponse,
 )
+from app.middleware.rate_limit import limiter
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -55,7 +56,9 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=TokenResponse)
+@limiter.limit("5/minute")
 def login_for_access_token(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
 ):
@@ -139,10 +142,14 @@ def read_users_me(current_user=Depends(get_current_user)):
 
 
 @router.post("/logout", response_model=MessageResponse)
-def logout():
-    """用户登出
-
-    注意：当前 JWT 无服务端 revocation 机制，登出仅前端丢弃 token。
-    完整实现需要 JWT blacklist（后续阶段）。
-    """
+async def logout(request: Request):
+    """用户登出，将 token 加入黑名单使其立即失效"""
+    from app.core.jwt_blacklist import add_to_blacklist
+    
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="未提供 token")
+    token = auth_header[7:]  # 去掉 "Bearer " 前缀
+    
+    add_to_blacklist(token)
     return MessageResponse(message="登出成功")

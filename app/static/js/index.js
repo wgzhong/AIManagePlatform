@@ -614,6 +614,7 @@ function renderUserList() {
     var userConfig = usersConfigMap[user.id] || {};
     var row = document.createElement('tr');
     var apiKeyDisplay = userConfig.api_key ? '***' + userConfig.api_key.slice(-4) : '-';
+    var contribCount = user.contributed_skills_count || 0;
     row.innerHTML =
       '<td style="color:var(--text-sub);font-size:11px;">' + user.id + '</td>' +
       '<td><strong>' + safeContent(user.username) + '</strong></td>' +
@@ -623,6 +624,7 @@ function renderUserList() {
       '<td style="color:var(--accent-cyan);font-size:12px;">' + safeContent(userConfig.default_model ? getModelDisplayName(userConfig.default_model) : '-') + '</td>' +
       '<td style="color:var(--text-sub);font-size:11px;font-family:monospace;">' + escapeHtml(apiKeyDisplay) + '</td>' +
       '<td style="color:var(--text-sub);font-size:11px;">' + (user.created_at ? new Date(user.created_at).toLocaleString('zh-CN') : '-') + '</td>' +
+      '<td><span style="background:rgba(135,232,232,0.1);color:var(--accent-cyan);padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600;">🎁 ' + contribCount + '</span></td>' +
       '<td>' +
         '<button onclick="editUser(' + user.id + ')" class="btn-action">编辑</button>' +
         '<button onclick="viewUserConfig(' + user.id + ')" class="btn-action" style="background:rgba(114,224,224,0.1);color:var(--accent-cyan);">配置</button>' +

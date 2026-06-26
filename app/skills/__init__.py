@@ -18,22 +18,37 @@ _TOOL_DEFINITIONS_CACHE = None
 
 
 def _load_skills_from_md():
-    """从 md 文件加载技能（扫描子目录下的 skill.md）"""
+    """从 md 文件加载技能（递归扫描子目录下的 skill.md）"""
     skills_dir = os.path.dirname(__file__)
-    
+
     existing_names = {skill.name for skill in ALL_SKILLS}
-    
-    for item in sorted(os.listdir(skills_dir)):
-        item_path = os.path.join(skills_dir, item)
-        if os.path.isdir(item_path):
-            skill_md_path = os.path.join(item_path, "skill.md")
-            if os.path.exists(skill_md_path):
-                try:
-                    skill = MdSkill(skill_md_path)
-                    if skill.name and skill.name not in existing_names:
-                        ALL_SKILLS.append(skill)
-                except Exception as e:
-                    logger.warning("加载 md 技能文件失败 %s: %s", skill_md_path, e)
+
+    def _scan_dir(base_dir):
+        """递归扫描目录中的 skill.md"""
+        try:
+            items = sorted(os.listdir(base_dir))
+        except OSError:
+            return
+        for item in items:
+            if item.startswith('.') or item == '__pycache__':
+                continue
+            item_path = os.path.join(base_dir, item)
+            if os.path.isdir(item_path):
+                # 先检查当前层是否有 skill.md（传统一级目录格式）
+                skill_md_path = os.path.join(item_path, "skill.md")
+                if os.path.exists(skill_md_path):
+                    try:
+                        skill = MdSkill(skill_md_path)
+                        if skill.name and skill.name not in existing_names:
+                            ALL_SKILLS.append(skill)
+                            existing_names.add(skill.name)
+                    except Exception as e:
+                        logger.warning("加载 md 技能文件失败 %s: %s", skill_md_path, e)
+                else:
+                    # 没有 skill.md，继续递归深入（如 custom/{name}/）
+                    _scan_dir(item_path)
+
+    _scan_dir(skills_dir)
 
 
 def _load_python_skills():

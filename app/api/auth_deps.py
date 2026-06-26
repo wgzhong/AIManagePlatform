@@ -33,9 +33,19 @@ async def get_current_user(
             ...
 
     第三阶段 F2：增加 token type 校验，拒绝 refresh_token 被当作 access_token 使用。
+    第四阶段：增加黑名单校验，使退出登录立即生效。
     """
     from jose import JWTError, jwt
     from app.services.user_service import SECRET_KEY, ALGORITHM
+    from app.core.jwt_blacklist import is_blacklisted
+
+    # 检查 token 是否在黑名单中
+    if is_blacklisted(token):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token 已失效，请重新登录",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,

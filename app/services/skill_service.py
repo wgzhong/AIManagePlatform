@@ -25,6 +25,23 @@ from app.schemas.skills import SkillSystemPromptResponse, SkillFilePathResponse,
 
 
 # ---------------------------------------------------------------------------
+# 内建技能名称（禁止删除）
+# ---------------------------------------------------------------------------
+BUILTIN_SKILL_NAMES = {
+    # 7种情绪
+    "happy_mood", "sad_mood", "angry_mood", "fear_mood",
+    "disgust_mood", "surprise_mood", "mood",
+    # 工具
+    "get_time", "calculate", "get_weather",
+}
+
+
+def _is_builtin_skill(skill_name: str) -> bool:
+    """判断是否为内建保护技能"""
+    return skill_name in BUILTIN_SKILL_NAMES
+
+
+# ---------------------------------------------------------------------------
 # 辅助：从完整 MD 文本解析 YAML frontmatter
 # ---------------------------------------------------------------------------
 
@@ -183,7 +200,7 @@ class SkillService:
             return self._create_private_skill(data, user_id)
 
     def _create_global_skill(self, data: CustomSkillCreate) -> dict:
-        """写入 skills/ 文件夹（原有逻辑）"""
+        """写入 skills/custom/ 文件夹（用户贡献的自定义技能）"""
         from app.skills import ALL_SKILLS
 
         if not re.match(r'^[a-zA-Z0-9_\-]+$', data.name):
@@ -193,12 +210,11 @@ class SkillService:
         if existing:
             return {"success": False, "message": f"技能 {data.name} 已存在"}
 
-        safe_category = re.sub(r'[<>:"/\\|?*]', '_', data.category).strip() or "自定义"
-
         app_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         skills_base_dir = os.path.join(app_dir, "skills")
 
-        skill_dir = os.path.join(skills_base_dir, safe_category, data.name)
+        # 统一存到 skills/custom/{name}/ 目录下
+        skill_dir = os.path.join(skills_base_dir, "custom", data.name)
         os.makedirs(skill_dir, exist_ok=True)
 
         keywords_yaml = "[" + ", ".join(f'"{kw}"' for kw in data.trigger_keywords) + "]"
@@ -243,13 +259,22 @@ trigger_keywords: {keywords_yaml}
         return {"success": False, "message": "请使用 UserSkillService 创建私人技能"}
 
     def delete_skill(self, skill_name: str) -> dict:
-        """删除全局技能（仅支持 md 文件型）"""
+        """删除全局技能（仅支持 md 文件型，内建技能拒绝删除）"""
         from app.skills import ALL_SKILLS
 
+        # 1. 名称白名单检查（优先）
+        if _is_builtin_skill(skill_name):
+            return {
+                "success": False,
+                "message": f"「{skill_name}」是内建保护技能，不支持删除"
+            }
+
+        # 2. 查找技能
         skill = get_skill_by_name(skill_name)
         if not skill:
             return {"success": False, "message": f"技能 {skill_name} 不存在"}
 
+        # 3. 文件类型检查
         skill_path = getattr(skill, '_skill_path', None)
         is_python_builtin = (
             skill_path is None
@@ -587,11 +612,11 @@ trigger_keywords: {keywords_yaml}
 """
 
     def _write_to_file(self, user_skill) -> Optional[str]:
-        """将私人技能写入 skills/ 文件夹，返回文件路径"""
-        safe_category = re.sub(r'[<>:"/\\|?*]', '_', user_skill.category).strip() or "自定义"
+        """将私人技能写入 skills/custom/ 文件夹，返回文件路径"""
         app_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         skills_base_dir = os.path.join(app_dir, "skills")
-        skill_dir = os.path.join(skills_base_dir, safe_category, user_skill.name)
+        # 统一存到 skills/custom/{name}/ 目录下
+        skill_dir = os.path.join(skills_base_dir, "custom", user_skill.name)
         os.makedirs(skill_dir, exist_ok=True)
 
         content = self._build_md_content(user_skill)

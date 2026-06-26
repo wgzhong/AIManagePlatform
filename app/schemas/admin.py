@@ -14,6 +14,7 @@ class UserListItem(BaseModel):
     is_active: bool
     is_superuser: bool
     created_at: str = ""
+    contributed_skills_count: int = 0  # 贡献技能数量
 
 
 class UserListResponse(BaseModel):

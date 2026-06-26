@@ -5,7 +5,7 @@
 
 from datetime import datetime
 from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey, JSON, Boolean
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, relationship, declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 
 Base = declarative_base()
@@ -100,8 +100,22 @@ class UserSkill(Base):
     user = relationship("User")
 
 
+class Device(Base):
+    """ESP32 设备管理表（替代 devices.json）"""
+    __tablename__ = "devices"
 
-# 数据库连接（使用绝对路径，避免因启动目录不同而创建空库）
+    id = Column(Integer, primary_key=True, index=True)
+    device_code = Column(String(20), unique=True, nullable=False, index=True)
+    device_name = Column(String(100), nullable=False)
+    admin_api_key = Column(String(255), nullable=False)
+    created_at = Column(DateTime, default=datetime.now)
+    last_used = Column(DateTime, nullable=True)
+    usage_count = Column(Integer, default=0)
+
+    __table_args__ = {"sqlite_autoincrement": True}
+
+
+
 import os as _os
 _data_dir = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))), "data")
 _os.makedirs(_data_dir, exist_ok=True)

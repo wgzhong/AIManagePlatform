@@ -16,7 +16,8 @@ from app.schemas.skills import (
 )
 from app.schemas.auth import MessageResponse
 from app.services.skill_service import SkillService, UserSkillService
-from app.middleware.auth import require_admin, get_current_user
+from app.api.auth_deps import get_current_user
+from app.middleware.auth import require_admin
 from app.dependencies import get_skill_service
 from app.models.database import get_db
 
@@ -161,16 +162,32 @@ def get_skills_merged(
     service: SkillService = Depends(get_skill_service),
 ):
     """
-    返回全局技能 + 当前用户私人技能的合并列表。
-    前端技能配置中心主入口。
+    返回全局技能 + 当前用户私人技能 + 其他用户贡献技能的合并列表（去重）。
+    
+    去重规则：
+    - 已贡献的技能只出现一次（来自全局列表），标记 is_owned_by_me
+    - 未贡献的私人技能正常显示，标记 source=private
+    - 其他用户的贡献技能标记 readonly
     """
-    result = service.get_all_skills()  # 全局技能
+    from app.models.database import UserSkill
+
+    result = service.get_all_skills()  # 全局技能（含已写入 skills/ 的贡献技能）
     user_svc = UserSkillService(db)
     private = user_svc.list_user_skills(current_user.id)
-
     result["private_skills"] = private
-    # 将私人技能也合并到 skills 列表，标记 source=private
+
+    # 已存在的全局技能名称集合
+    global_names = {s.get("name") or s.get("skill_name", "") for s in result.get("skills", [])}
+
+    # 当前用户已贡献的名称集合
+    my_contributed_names = {ps["name"] for ps in private if ps.get("is_contributed")}
+
+    # ── 1. 将未贡献的私人技能加入列表（已贡献的跳过，因为全局已有）─
     for ps in private:
+        # 已贡献的技能已在全局列表中，不重复添加；标记为「我的」
+        if ps.get("is_contributed"):
+            continue
+        # 未贡献的：作为私人技能添加
         result["skills"].append({
             "name": ps["name"],
             "description": ps["description"],
@@ -180,8 +197,55 @@ def get_skills_merged(
             "auto_trigger": ps["auto_trigger"],
             "trigger_keywords": ps["trigger_keywords"],
             "source": "private",
-            "is_contributed": ps["is_contributed"],
+            "is_contributed": False,
+            "owner_id": current_user.id,
         })
+
+    # ── 2. 标记全局列表中属于当前用户的贡献技能（用于前端显示贡献开关）─
+    for s in result["skills"]:
+        sname = s.get("name") or s.get("skill_name", "")
+        if sname in my_contributed_names:
+            s["_owned_by_me"] = True
+
+    # ── 3. 其他用户已贡献的技能（对当前用户只读可见）─
+    contributed_others = db.query(UserSkill).filter(
+        UserSkill.is_contributed == True,
+        UserSkill.user_id != current_user.id,
+    ).all()
+
+    # 已加载的全部技能名称→索引映射（用于快速查找并更新）
+    skill_name_map = {}
+    for idx, s in enumerate(result["skills"]):
+        sname = s.get("name") or s.get("skill_name", "")
+        if sname:
+            skill_name_map[sname] = idx
+
+    for cs in contributed_others:
+        # 检查是否已存在于全局列表中（从 skills/custom/ 加载上来的）
+        if cs.name in skill_name_map:
+            # 已存在 → 用贡献元数据覆盖（让其他用户看到「公开」标签 + 只读）
+            existing = result["skills"][skill_name_map[cs.name]]
+            existing["source"] = "contributed"
+            existing["is_contributed"] = True
+            existing["owner_id"] = cs.user_id
+            existing["owner_name"] = cs.user.username if cs.user else "未知用户"
+            existing["readonly"] = True
+        elif cs.name not in global_names:
+            # 不存在于全局列表 → 新增条目
+            result["skills"].append({
+                "name": cs.name,
+                "description": cs.description or "",
+                "category": cs.category or "自定义",
+                "icon": cs.icon or "🔧",
+                "enabled": cs.enabled,
+                "auto_trigger": cs.auto_trigger or False,
+                "trigger_keywords": cs.trigger_keywords or [],
+                "source": "contributed",
+                "is_contributed": True,
+                "owner_id": cs.user_id,
+                "owner_name": cs.user.username if cs.user else "未知用户",
+                "readonly": True,
+            })
 
     return result
 

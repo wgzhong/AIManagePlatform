@@ -1,5 +1,5 @@
 ---
-name: test
+name: test2
 description: 单元测试
 version: 1.0.0
 category: 自定义
@@ -9,5 +9,4 @@ auto_trigger: false
 trigger_keywords: []
 ---
 
-
-单元测试运行
+22222

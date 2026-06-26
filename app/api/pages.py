@@ -51,5 +51,12 @@ def devices_page():
 
 @router.get("/skills")
 def skills_page():
-    """Skills 配置页面"""
-    return FileResponse(os.path.join(STATIC_DIR, "skills.html"))
+    """Skills 配置页面（禁用缓存，确保用户始终获取最新版本）"""
+    return FileResponse(
+        os.path.join(STATIC_DIR, "skills.html"),
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )

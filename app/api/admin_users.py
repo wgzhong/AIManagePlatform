@@ -31,19 +31,29 @@ def get_users(
     current_user=Depends(require_superuser),
     db: Session = Depends(get_db),
 ):
-    """管理员获取所有用户列表"""
+    """管理员获取所有用户列表（含贡献技能数量）"""
+    from app.models.database import UserSkill
+
     users = get_all_users(db)
-    return [
-        UserListItem(
-            id=user.id,
-            username=user.username,
-            email=user.email,
-            is_active=user.is_active,
-            is_superuser=user.is_superuser,
-            created_at=user.created_at.isoformat() if user.created_at else "",
+    result = []
+    for user in users:
+        # 统计该用户的贡献技能数
+        contrib_count = db.query(UserSkill).filter(
+            UserSkill.user_id == user.id,
+            UserSkill.is_contributed == True,
+        ).count()
+        result.append(
+            UserListItem(
+                id=user.id,
+                username=user.username,
+                email=user.email,
+                is_active=user.is_active,
+                is_superuser=user.is_superuser,
+                created_at=user.created_at.isoformat() if user.created_at else "",
+                contributed_skills_count=contrib_count,
+            )
         )
-        for user in users
-    ]
+    return result
 
 
 @router.get("/users/{user_id}", response_model=UserListItem)
@@ -53,9 +63,16 @@ def get_single_user(
     db: Session = Depends(get_db),
 ):
     """管理员获取单个用户"""
+    from app.models.database import UserSkill
+
     user = get_user_by_id(db, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="用户不存在")
+
+    contrib_count = db.query(UserSkill).filter(
+        UserSkill.user_id == user_id,
+        UserSkill.is_contributed == True,
+    ).count()
 
     return UserListItem(
         id=user.id,
@@ -64,6 +81,7 @@ def get_single_user(
         is_active=user.is_active,
         is_superuser=user.is_superuser,
         created_at=user.created_at.isoformat() if user.created_at else "",
+        contributed_skills_count=contrib_count,
     )
 
 

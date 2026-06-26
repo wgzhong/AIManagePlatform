@@ -4,7 +4,7 @@
 """
 
 from datetime import datetime
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey, JSON, Boolean
+from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey, JSON, Boolean, Index
 from sqlalchemy.orm import sessionmaker, relationship, declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 
@@ -113,6 +113,26 @@ class Device(Base):
     usage_count = Column(Integer, default=0)
 
     __table_args__ = {"sqlite_autoincrement": True}
+
+
+class ExternalApiKey(Base):
+    """外部服务 API Key 管理表（大模型/天气/导航等第三方密钥）"""
+    __tablename__ = "external_api_keys"
+
+    id = Column(Integer, primary_key=True, index=True)
+    provider_name = Column(String(100), nullable=False)          # 显示名称：如 "智谱 AI"、"OpenAI"
+    provider_code = Column(String(50), nullable=False, index=True)  # 唯一标识：如 "zhipu"、"openai"
+    category = Column(String(30), nullable=False, index=True)     # 分类：llm / weather / navigation / search / other
+    key_value = Column(Text, nullable=False)                      # 加密后的密文
+    api_url = Column(String(500), default="")                     # API 地址（可选）
+    models = Column(JSON, default=[])                             # 关联模型列表（LLM 类专用）
+    is_active = Column(Boolean, default=True)                     # 是否启用
+    priority = Column(Integer, default=0)                         # 优先级
+    description = Column(Text, default="")                        # 备注
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+    __table_args__ = (Index("idx_provider_code_unique", "provider_code", unique=True),)
 
 
 

@@ -129,11 +129,13 @@ AI 推理对话平台 API 文档
     from app.api.user_config import router as user_config_router
     from app.api.user_history import router as user_history_router
     from app.api.admin_users import router as admin_users_router
+    from app.api.provider_keys import router as provider_keys_router
 
     app.include_router(auth_router)
     app.include_router(user_config_router)
     app.include_router(user_history_router)
     app.include_router(admin_users_router)
+    app.include_router(provider_keys_router)
     app.include_router(chat_router)
     app.include_router(devices_router)
     app.include_router(skills_router)

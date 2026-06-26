@@ -87,6 +87,11 @@
           <span>系统日志</span>
           <span class="menu-arrow">→</span>
         </div>
+        <div class="menu-item" onclick="navigateTo('/apikeys')">
+          <span class="menu-icon">🔑</span>
+          <span>API Key 管理</span>
+          <span class="menu-arrow">→</span>
+        </div>
         <div class="menu-divider"></div>
         <div class="menu-item" onclick="logout()">
           <span class="menu-icon">🚪</span>
@@ -295,6 +300,18 @@
           <p class="bottom-desc">管理所有技能的启用状态与触发规则</p>
         </div>
       </div>
+
+      <!-- API Key 管理卡片 -->
+      <div class="bottom-card" onclick="navigateTo('/apikeys')">
+        <div class="bottom-card-header">
+          <span class="bottom-card-icon">🔑</span>
+          <h4>API Key 管理</h4>
+          <span class="bottom-card-link">— 密钥中心</span>
+        </div>
+        <div class="bottom-card-body">
+          <p class="bottom-desc">管理大模型、天气、导航等第三方服务密钥</p>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -312,6 +329,10 @@
       <div class="recent-item" onclick="navigateTo('/devices')">
         <span class="recent-icon">🖥️</span>
         <span class="recent-text">设备管理</span>
+      </div>
+      <div class="recent-item" onclick="navigateTo('/apikeys')">
+        <span class="recent-icon">🔑</span>
+        <span class="recent-text">API Key 管理</span>
       </div>
     </div>
   </div>

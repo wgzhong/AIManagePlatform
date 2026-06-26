@@ -6,6 +6,8 @@ __pycache__/
 .Python
 *.egg-info/
 .eggs/
+app/skills/custom/
+.workbuddy/
 
 # 虚拟环境
 .venv/

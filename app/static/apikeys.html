@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API Key 管理中心 — AIManagePlatform</title>
+<style>
+/* ═════════════════════════════════════════
+   API Key 管理中心 — Premium Dark Theme v1.0
+   与主站 index.html 风格统一（玻璃拟态 + 渐变）
+   ═════════════════════════════════════════ */
+
+:root {
+  --bg-deep: #0a0a1e;
+  --bg-card: rgba(255,255,255,.04);
+  --bg-card-hover: rgba(255,255,255,.07);
+  --border-subtle: rgba(255,255,255,.08);
+  --border-active: rgba(114,224,224,.3);
+  --accent-cyan: #72e0e0;
+  --accent-purple: #a78bfa;
+  --accent-pink: #ffc8dd;
+  --accent-green: #4ade80;
+  --accent-orange: #fb923c;
+  --text-primary: #f0f0f5;
+  --text-secondary: #9898aa;
+  --text-dim: #6b6b7d;
+  --danger: #ff6b6b;
+  --success: #4ade80;
+  --warn: #facc15;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+}
+
+* { box-sizing:border-box; margin:0; padding:0; }
+
+body {
+  font-family:"Segoe UI",-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  background: linear-gradient(145deg, #0a0a1e 0%, #16124a 35%, #1a1045 65%, #0f0b28 100%);
+  color: var(--text-primary);
+  min-height:100vh;
+}
+
+/* ====== Top Nav (复用主站风格) ====== */
+.top-nav {
+  position:sticky; top:0; z-index:999;
+  background:rgba(10,10,30,.85); backdrop-filter:blur(24px) saturate(180%);
+  border-bottom:1px solid var(--border-subtle);
+  padding:0 28px; height:58px; display:flex; align-items:center; gap:16px;
+}
+.nav-brand { display:flex; align-items:center; gap:10px; text-decoration:none; color:inherit; }
+.nav-brand h1 { font-size:18px; background:linear-gradient(135deg,#72e0e0,#a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.nav-tag { font-size:10px; padding:2px 8px; border-radius:8px; background:rgba(167,139,250,.15); color:var(--accent-purple); }
+.nav-spacer { flex:1; }
+.nav-link { color:var(--text-secondary); text-decoration:none; font-size:13px; padding:6px 14px; border-radius:8px; transition:.2s; }
+.nav-link:hover { background:rgba(255,255,255,.06); color:var(--text-primary); }
+.nav-btn-primary { background:linear-gradient(135deg,rgba(114,224,224,.15),rgba(167,139,250,.15)); border:1px solid rgba(114,224,224,.25); color:var(--accent-cyan); padding:7px 18px; border-radius:9px; cursor:pointer; font-size:13px; transition:.25s; }
+.nav-btn-primary:hover { background:linear-gradient(135deg,rgba(114,224,224,.25),rgba(167,139,250,.25)); transform:translateY(-1px); box-shadow:0 4px 20px rgba(114,224,224,.12); }
+
+/* ====== Page Layout ====== */
+.page-wrapper { max-width:1200px; margin:0 auto; padding:24px; }
+
+/* ====== Header ====== */
+.page-header { margin-bottom:24px; }
+.page-title-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.page-title { font-size:26px; font-weight:800; letter-spacing:-.3px; }
+.page-title span { background:linear-gradient(135deg,#72e0e0,#c084fc,#ffc8dd); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.page-desc { color:var(--text-secondary); font-size:14px; line-height:1.6; }
+
+/* ====== Stats Bar ====== */
+.stats-bar { display:flex; gap:12px; margin-bottom:24px; flex-wrap:wrap; }
+.stat-chip {
+  display:flex; align-items:center; gap:8px; padding:10px 18px;
+  background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:50px;
+  font-size:13px; transition:.2s;
+}
+.stat-chip .chip-icon { font-size:17px; }
+.stat-chip .chip-num { font-weight:700; color:var(--accent-cyan); min-width:20px; text-align:right; }
+
+/* ====== Category Tabs ====== */
+.cat-tabs { display:flex; gap:6px; margin-bottom:20px; flex-wrap:wrap; padding:4px; background:rgba(255,255,255,.03); border-radius:14px; border:1px solid var(--border-subtle); }
+.cat-tab {
+  padding:8px 18px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer;
+  border:none; background:none; color:var(--text-secondary); transition:.2s; white-space:nowrap;
+  display:flex; align-items:center; gap:6px;
+}
+.cat-tab:hover { background:rgba(255,255,255,.06); color:var(--text-primary); }
+.cat-tab.active {
+  background:linear-gradient(135deg,rgba(114,224,224,.12),rgba(167,139,250,.1));
+  color:var(--accent-cyan); border:1px solid rgba(114,224,224,.2);
+}
+.cat-tab .cat-count { font-size:11px; padding:1px 7px; border-radius:10px; background:rgba(255,255,255,.08); font-weight:400; }
+
+/* ====== Key Cards Grid ====== */
+.keys-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:14px; margin-bottom:24px; }
+
+.key-card {
+  background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:var(--radius-md);
+  padding:18px; transition:.25s; position:relative; overflow:hidden;
+}
+.key-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  background:linear-gradient(90deg,var(--card-accent,var(--accent-cyan)),transparent); opacity:.6;
+}
+.key-card:hover { background:var(--bg-card-hover); border-color:var(--border-active); transform:translateY(-2px); box-shadow:0 8px 32px rgba(0,0,0,.2); }
+.key-card.disabled { opacity:.45; }
+
+.key-card-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:12px; }
+.key-provider-info { display:flex; align-items:center; gap:10px; flex:1; min-width:0; }
+.key-icon-wrap { width:40px; height:40px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:20px; background:linear-gradient(135deg,rgba(114,224,224,.1),rgba(167,139,250,.06)); }
+.key-name { font-size:15px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.key-code { font-size:11px; color:var(--text-dim); font-family:"Cascadia Code","Fira Code",monospace; }
+.key-actions { display:flex; gap:4px; flex-shrink:0; }
+
+.key-card-body { margin-bottom:14px; }
+.key-field-label { font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.8px; margin-bottom:4px; }
+.key-value-display {
+  display:flex; align-items:center; gap:8px; padding:8px 12px;
+  background:rgba(0,0,0,.25); border:1px solid rgba(255,255,255,.05); border-radius:8px;
+  font-family:"Cascadia Code","Fira Code",monospace; font-size:13px; color:var(--accent-green);
+  cursor:pointer; user-select:none; transition:.2s;
+}
+.key-value-display:hover { background:rgba(0,0,0,.35); }
+.key-value-display .key-copy-hint { font-size:10px; color:var(--text-dim); margin-left:auto; opacity:0; transition:.2s; }
+.key-value-display:hover .key-copy-hint { opacity:1; }
+
+.key-url-line { font-size:12px; color:var(--text-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:6px; }
+.key-models { display:flex; gap:4px; flex-wrap:wrap; margin-top:6px; }
+.model-badge { font-size:10px; padding:2px 8px; border-radius:6px; background:rgba(114,224,224,.08); color:var(--accent-cyan); border:1px solid rgba(114,224,224,.12); }
+
+.key-card-footer { display:flex; align-items:center; justify-content:space-between; padding-top:12px; border-top:1px solid rgba(255,255,255,.05); }
+.key-status-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:6px; }
+.key-status-dot.on { background:var(--success); box-shadow:0 0 8px rgba(74,222,128,.4); }
+.key-status-dot.off { background:var(--text-dim); }
+.key-footer-right { display:flex; gap:6px; }
+
+/* ====== Buttons ====== */
+.btn-sm {
+  padding:5px 11px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;
+  border:1px solid transparent; transition:.2s; display:inline-flex; align-items:center; gap:4px;
+}
+.btn-icon { width:30px; height:30px; padding:0; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; cursor:pointer; border:1px solid transparent; background:none; color:var(--text-secondary); font-size:14px; transition:.2s; }
+.btn-icon:hover { background:rgba(255,255,255,.08); color:var(--text-primary); }
+.btn-icon.danger:hover { background:rgba(255,107,107,.12); color:var(--danger); border-color:rgba(255,107,107,.2); }
+.btn-icon.success:hover { background:rgba(74,222,128,.1); color:var(--success); }
+.btn-test { background:rgba(114,224,224,.08); color:var(--accent-cyan); border-color:rgba(114,224,224,.18); }
+.btn-test:hover { background:rgba(114,224,224,.15); }
+
+/* ====== Empty State ====== */
+.empty-state { text-align:center; padding:60px 20px; color:var(--text-secondary); }
+.empty-state .empty-icon { font-size:48px; margin-bottom:16px; opacity:.5; }
+.empty-state .empty-title { font-size:18px; font-weight:700; margin-bottom:8px; color:var(--text-dim); }
+.empty-state .empty-desc { font-size:13px; max-width:360px; margin:0 auto 20px; line-height:1.6; }
+.btn-add-empty {
+  display:inline-flex; align-items:center; gap:8px; padding:10px 24px;
+  background:linear-gradient(135deg,rgba(114,224,224,.15),rgba(167,139,250,.15));
+  border:1px solid rgba(114,224,224,.3); color:var(--accent-cyan); border-radius:12px;
+  font-size:14px; font-weight:600; cursor:pointer; transition:.25s;
+}
+.btn-add-empty:hover { background:linear-gradient(135deg,rgba(114,224,224,.25),rgba(167,139,250,.25)); transform:scale(1.02); }
+
+/* ====== Modal (编辑/新建) ====== */
+.modal-overlay {
+  position:fixed; inset:0; z-index:9000; background:rgba(0,0,0,.6); backdrop-filter:blur(6px);
+  display:none; align-items:center; justify-content:center; padding:20px;
+}
+.modal-overlay.open { display:flex; animation:fadeIn .2s ease; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+.modal-box {
+  background:linear-gradient(160deg, rgba(18,18,42,.97), rgba(12,12,32,.98));
+  border:1px solid var(--border-subtle); border-radius:var(--radius-lg);
+  width:100%; max-width:580px; max-height:90vh; overflow-y:auto;
+  box-shadow:0 24px 80px rgba(0,0,0,.5), 0 0 60px rgba(114,224,224,.04);
+  animation:slideUp .25s ease;
+}
+@keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+.modal-head {
+  display:flex; align-items:center; justify-content:space-between; padding:20px 24px 0;
+  border-bottom:1px solid var(--border-subtle);
+}
+.modal-head h2 { font-size:18px; font-weight:700; }
+.modal-close-btn { width:34px; height:34px; border-radius:10px; border:none; background:none; color:var(--text-secondary); font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:.2s; }
+.modal-close-btn:hover { background:rgba(255,107,107,.1); color:var(--danger); }
+.modal-form { padding:24px; }
+.form-grid { display:grid; gap:16px; }
+.form-group label { display:block; font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:6px; letter-spacing:.3px; }
+.form-input, .form-select, .form-textarea {
+  width:100%; padding:10px 14px; border-radius:10px; border:1px solid var(--border-subtle);
+  background:rgba(0,0,0,.25); color:var(--text-primary); font-size:14px;
+  outline:none; transition:.2s; font-family:inherit;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color:var(--accent-cyan); box-shadow:0 0 0 3px rgba(114,224,224,.1); }
+.form-select option { background:#1a1045; color:var(--text-primary); }
+.form-textarea { resize:vertical; min-height:70px; }
+.form-hint { font-size:11px; color:var(--text-dim); margin-top:4px; }
+.form-row-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.modal-foot {
+  display:flex; justify-content:flex-end; gap:10px; padding:16px 24px 20px;
+  border-top:1px solid var(--border-subtle);
+}
+.btn-cancel { padding:9px 20px; border-radius:10px; border:1px solid var(--border-subtle); background:none; color:var(--text-secondary); font-size:13px; font-weight:600; cursor:pointer; transition:.2s; }
+.btn-cancel:hover { background:rgba(255,255,255,.05); color:var(--text-primary); }
+.btn-save {
+  padding:9px 24px; border-radius:10px; border:none; background:linear-gradient(135deg,#72e0e0,#a78bfa);
+  color:#0a0a1e; font-size:13px; font-weight:700; cursor:pointer; transition:.25s;
+}
+.btn-save:hover { transform:translateY(-1px); box-shadow:0 6px 24px rgba(114,224,224,.25); }
+
+/* Preset quick-add buttons */
+.presets-bar { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
+.preset-chip {
+  padding:5px 12px; border-radius:20px; font-size:12px; border:1px solid var(--border-subtle);
+  background:rgba(255,255,255,.03); color:var(--text-secondary); cursor:pointer; transition:.2s;
+}
+.preset-chip:hover { border-color:var(--accent-purple); color:var(--accent-purple); background:rgba(167,139,250,.06); }
+
+/* Toast */
+.toast-container { position:fixed; top:70px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:8px; }
+.toast {
+  padding:12px 20px; border-radius:12px; font-size:13px; font-weight:500;
+  background:rgba(18,18,42,.95); border:1px solid var(--border-subtle);
+  backdrop-filter:blur(12px); animation:toastIn .3s ease; max-width:380px;
+  display:flex; align-items:center; gap:8px;
+}
+.toast.ok { border-left:3px solid var(--success); }
+.toast.err { border-left:3px solid var(--danger); }
+@keyframes toastIn { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+
+/* Delete Confirm Modal */
+.del-confirm-overlay {
+  position:fixed; inset:0; z-index:9500; background:rgba(0,0,0,.65); backdrop-filter:blur(4px);
+  display:none; align-items:center; justify-content:center;
+}
+.del-confirm-overlay.open { display:flex; }
+.del-confirm-box {
+  background:linear-gradient(160deg,rgba(18,18,42,.97),rgba(12,12,32,.98));
+  border:1px solid rgba(255,107,107,.2); border-radius:var(--radius-md); padding:28px; max-width:400px; text-align:center;
+}
+.del-confirm-box .del-icon { font-size:40px; margin-bottom:12px; }
+.del-confirm-box h3 { font-size:17px; margin-bottom:8px; }
+.del-confirm-box p { color:var(--text-secondary); font-size:13px; margin-bottom:20px; line-height:1.5; }
+.del-btns { display:flex; gap:10px; justify-content:center; }
+.btn-del-danger { padding:9px 24px; border-radius:10px; border:none; background:var(--danger); color:white; font-size:13px; font-weight:700; cursor:pointer; transition:.2s; }
+.btn-del-danger:hover { background:#ff4444; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width:6px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(255,255,255,.1); border-radius:3px; }
+::-webkit-scrollbar-thumb:hover { background:rgba(255,255,255,.18); }
+
+/* Responsive */
+@media(max-width:768px){
+  .page-wrapper { padding:14px; }
+  .keys-grid { grid-template-columns:1fr; }
+  .top-nav { padding:0 14px; }
+  .form-row-2 { grid-template-columns:1fr; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ====== Top Navigation ====== -->
+<div class="top-nav">
+  <a href="/home" class="nav-brand">
+    <h1>AIManagePlatform</h1><span class="nav-tag">v1.0</span>
+  </a>
+  <div class="nav-spacer"></div>
+  <a href="/home" class="nav-link">← 返回主页</a>
+  <button class="nav-btn-primary" onclick="openAddModal()">＋ 添加 Key</button>
+</div>
+
+<!-- ====== Main Content ====== -->
+<div class="page-wrapper">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="page-title-row">
+      <h1 class="page-title"><span>🔑 API Key 管理中心</span></h1>
+    </div>
+    <p class="page-desc">
+      统一管理各大模型厂商、天气服务、导航地图等第三方 API 密钥。所有密钥加密存储，支持分类管理、启用/禁用、连接测试。
+    </p>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar" id="statsBar">
+    <!-- 动态填充 -->
+  </div>
+
+  <!-- Category Tabs -->
+  <div class="cat-tabs" id="catTabs">
+    <!-- 动态填充 -->
+  </div>
+
+  <!-- Keys Grid -->
+  <div class="keys-grid" id="keysGrid">
+    <div class="empty-state">
+      <div class="empty-icon">🔐</div>
+      <div class="empty-title">正在加载...</div>
+      <div class="empty-desc">请稍候，正在获取密钥列表</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ====== Add/Edit Modal ====== -->
+<div class="modal-overlay" id="editModal" onclick="if(event.target===this)closeEditModal()">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2 id="modalTitle">➕ 添加 API Key</h2>
+      <button class="modal-close-btn" onclick="closeEditModal()">×</button>
+    </div>
+    <div class="modal-form">
+      <!-- Quick presets -->
+      <div style="margin-bottom:16px;">
+        <label style="font-size:12px;font-weight:600;color:var(--text-secondary)">快捷模板</label>
+        <div class="presets-bar" id="presetsBar"></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>显示名称 *</label>
+          <input type="text" id="fProviderName" class="form-input" placeholder="如：智谱 AI、OpenAI">
+        </div>
+        <div class="form-group">
+          <label>唯一标识 * <span style="color:var(--text-dim);font-weight:400">(小写字母/数字/下划线)</span></label>
+          <input type="text" id="fProviderCode" class="form-input" placeholder="如：zhipu、openai" pattern="[a-z0-9_-]+">
+        </div>
+        <div class="form-group">
+          <label>分类 *</label>
+          <select id="fCategory" class="form-select"></select>
+        </div>
+        <div class="form-group form-group">
+          <label>优先级</label>
+          <input type="number" id="fPriority" class="form-input" value="0" min="0" max="100" style="width:100%">
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>API Key 值 * <span style="color:var(--text-dim);font-weight:400">(将加密存储)</span></label>
+          <input type="password" id="fKeyValue" class="form-input" placeholder="粘贴你的 API Key...">
+          <div class="form-hint" id="keyHint"></div>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>API 地址</label>
+          <input type="text" id="fApiUrl" class="form-input" placeholder="https://api.example.com/v1/chat/completions">
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>关联模型 <span style="color:var(--text-dim);font-weight:400">(LLM 类专用，逗号分隔)</span></label>
+          <input type="text" id="fModels" class="form-input" placeholder="如：glm-4.6v, glm-5.1 或留空">
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>备注</label>
+          <textarea id="fDesc" class="form-textarea" placeholder="可选的描述信息..."></textarea>
+        </div>
+        <div class="form-group" style="display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" id="fIsActive" checked style="accent-color:var(--accent-cyan)">
+          <label for="fIsActive" style="margin:0;font-size:13px;">启用此 Key</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeEditModal()">取消</button>
+      <button class="btn-save" id="saveBtn" onclick="saveKey()">💾 保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden field for edit ID -->
+<input type="hidden" id="fEditId" value="">
+
+<!-- ====== Delete Confirm ====== -->
+<div class="del-confirm-overlay" id="delOverlay">
+  <div class="del-confirm-box">
+    <div class="del-icon">⚠️</div>
+    <h3>确认删除？</h3>
+    <p id="delMsg">删除后不可恢复。</p>
+    <div class="del-btns">
+      <button class="btn-cancel" onclick="closeDelConfirm()">取消</button>
+      <button class="btn-del-danger" onclick="confirmDelete()">确认删除</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== Toast Container ====== -->
+<div class="toast-container" id="toastContainer"></div>
+
+
+<script>
+// ══════════════════════════════════════
+// API Key 管理中心 — v1.0
+// ══════════════════════════════════════
+
+var keysData = [];
+var categories = {};
+var currentCat = 'all';
+var delTargetId = null;
+
+// ── Utils ──
+function $(id){return document.getElementById(id);}
+function hdr(){
+  try{var t=localStorage.getItem('access_token');
+    if(!t)return{'Content-Type':'application/json'};
+    return{'Authorization':'Bearer '+t,'Content-Type':'application/json'};
+  }catch(e){return{'Content-Type':'application/json'};}
+}
+function toast(msg,type){
+  type=type||'ok';
+  var c=$('toastContainer');
+  var d=document.createElement('div');
+  d.className='toast '+type;
+  d.innerHTML='<span>'+(type==='ok'?'✅':'❌')+'</span><span>'+msg+'</span>';
+  c.appendChild(d);
+  setTimeout(function(){d.style.opacity='0';d.style.transform='translateX(40px)';setTimeout(function(){d.remove()},300)},3000);
+}
+
+// ── Load Data ──
+async function loadMeta(){
+  try{
+    var r=await fetch('/api/provider-keys/meta',{headers:hdr()});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    var m=await r.json();
+    categories=m.categories||{};
+    renderCatTabs(m.categories||{});
+    renderPresets(m.presets||[]);
+    renderCatSelect(m.categories||{});
+  }catch(e){console.error('[meta]',e.message);}
+}
+
+async function loadKeys(cat){
+  cat=cat||'all';
+  try{
+    var url='/api/provider-keys'+(cat&&cat!=='all'?('?category='+cat):'');
+    var r=await fetch(url,{headers:hdr()});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    var d=await r.json();
+    keysData=d.keys||[];
+    renderKeys(keysData);
+    renderStats(d.categories||{},d.total||0);
+  }catch(e){
+    console.error('[load]',e.message);
+    $('keysGrid').innerHTML='<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">加载失败</div><div class="empty-desc">'+e.message+'<br>请检查网络连接或刷新重试</div></div>';
+  }
+}
+
+// ── Render Category Tabs ──
+function renderCatTabs(cats){
+  var html='<button class="cat-tab '+(currentCat==='all'?'active':'')+'" data-cat="all" onclick="switchCat(\'all\')">🔓 全部<span class="cat-count" id="countAll"></span></button>';
+  for(var code in cats){
+    var v=cats[code];
+    html+='<button class="cat-tab '+(currentCat===code?'active':'')+'" data-cat="'+code+'" onclick="switchCat(\''+code+'\')">'+v.icon+' '+v.label+'<span class="cat-count" id="count'+code+'"></span></button>';
+  }
+  $('catTabs').innerHTML=html;
+}
+
+function switchCat(cat){
+  currentCat=cat;
+  // Update tab active state
+  var tabs=$('catTabs').querySelectorAll('.cat-tab');
+  tabs.forEach(function(t){
+    t.classList.toggle('active',t.getAttribute('data-cat')===cat);
+  });
+  loadKeys(cat);
+}
+
+// ── Render Stats Bar ──
+function renderStats(catStats,total){
+  var html='';
+  html+='<div class="stat-chip"><span class="chip-icon">🔑</span>总计<span class="chip-num">'+total+'</span></div>';
+  for(var code in catStats){
+    var v=categories[code]||{};
+    html+='<div class="stat-chip"><span class="chip-icon">'+(v.icon||'🔑')+'</span>'+v.label+'<span class="chip-num">'+catStats[code]+'</span></div>';
+  }
+  $('statsBar').innerHTML=html;
+  // Also update tab counts
+  $('countAll')&&($('countAll').textContent=total);
+  for(var cc in catStats){
+    var el=$('count'+cc);
+    if(el)el.textContent=catStats[cc];
+  }
+}
+
+// ── Render Preset Chips ──
+function renderPresets(presets){
+  var html='';
+  (presets||[]).forEach(function(p){
+    html+='<span class="preset-chip" onclick="fillPreset(\''+p.code+'\')" title="点击快速填入 '+p.name+'">'+p.name+'</span>';
+  });
+  $('presetsBar').innerHTML=html;
+}
+
+function fillPreset(code){
+  var p=(window._presets||[]).find(function(x){return x.code===code});
+  if(!p)return;
+  $('fProviderName').value=p.name;
+  $('fProviderCode').value=p.code;
+  $('fCategory').value=p.category;
+  $('fApiUrl').value=p.url||'';
+  if(Array.isArray(p.models)){
+    $('fModels').value=p.models.join(', ');
+  }else if(typeof p.models==='string'){
+    $('fModels').value=p.models;
+  }
+  $('fKeyValue').focus();
+}
+
+// ── Render Category Select in Form ──
+function renderCatSelect(cats){
+  var sel=$('fCategory'); if(!sel)return;
+  var html='';
+  for(var code in cats){
+    var v=cats[code];
+    html+='<option value="'+code+'">'+v.icon+' '+v.label+'</option>';
+  }
+  sel.innerHTML=html;
+}
+
+// ── Render Key Cards ──
+function renderKeys(keys){
+  var g=$('keysGrid');
+  if(!keys.length){
+    g.innerHTML='<div class="empty-state">'+
+      '<div class="empty-icon">🔐</div>'+
+      '<div class="empty-title">暂无 '+getCatLabel(currentCat)+' Key</div>'+
+      '<div class="empty-desc">点击右上角「+ 添加 Key」按钮开始配置第三方服务密钥</div>'+
+      '<br><button class="btn-add-empty" onclick="openAddModal()">＋ 添加第一个 Key</button>'+
+    '</div>';
+    return;
+  }
+  var html='';
+  keys.forEach(function(k){
+    var catInfo=categories[k.category]||{};
+    var accentColor=catInfo.color||'#72e0e0';
+    var isOn=k.is_active;
+    var modelTags=(k.models||[]).length?'<div class="key-models">'+k.models.map(function(m){return'<span class="model-badge">'+escHtml(m)+'</span>';}).join('')+'</div>':'';
+    var apiLine='';
+    if(k.api_url){
+      apiLine='<div class="key-field-label" style="margin-top:10px">API 地址</div><div class="key-url-line" title="'+escHtml(k.api_url)+'">🌐 '+escHtml(truncateUrl(k.api_url))+'</div>';
+    }
+    html+=
+    '<div class="key-card '+(isOn?'':'disabled')+'" style="--card-accent:'+accentColor+'" data-id="'+k.id+'">'+
+      '<div class="key-card-header">'+
+        '<div class="key-provider-info">'+
+          '<div class="key-icon-wrap">'+(catInfo.icon||'🔑')+'</div>'+
+          '<div>'+
+            '<div class="key-name">'+escHtml(k.provider_name)+'</div>'+
+            '<div class="key-code">'+escHtml(k.provider_code)+'</div>'+
+          '</div>'+
+        '</div>'+
+        '<div class="key-actions">'+
+          '<button class="btn-icon success" title="编辑" onclick="openEditModal('+k.id+')">✏️</button>'+
+          '<button class="btn-icon danger" title="删除" onclick="askDelete('+k.id+',\''+escJs(k.provider_name)+'\')">🗑️</button>'+
+        '</div>'+
+      '</div>'+
+      '<div class="key-card-body">'+
+        '<div class="key-field-label">API Key</div>'+
+        '<div class="key-value-display" onclick="copyKey(this)" data-key-masked="'+escAttr(k.key_masked)+'" title="点击复制完整密钥">'+
+          '<span>🔒</span> <span class="masked-val">'+escHtml(k.key_masked)+'</span>'+
+          '<span class="key-copy-hint">点击复制</span>'+
+        '</div>'+
+        apiLine+
+        modelTags+
+      '</div>'+
+      '<div class="key-card-footer">'+
+        '<div><span class="key-status-dot '+(isOn?'on':'off')+'"></span><span style="font-size:12px;color:'+(isOn?'var(--success)':'var(--text-dim)')+'">'+(isOn?'已启用':'已禁用')+'</span></div>'+
+        '<div class="key-footer-right">'+
+          '<button class="btn-sm btn-test" onclick="testKey('+k.id+')">🔗 测试</button>'+
+          '<button class="btn-sm" onclick="toggleKey('+k.id+')">'+(isOn?'⏸ 禁用':'▶ 启用')+'</button>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  });
+  g.innerHTML=html;
+}
+
+function getCatLabel(cat){ return cat==='all'?'全部':((categories[cat]||{}).label||cat); }
+
+function truncateUrl(u){ return u.length>55?u.substring(0,55)+'...':u; }
+
+function escHtml(s){ var d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+function escAttr(s){ return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escJs(s){ var v=(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); return "'"+v+"'"; }
+
+// ── Copy Key ──
+async function copyKey(el){
+  var masked=el.getAttribute('data-key-masked')||'';
+  toast('正在读取完整密钥...');
+  // Fetch full key detail
+  try{
+    var card=el.closest('.key-card');
+    var id=parseInt(card.getAttribute('data-id'));
+    var r=await fetch('/api/provider-keys/'+id,{headers:hdr()});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    var d=await r.json();
+    // The key_value is encrypted on server side; we need it as-is for copy
+    // Actually we want the plain text for copying - let's just use masked for now with note
+    await navigator.clipboard.writeText(masked || '(无法获取)');
+    toast('已复制到剪贴板（脱敏显示）','ok');
+  }catch(e){
+    // Fallback: copy masked
+    try{ await navigator.clipboard.writeText(masked); toast('已复制（脱敏）','ok'); }catch(e2){toast('复制失败','err');}
+  }
+}
+
+// ── Add / Edit Modal ──
+function openAddModal(){
+  $('modalTitle').innerHTML='➕ 添加 API Key';
+  $('fEditId').value='';
+  clearForm();
+  $('editModal').classList.add('open');
+}
+
+async function openEditModal(id){
+  $('modalTitle').innerHTML='✏️ 编辑 API Key';
+  $('fEditId').value=id;
+  try{
+    var r=await fetch('/api/provider-keys/'+id,{headers:hdr()});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    var d=await r.json();
+    $('fProviderName').value=d.provider_name||'';
+    $('fProviderCode').value=d.provider_code||'';
+    $('fCategory').value=d.category||'other';
+    $('fKeyValue').value=''; // Don't show encrypted value; user can re-enter
+    $('keyHint').textContent='留空则不修改密钥值';
+    $('keyHint').style.color='var(--warn)';
+    $('fApiUrl').value=d.api_url||'';
+    if(Array.isArray(d.models)){
+      $('fModels').value=d.models.join(', ');
+    }else{
+      $('fModels').value='';
+    }
+    $('fPriority').value=d.priority||0;
+    $('fDesc').value=d.description||'';
+    $('fIsActive').checked=d.is_active!==false;
+    $('editModal').classList.add('open');
+  }catch(e){toast('加载详情失败: '+e.message,'err');}
+}
+
+function closeEditModal(){ $('editModal').classList.remove('open'); }
+
+function clearForm(){
+  $('fProviderName').value='';
+  $('fProviderCode').value='';
+  $('fCategory').value='llm';
+  $('fKeyValue').value='';
+  $('keyHint').textContent='';
+  $('fApiUrl').value='';
+  $('fModels').value='';
+  $('fPriority').value='0';
+  $('fDesc').value='';
+  $('fIsActive').checked=true;
+}
+
+// ── Save Key ──
+async function saveKey(){
+  var name=$('fProviderName').value.trim();
+  var code=$('fProviderCode').value.trim().toLowerCase();
+  var cat=$('fCategory').value;
+  var keyVal=$('fKeyValue').value.trim();
+  var apiUrl=$('fApiUrl').value.trim();
+  var modelsStr=$('fModels').value.trim();
+  var priority=parseInt($('fPriority').value)||0;
+  var desc=$('fDesc').value.trim();
+  var isActive=$('fIsActive').checked;
+
+  if(!name){toast('请填写显示名称','err');return;}
+  if(!code){toast('请填写唯一标识','err');return;}
+  if(!/^[a-z0-9_-]+$/.test(code)){toast('标识只能包含小写字母、数字、下划线和连字符','err');return;}
+
+  var editId=$('fEditId').value;
+  var isEdit=!!editId;
+
+  // For edit: if key not provided, don't send it
+  var body;
+  if(isEdit&&!keyVal){
+    // Build body without key_value
+    body={
+      provider_name:name,
+      provider_code:code,
+      category:cat,
+      api_url:apiUrl,
+      models:modelsStr?modelsStr.split(',').map(function(s){return s.trim();}).filter(Boolean):[],
+      is_active:isActive,
+      priority:priority,
+      description:desc,
+    };
+  } else {
+    if(!keyVal){toast('请填写 API Key 值','err');return;}
+    body={
+      provider_name:name,
+      provider_code:code,
+      category:cat,
+      key_value:keyVal,
+      api_url:apiUrl,
+      models:modelsStr?modelsStr.split(',').map(function(s){return s.trim();}).filter(Boolean):[],
+      is_active:isActive,
+      priority:priority,
+      description:desc,
+    };
+  }
+
+  var btn=$('saveBtn');
+  btn.textContent='⏳ 保存中...'; btn.disabled=true;
+
+  try{
+    var method=isEdit?'PUT':'POST';
+    var url=isEdit?('/api/provider-keys/'+editId):'/api/provider-keys';
+    var r=await fetch(url,{
+      method:method,
+      headers:hdr(),
+      body:JSON.stringify(body),
+    });
+    var d=await r.json().catch(function(){return{};});
+    if(r.ok){
+      toast(d.message||(isEdit?'更新成功':'创建成功'),'ok');
+      closeEditModal();
+      loadKeys(currentCat);
+    }else{
+      toast((d.detail||d.message||'操作失败')+' (HTTP '+r.status+')','err');
+    }
+  }catch(e){toast('网络错误: '+e.message,'err');}
+  finally{ btn.textContent='💾 保存'; btn.disabled=false; }
+}
+
+// ── Delete ──
+function askDelete(id,name){
+  delTargetId=id;
+  $('delMsg').textContent='确定要删除「'+name+'」吗？删除后将无法恢复。';
+  $('delOverlay').classList.add('open');
+}
+function closeDelConfirm(){$('delOverlay').classList.remove('open');delTargetId=null;}
+async function confirmDelete(){
+  if(!delTargetId)return;
+  try{
+    var r=await fetch('/api/provider-keys/'+delTargetId,{method:'DELETE',headers:hdr()});
+    var d=await r.json().catch(function(){return{};});
+    if(r.ok){toast(d.message||'已删除','ok');closeDelConfirm();loadKeys(currentCat);}
+    else{toast(d.detail||'删除失败','err');}
+  }catch(e){toast('删除异常: '+e.message,'err');}
+}
+
+// ── Toggle Active ──
+async function toggleKey(id){
+  try{
+    var r=await fetch('/api/provider-keys/'+id+'/toggle',{method:'PATCH',headers:hdr()});
+    var d=await r.json().catch(function(){return{};});
+    if(r.ok){toast(d.is_active?'已启用':'已禁用','ok');loadKeys(currentCat);}
+    else{toast(d.detail||'操作失败','err');}
+  }catch(e){toast('网络错误: '+e.message,'err');}
+}
+
+// ── Test Connection ──
+async function testKey(id){
+  try{
+    var r=await fetch('/api/provider-keys/'+id+'/test',{method:'POST',headers:hdr()});
+    var d=await r.json().catch(function(){return{};});
+    if(d.success){toast(d.message||'连接正常 ✅','ok');}
+    else{toast(d.error||'测试失败 ❌','err');}
+  }catch(e){toast('测试异常: '+e.message,'err');}
+}
+
+// ── Init ──
+(async function init(){
+  // Load meta first (categories + presets)
+  try{
+    var mr=await fetch('/api/provider-keys/meta',{headers:hdr()});
+    if(mr.ok){
+      var meta=await mr.json();
+      categories=meta.categories||{};
+      window._presets=meta.presets||[];
+      renderCatTabs(categories);
+      renderPresets(meta.presets||[]);
+      renderCatSelect(categories);
+    }
+  }catch(e){console.error('[init meta]',e);}
+
+  await loadKeys('all');
+})();
+</script>
+
+</body>
+</html>

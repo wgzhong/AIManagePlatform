@@ -60,3 +60,16 @@ def skills_page():
             "Expires": "0",
         },
     )
+
+
+@router.get("/apikeys")
+def apikeys_page():
+    """API Key 管理中心页面"""
+    return FileResponse(
+        os.path.join(STATIC_DIR, "apikeys.html"),
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )

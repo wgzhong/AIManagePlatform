@@ -15,8 +15,7 @@ router = APIRouter()
 STATIC_DIR = os.path.join(settings.base_dir, "app", "static")
 os.makedirs(STATIC_DIR, exist_ok=True)
 
-# 挂载静态资源目录（/static 前缀）
-router.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+# 静态资源挂载已移至 app/main.py 的 create_app() 中（必须用 app.mount 而非 router.mount）
 
 
 @router.get("/")

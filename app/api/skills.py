@@ -7,7 +7,8 @@ V2: 支持私人技能（user_skills 表）+ 贡献开关。
 - /api/skills/merged   → 合并列表（前端主入口）
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body
+from fastapi import APIRouter, Depends, HTTPException, Query, Body, Request
+import os
 from sqlalchemy.orm import Session
 
 from app.schemas.skills import (
@@ -20,6 +21,7 @@ from app.api.auth_deps import get_current_user
 from app.middleware.auth import require_admin
 from app.dependencies import get_skill_service
 from app.models.database import get_db
+from app.core.config import settings
 
 router = APIRouter()
 
@@ -154,6 +156,7 @@ def save_raw_md_content(
 
 @router.get("/api/skills/merged")
 def get_skills_merged(
+    request: Request,
     db: Session = Depends(get_db),
     service: SkillService = Depends(get_skill_service),
 ):
@@ -161,51 +164,37 @@ def get_skills_merged(
     返回全局技能 + 私人技能 + 贡献技能的合并列表（去重）。
 
     认证可选：
-    - 有有效 token → 额外返回当前用户的私人技能
+    - 有有效 token → 额外返回当前用户的私人技能（source='private'）
     - 无 token / token 过期 → 只返回全局技能 + 他人贡献的公开技能（只读）
     """
     from app.models.database import UserSkill
+    from app.skills import ensure_contributed_skills_loaded
 
-    # 尝试获取当前用户（可选）
-    current_user = None
-    try:
-        # 从请求头手动提取 token 并验证（不依赖 Depends，避免 401）
-        from fastapi import Request
-        from fastapi import Header
-        # 通过 get_current_user 的逻辑手动解析
-        from jose import JWTError, jwt
-        from app.services.user_service import SECRET_KEY, ALGORITHM, get_user_by_email
-        import inspect
+    # ── 懒加载已贡献技能到 ALL_SKILLS（服务器重启后恢复）───────────
+    ensure_contributed_skills_loaded(db)
 
-        # 获取当前 request 对象（通过 inspect 调用栈）
-        # 更可靠的方式：直接在函数签名中加可选的 Authorization header
-        pass  # 在下面处理
-    except Exception:
-        pass
+    # ── 尝试获取当前用户（可选，不抛 401）─────────────────────
+    current_user = _try_get_current_user(db, request)
 
     result = service.get_all_skills()  # 全局技能
-
-    # 尝试从 header 解析用户
-    try:
-        from starlette.requests import Request as StarletteRequest
-        # 使用依赖注入的上下文获取 request
-        import contextvars
-        # 实际上我们无法直接获取 request，改用另一种方式：
-        # 让前端传 token，我们在代码中手动验证
-        pass
-    except Exception:
-        pass
 
     # 标记所有全局技能为可读
     for s in result.get("skills", []):
         s.setdefault("source", "global")
         s.setdefault("readonly", False)
 
-    # 查询所有已贡献的公开技能（其他用户的）
-    contributed_others = db.query(UserSkill).filter(
-        UserSkill.is_contributed == True,
-    ).all()
+    # 标记 skills/custom/ 下的技能为 source='custom'
+    # 使用与 skill_service.py 一致的路径计算方式（不依赖 settings.base_dir）
+    _skills_base = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "skills")
+    _custom_dir = os.path.join(_skills_base, "custom")
+    for s in result.get("skills", []):
+        _sn = s.get("name", "")
+        if _sn and os.path.isdir(os.path.join(_custom_dir, _sn)):
+            s["source"] = "custom"
+            # Admin 可编辑，其他用户只读
+            s["readonly"] = not (current_user and getattr(current_user, "is_superuser", False))
 
+    # 构建名称 → 索引映射，用于去重
     skill_name_map = {}
     for idx, s in enumerate(result["skills"]):
         sname = s.get("name") or s.get("skill_name", "")
@@ -213,15 +202,61 @@ def get_skills_merged(
             skill_name_map[sname] = idx
 
     global_names = set(skill_name_map.keys())
+    current_user_id = current_user.id if current_user else None
+
+    # ── 注入当前用户的私人技能（is_contributed=False）───────────
+    if current_user_id:
+        private_skills = db.query(UserSkill).filter(
+            UserSkill.user_id == current_user_id,
+            UserSkill.is_contributed == False,
+        ).all()
+
+        for ps in private_skills:
+            if ps.name in skill_name_map:
+                # 与全局技能重名：标记来源但不覆盖全局内容
+                existing = result["skills"][skill_name_map[ps.name]]
+                existing["_has_private"] = True
+                existing["private_id"] = ps.id
+            else:
+                result["skills"].append({
+                    "name": ps.name,
+                    "description": ps.description or "",
+                    "category": ps.category or "自定义",
+                    "icon": ps.icon or "🔧",
+                    "enabled": ps.enabled,
+                    "auto_trigger": ps.auto_trigger or False,
+                    "trigger_keywords": ps.trigger_keywords or [],
+                    "source": "private",
+                    "is_contributed": False,
+                    "owner_id": ps.user_id,
+                    "owner_name": current_user.username,
+                    "readonly": False,
+                    "db_id": ps.id,
+                })
+                skill_name_map[ps.name] = len(result["skills"]) - 1
+
+    # ── 查询所有已贡献的公开技能 ──────────────────────────────
+    contributed_others = db.query(UserSkill).filter(
+        UserSkill.is_contributed == True,
+    ).all()
 
     for cs in contributed_others:
         if cs.name in skill_name_map:
             existing = result["skills"][skill_name_map[cs.name]]
+            # 已是私人技能则跳过（私人优先）
+            if existing.get("source") == "private":
+                continue
+            # 已标记为 custom 技能则保留 custom 标签，只补充贡献信息
+            if existing.get("source") == "custom":
+                existing["is_contributed"] = True
+                existing["owner_id"] = cs.user_id
+                existing["owner_name"] = cs.user.username if cs.user else "未知用户"
+                continue  # ← 关键：保留 source='custom'，不覆盖为 'contributed'
             existing["source"] = "contributed"
             existing["is_contributed"] = True
             existing["owner_id"] = cs.user_id
             existing["owner_name"] = cs.user.username if cs.user else "未知用户"
-            if cs.user_id != (current_user.id if current_user else None):
+            if cs.user_id != current_user_id:
                 existing["readonly"] = True
         elif cs.name not in global_names:
             result["skills"].append({
@@ -236,10 +271,36 @@ def get_skills_merged(
                 "is_contributed": True,
                 "owner_id": cs.user_id,
                 "owner_name": cs.user.username if cs.user else "未知用户",
-                "readonly": True,
+                "readonly": cs.user_id != current_user_id,
             })
 
     return result
+
+
+def _try_get_current_user(db: Session, request=None):
+    """尝试从请求头解析 JWT 获取当前用户；失败时返回 None（不抛异常）。"""
+    try:
+        if not request:
+            return None
+        auth_header = request.headers.get("authorization", "")
+        if not auth_header.startswith("Bearer "):
+            return None
+        token = auth_header[7:]
+
+        from jose import jwt, JWTError
+        from app.services.user_service import SECRET_KEY, ALGORITHM, get_user_by_email
+        from app.core.jwt_blacklist import is_blacklisted
+
+        if not token or is_blacklisted(token):
+            return None
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("sub")
+        token_type = payload.get("type")
+        if not email or token_type != "access":
+            return None
+        return get_user_by_email(db, email=email)
+    except Exception:
+        return None
 
 
 # =====================================================================
@@ -333,11 +394,25 @@ def update_user_skill(
 
     db.commit()
 
-    # 若已贡献，同步文件
+    # 同步文件：已贡献的技能同步到 skills/ 文件夹；custom 技能始终同步到 skills/custom/ 目录
+    # 检查是否是 custom 技能（contributed_skill_path 指向 skills/custom/ 目录）
+    _should_sync = False
     if skill.is_contributed and skill.contributed_skill_path:
+        _should_sync = True
+    elif skill.contributed_skill_path and os.path.isfile(skill.contributed_skill_path):
+        # custom 技能（未贡献）的文件也在 skills/custom/ 下，始终同步
+        _should_sync = True
+
+    if _should_sync:
         from app.services.skill_service import UserSkillService
+        from app.skills import refresh_custom_skill_in_all_skills
         svc = UserSkillService(db)
         svc._sync_to_file(skill)
+        # 刷新 ALL_SKILLS 内存中该技能的数据，确保 get_skills_merged() 返回最新配置
+        try:
+            refresh_custom_skill_in_all_skills(skill_name)
+        except Exception:
+            pass
 
     return MessageResponse(message=f"技能 {skill_name} 已更新")
 

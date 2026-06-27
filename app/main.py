@@ -146,6 +146,12 @@ AI 推理对话平台 API 文档
     app.include_router(mood_router)
     app.include_router(pages_router)
 
+    # 挂载静态文件服务（必须在 app 实例上 mount，router.mount 不生效）
+    from fastapi.staticfiles import StaticFiles
+    import os
+    _static_dir = os.path.join(settings.base_dir, "app", "static")
+    app.mount("/static", StaticFiles(directory=_static_dir), name="static")
+
     return app
 
 

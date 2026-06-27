@@ -398,7 +398,7 @@ class UserSkillService:
         ).first()
 
     def create_skill(self, data: CustomSkillCreate, user_id: int) -> dict:
-        """创建私人技能（仅存数据库，不写入 skills/ 文件夹）"""
+        """创建私人技能（存数据库，同时写入 skills/custom/ 目录做持久化）"""
         from app.models.database import UserSkill
 
         if not re.match(r'^[a-zA-Z0-9_\-]+$', data.name):
@@ -425,6 +425,14 @@ class UserSkillService:
         )
         self.db.add(user_skill)
         self.db.commit()
+
+        # 始终写入 skills/custom/ 目录（即使未贡献也保存文件，便于备份和直接编辑）
+        try:
+            fp = self._write_to_file(user_skill)
+            user_skill.contributed_skill_path = fp
+            self.db.commit()
+        except Exception:
+            logger.exception("写入 skills/custom/ 文件失败：%s", data.name)
 
         return {
             "success": True,
@@ -453,14 +461,16 @@ class UserSkillService:
         user_skill.system_prompt = data.system_prompt
         self.db.commit()
 
-        # 如果已贡献，同步更新 skills/ 文件夹中的文件
-        if user_skill.is_contributed and user_skill.contributed_skill_path:
+        # 始终同步 skills/custom/ 目录中的文件（即使未贡献也保存文件，便于备份）
+        try:
             self._sync_to_file(user_skill)
+        except Exception:
+            logger.exception("同步 skills/custom/ 文件失败：%s", skill_name)
 
         return {"success": True, "message": f"私人技能 {skill_name} 已更新"}
 
     def delete_skill(self, skill_name: str, user_id: int) -> dict:
-        """删除私人技能（若已贡献，同时从 skills/ 文件夹删除）"""
+        """删除私人技能（同时从 skills/custom/ 文件夹删除）"""
         from app.models.database import UserSkill
 
         user_skill = self.db.query(UserSkill).filter(
@@ -470,9 +480,11 @@ class UserSkillService:
         if not user_skill:
             return {"success": False, "message": "找不到该私人技能"}
 
-        # 若已贡献，从 skills/ 文件夹删除
-        if user_skill.is_contributed and user_skill.contributed_skill_path:
+        # 始终从 skills/custom/ 文件夹删除（因为创建时已写入）
+        try:
             self._remove_from_file(user_skill)
+        except Exception:
+            logger.exception("删除 skills/custom/ 文件失败：%s", skill_name)
 
         self.db.delete(user_skill)
         self.db.commit()
@@ -525,9 +537,9 @@ class UserSkillService:
     def uncontribute(self, skill_name: str, user_id: int) -> dict:
         """
         取消贡献：
-        1. 从 skills/ 文件夹删除
-        2. 从 ALL_SKILLS 移除
-        3. 标记 is_contributed=False
+        1. 从 ALL_SKILLS 移除（其他用户不再可见）
+        2. 标记 is_contributed=False
+        3. 保留 skills/custom/ 文件夹中的文件（便于再次贡献）
         """
         from app.models.database import UserSkill
         from app.skills import ALL_SKILLS
@@ -541,15 +553,12 @@ class UserSkillService:
         if not user_skill.is_contributed:
             return {"success": False, "message": "该技能未贡献"}
 
-        # 从 skills/ 文件夹删除
-        self._remove_from_file(user_skill)
-
-        # 从运行内存移除
+        # 从运行内存移除（不再对其他用户可见）
         ALL_SKILLS[:] = [s for s in ALL_SKILLS if s.name != skill_name]
         invalidate_tool_cache()
 
         user_skill.is_contributed = False
-        user_skill.contributed_skill_path = ""
+        # 保留 contributed_skill_path（文件还在 skills/custom/ 下）
         self.db.commit()
 
         return {"success": True, "message": f"技能 {skill_name} 已取消贡献"}
@@ -585,9 +594,11 @@ class UserSkillService:
         user_skill.system_prompt = parsed["system_prompt"]
         self.db.commit()
 
-        # 若已贡献，同步文件
-        if user_skill.is_contributed and user_skill.contributed_skill_path:
+        # 始终同步 skills/custom/ 目录中的文件（即使未贡献也保存文件，便于备份）
+        try:
             self._sync_to_file(user_skill)
+        except Exception:
+            logger.exception("同步 skills/custom/ 文件失败：%s", skill_name)
 
         return {"success": True, "message": "私人技能已保存"}
 

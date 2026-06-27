@@ -1,6 +1,6 @@
 ---
 name: test
-description: 单元测试
+description: test
 version: 1.0.0
 category: 自定义
 icon: 🔧
@@ -9,4 +9,4 @@ auto_trigger: false
 trigger_keywords: []
 ---
 
-12314
+1111111

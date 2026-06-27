@@ -105,12 +105,15 @@ class Device(Base):
     __tablename__ = "devices"
 
     id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     device_code = Column(String(20), unique=True, nullable=False, index=True)
     device_name = Column(String(100), nullable=False)
     admin_api_key = Column(String(255), nullable=False)
     created_at = Column(DateTime, default=datetime.now)
     last_used = Column(DateTime, nullable=True)
     usage_count = Column(Integer, default=0)
+
+    user = relationship("User")
 
     __table_args__ = {"sqlite_autoincrement": True}
 
@@ -149,8 +152,31 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 def init_db():
-    """初始化数据库表"""
+    """初始化数据库表（含自适应列迁移）"""
     Base.metadata.create_all(bind=engine)
+    # 自适应迁移：给 devices 表添加 user_id 列（如果不存在）
+    _ensure_device_user_id_column()
+
+def _ensure_device_user_id_column():
+    """确保 devices 表有 user_id 列，没有则 ALTER TABLE 添加。
+    SQLite ALTER TABLE 不支持 REFERENCES 子句，外键约束仅在建表时生效。
+    """
+    import sqlite3, os, logging
+    logger = logging.getLogger(__name__)
+    db_path = os.path.join(_data_dir, "app.db")
+    conn = sqlite3.connect(db_path)
+    try:
+        cursor = conn.execute("PRAGMA table_info(devices)")
+        columns = {row[1] for row in cursor.fetchall()}
+        if "user_id" not in columns:
+            # SQLite ALTER TABLE 不支持 REFERENCES，仅添加列
+            conn.execute(
+                "ALTER TABLE devices ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1"
+            )
+            conn.commit()
+            logger.info("✅ devices 表已添加 user_id 列，旧数据默认归用户 id=1")
+    finally:
+        conn.close()
 
 
 def get_db():

@@ -44,19 +44,19 @@ def clear_history(current_user=Depends(get_current_user), db: Session = Depends(
 
 @router.get("/stats", response_model=UserStatsResponse)
 def get_user_stats(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
-    """获取当前用户的统计数据（含全局设备信息）"""
+    """获取当前用户的统计数据（含设备信息）"""
     from app.services.stats_service import get_user_stats_dict
-    from app.core.devices import device_manager
+    from app.models.database import Device
     import logging
 
     logger = logging.getLogger(__name__)
     stats = get_user_stats_dict(db, current_user.id)
 
-    # 添加全局设备统计
+    # 添加当前用户的设备统计（用户隔离）
     try:
-        all_devices = device_manager.get_all_devices()
+        user_device_count = db.query(Device.id).filter(Device.user_id == current_user.id).count()
         stats["online_devices"] = 0  # 当前无在线状态跟踪
-        stats["total_devices"] = len(all_devices)
+        stats["total_devices"] = user_device_count
     except Exception:
         logger.exception("获取设备统计失败")
         stats["online_devices"] = 0

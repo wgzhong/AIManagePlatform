@@ -10,7 +10,6 @@ from typing import List, Optional, AsyncGenerator
 from uuid import uuid4
 
 from app.core.config import settings
-from app.core.devices import device_manager
 from app.core.llm_infer import stream_chat_request
 from app.skills import ALL_SKILLS, get_skill_by_name, get_mood_system_prompt
 from app.services.skill_service import load_user_skills_for_chat
@@ -81,19 +80,31 @@ class ChatService:
         api_url = request.api_url or settings.zhipu_api_url
 
         if request.device_code:
-            # device_manager 内部用 threading.Lock 保护并发，无需在此再加 asyncio.Lock
-            devices = device_manager.get_all_devices()
+            # 从数据库查询设备（支持用户隔离）
+            from app.models.database import Device
 
-            if request.device_code not in devices:
+            def _lookup_device(db):
+                return db.query(Device).filter(Device.device_code == request.device_code).first()
+
+            device = self._safe_db_action(0, _lookup_device)
+
+            if not device:
                 return {"error": "设备码未注册，请先在网页端注册设备"}, None
 
-            device_info = devices[request.device_code]
-            api_key = device_info.get("admin_api_key", "")
-
+            api_key = device.admin_api_key
             if not api_key:
                 return {"error": "设备未配置 API Key，请重新注册"}, None
 
-            device_manager.update_device_usage(request.device_code, api_key)
+            # 更新使用统计
+            def _update_usage(db):
+                from datetime import datetime
+                d = db.query(Device).filter(Device.device_code == request.device_code).first()
+                if d:
+                    d.last_used = datetime.now()
+                    d.usage_count = (d.usage_count or 0) + 1
+                    db.commit()
+
+            self._safe_db_action(0, _update_usage)
             return api_key, api_url
 
         api_key = request.api_key or (settings.api_keys[0] if settings.api_keys else "")

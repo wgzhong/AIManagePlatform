@@ -312,6 +312,11 @@ body {
       <input type="text" id="deviceNameInput" placeholder="输入设备名称（如：ESP32-客厅）" onkeydown="if(event.key==='Enter')registerDevice()">
       <button class="btn btn-success" onclick="registerDevice()">注册设备</button>
     </div>
+    <div id="apiKeySection" style="margin-top:10px;display:none;">
+      <input type="text" id="apiKeyInput" placeholder="请输入 API Key（用于分配给设备）" style="width:100%;padding:8px 12px;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:#fff;font-size:13px;outline:none;margin-bottom:8px;">
+      <button class="btn btn-secondary" onclick="saveApiKey()" style="font-size:12px;padding:6px 12px;">保存 API Key</button>
+      <span style="font-size:12px;color:var(--text-sub);margin-left:8px;">保存后可直接注册设备</span>
+    </div>
   </div>
 
   <div class="panel">
@@ -330,57 +335,140 @@ body {
 <script>
 let devices = [];
 let adminApiKey = '';
-let adminToken = localStorage.getItem('admin_token') || '';
+let _refreshingToken = false;  // 防止并发刷新
 
-/* 返回带 Admin Token 的 Authorization header（鉴权未配置时返回空 headers） */
-function getAdminHeaders() {
-  if (!adminToken) return {};
-  return { 'Authorization': 'Bearer ' + adminToken };
+/* 返回带 JWT Access Token 的 Authorization header */
+function getAuthHeaders() {
+  try {
+    var t = localStorage.getItem('access_token');
+    if (!t) return {};
+    return { 'Authorization': 'Bearer ' + t };
+  } catch(e) {
+    return {};
+  }
+}
+
+/* 用 refresh_token 换取新的 access_token，成功返回 true */
+async function tryRefreshToken() {
+  if (_refreshingToken) return false;
+  var rt = localStorage.getItem('refresh_token');
+  if (!rt) return false;
+
+  _refreshingToken = true;
+  try {
+    const res = await fetch('/auth/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: rt })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      localStorage.setItem('access_token', data.access_token);
+      console.log('[auth] token 已自动续期');
+      return true;
+    }
+    return false;
+  } catch(e) {
+    return false;
+  } finally {
+    _refreshingToken = false;
+  }
+}
+
+/* 合并 headers 的辅助函数，避免展开运算符的兼容性问题 */
+function mergeHeaders() {
+  var h = {};
+  var auth = getAuthHeaders();
+  for (var k in auth) h[k] = auth[k];
+  for (var i = 0; i < arguments.length; i++) {
+    var obj = arguments[i];
+    if (obj) for (var k2 in obj) h[k2] = obj[k2];
+  }
+  return h;
+}
+
+/* 带自动续期的 fetch 封装：遇到 401 先尝试续期，失败再跳转登录 */
+async function authFetch(url, options) {
+  options = options || {};
+  var fetchOpts = {};
+  for (var k in options) fetchOpts[k] = options[k];
+  fetchOpts.headers = mergeHeaders(options.headers);
+
+  console.log('[authFetch] 请求:', url, '方法:', fetchOpts.method || 'GET');
+
+  var res = await fetch(url, fetchOpts);
+  console.log('[authFetch] 响应 status:', res.status);
+
+  // 如果 401，尝试用 refresh_token 续期后重试一次
+  if (res.status === 401) {
+    console.log('[authFetch] token过期，尝试续期...');
+    var refreshed = await tryRefreshToken();
+    if (refreshed) {
+      fetchOpts.headers = mergeHeaders(options.headers);
+      res = await fetch(url, fetchOpts);
+      console.log('[authFetch] 续期后重试 status:', res.status);
+      if (res.status !== 401) return res;  // 续期成功
+    }
+    // 续期失败或新 token 也无效 → 跳转登录
+    alert('登录已过期，请重新登录');
+    window.location.href = '/login';
+    throw new Error('UNAUTHORIZED');
+  }
+  return res;
+}
+
+/* 从 localStorage 恢复完整的 API Key（与 chat.html 保持一致） */
+function getFullApiKey() {
+  // 来源1：ai_platform_api_key（首页 navigateTo / validateKey 写入）
+  var k = localStorage.getItem('ai_platform_api_key') || '';
+  if (k && !k.includes('...') && k !== '***') return k;
+  // 来源2：ai_chat_config.key（首页 navigateTo 写入的副本）
+  try {
+    var cfg = JSON.parse(localStorage.getItem('ai_chat_config') || '{}');
+    if (cfg.key && !cfg.key.includes('...') && cfg.key !== '***') return cfg.key;
+  } catch(e) {}
+  return '';
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  // 从首页保存的配置中获取 API Key
-  const savedConfig = localStorage.getItem('ai_chat_config');
-  
-  if (!savedConfig) {
-    alert('请先在首页配置 API Key！');
-    window.location.href = '/';
-    return;
-  }
-  
-  try {
-    const config = JSON.parse(savedConfig);
-    adminApiKey = config.key || '';
-  } catch (e) {
-    alert('配置解析失败，请重新配置！');
-    window.location.href = '/';
-    return;
-  }
-  
+  adminApiKey = getFullApiKey();
+
   if (!adminApiKey) {
-    alert('请先在首页输入 API Key！');
-    window.location.href = '/';
-    return;
+    // 没有 API Key，显示输入框让用户填写
+    document.getElementById('apiKeySection').style.display = 'block';
+    showToast('请先输入 API Key（将分配给设备使用）', 'error');
   }
-  
+
   loadDevices();
 });
 
+function saveApiKey() {
+  var key = document.getElementById('apiKeyInput').value.trim();
+  if (!key || key.length < 10) {
+    showToast('请输入有效的 API Key（至少 10 个字符）', 'error');
+    return;
+  }
+  adminApiKey = key;
+  localStorage.setItem('ai_platform_api_key', key);
+  document.getElementById('apiKeySection').style.display = 'none';
+  showToast('API Key 已保存，现在可以注册设备了', 'success');
+}
+
 async function loadDevices() {
   try {
-    const res = await fetch('/api/devices');
+    const res = await authFetch('/api/devices');
     const data = await res.json();
     devices = data.devices || [];
-    
+
     document.getElementById('deviceCount').textContent = data.total || 0;
     document.getElementById('apiKeyCount').textContent = data.api_keys_total || 0;
-    
+
     let totalUsage = 0;
     devices.forEach(d => {
       totalUsage += d.usage_count || 0;
     });
     document.getElementById('totalUsage').textContent = totalUsage;
-    
+
     renderDeviceList();
   } catch (err) {
     showToast('加载设备失败', 'error');
@@ -433,53 +521,65 @@ function renderDeviceList() {
 
 async function registerDevice() {
   const deviceName = document.getElementById('deviceNameInput').value.trim();
-  
+
+  console.log('[注册] 开始, deviceName=', deviceName, ', adminApiKey长度=', adminApiKey ? adminApiKey.length : 0);
+
   if (!deviceName) {
     showToast('请输入设备名称', 'error');
     return;
   }
-  
+
+  if (!adminApiKey || adminApiKey.length < 10) {
+    // 显示 API Key 输入区域
+    document.getElementById('apiKeySection').style.display = 'block';
+    alert('请先输入并保存有效的 API Key（至少10个字符）！');
+    return;
+  }
+
   try {
-    const res = await fetch('/api/devices/register', {
+    console.log('[注册] 发送请求...');
+    const res = await authFetch('/api/devices/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `device_name=${encodeURIComponent(deviceName)}&admin_api_key=${encodeURIComponent(adminApiKey)}`
+      body: 'device_name=' + encodeURIComponent(deviceName) + '&admin_api_key=' + encodeURIComponent(adminApiKey)
     });
+    console.log('[注册] 收到响应, status=', res.status, ', ok=', res.ok);
+
     const data = await res.json();
-    
-    if (data.success) {
-      showToast(`设备注册成功！设备码：${data.device_code}`, 'success');
+    console.log('[注册] 响应数据:', data);
+
+    if (res.ok) {
+      showToast('设备注册成功！设备码：' + data.device_code, 'success');
       document.getElementById('deviceNameInput').value = '';
       loadDevices();
     } else {
-      showToast(data.error || '注册失败', 'error');
+      console.error('[注册失败] 状态码:', res.status, '响应:', data);
+      showToast('注册失败(' + res.status + ')：' + (data.detail || data.error || JSON.stringify(data)), 'error');
     }
   } catch (err) {
-    showToast('注册失败', 'error');
+    if (err.message === 'UNAUTHORIZED') return;
+    console.error('[注册异常]', err);
+    showToast('注册异常：' + err.message, 'error');
   }
 }
 
 async function deleteDevice(deviceCode) {
   if (!confirm(`确定删除设备 ${deviceCode} 吗？`)) return;
-  
+
   try {
-    const res = await fetch(`/api/devices/${encodeURIComponent(deviceCode)}`, {
-      method: 'DELETE',
-      headers: getAdminHeaders()
+    const res = await authFetch(`/api/devices/${encodeURIComponent(deviceCode)}`, {
+      method: 'DELETE'
     });
     if (res.ok) {
       showToast('设备已删除', 'success');
       loadDevices();
-    } else if (res.status === 401) {
-      adminToken = prompt('请输入管理员令牌（ADMIN_TOKEN）：');
-      if (adminToken) {
-        localStorage.setItem('admin_token', adminToken);
-        deleteDevice(deviceCode); // 重试
-      }
+    } else if (res.status === 404) {
+      showToast('设备不存在或无权操作', 'error');
     } else {
       showToast('删除失败', 'error');
     }
   } catch (err) {
+    if (err.message === 'UNAUTHORIZED') return;  // 已跳转登录
     showToast('删除失败', 'error');
   }
 }

@@ -21,18 +21,39 @@ CATEGORIES = {
 }
 
 # 预置模板（用户可快速添加常用服务商）
+# 格式：code, name, category, url, models, icon(emoji), color
 PRESET_PROVIDERS = [
-    {"code": "zhipu", "name": "智谱 AI (Zhipu)", "category": "llm", "url": "https://open.bigmodel.cn/api/paas/v4/chat/completions", "models": ["glm-4.6v", "glm-5.1", "glm-4.5-air"]},
-    {"code": "openai", "name": "OpenAI", "category": "llm", "url": "https://api.openai.com/v1/chat/completions", "models": ["gpt-4o", "gpt-4o-mini", "o3-mini"]},
-    {"code": "anthropic", "name": "Anthropic (Claude)", "category": "llm", "url": "https://api.anthropic.com/v1/messages", "models": ["claude-sonnet-4-20250514", "claude-opus-4-20250514"]},
-    {"code": "deepseek", "name": "DeepSeek", "category": "llm", "url": "https://api.deepseek.com/chat/completions", "models": ["deepseek-chat", "deepseek-reasoner"]},
-    {"code": "qwen", "name": "通义千问 (Qwen)", "category": "llm", "url": "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions", "models": ["qwen3-turbo", "qwen3-max", "qwen-vl-plus"]},
-    {"code": "doubao", "name": "豆包 (Doubao)", "category": "llm", "url": "https://ark.cn-beijing.volces.com/api/v3/chat/completions", "models": "请填写火山引擎 Endpoint ID"},
-    {"code": "moonshot", "name": "Moonshot (Kimi)", "category": "llm", "url": "https://api.moonshot.cn/v1/chat/completions", "models": ["moonshot-v1-auto", "moonshot-v1-128k", "moonshot-v1-32k"]},
-    {"code": "gaode_weather", "name": "高德天气", "category": "weather", "url": "https://restapi.amap.com/v3/weather/weatherInfo", "models": []},
-    {"code": "hefeng_weather", "name": "和风天气", "category": "weather", "url": "https://devapi.qweather.com/v7/weather/now", "models": []},
-    {"code": "gaode_map", "name": "高德地图", "category": "navigation", "url": "https://restapi.amap.com/v3/geocode/geo", "models": []},
-    {"code": "baidu_map", "name": "百度地图", "category": "navigation", "url": "https://map.baidu.com/", "models": []},
+    # ── 左列 ──
+    {"code": "google", "name": "Google", "category": "llm", "url": "https://generativelanguage.googleapis.com/v1beta/openai/", "models": ["gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.0-flash"], "icon": "🌐", "color": "#4285F4"},
+    {"code": "deepseek", "name": "DeepSeek", "category": "llm", "url": "https://api.deepseek.com/chat/completions", "models": ["deepseek-chat", "deepseek-reasoner", "deepseek-v3-0324"], "icon": "🌊", "color": "#0066FF"},
+    {"code": "xiai", "name": "xAI (Grok)", "category": "llm", "url": "https://api.x.ai/v1/chat/completions", "models": ["grok-3", "grok-3-mini", "grok-2"], "icon": "✕", "color": "#000000"},
+    {"code": "minimax_global", "name": "MiniMax Global", "category": "llm", "url": "https://api.minimax.chat/v1/chat/completions", "models": ["MiniMax-Text-01", "abab6.5s-chat"], "icon": "🩷", "color": "#FF6B9D"},
+    {"code": "byteplus", "name": "BytePlus", "category": "llm", "url": "https://ark.byteplusapi.com/api/v3/chat/completions", "models": ["请填写 Endpoint ID"], "icon": "🔷", "color": "#0066FF"},
+    {"code": "novita", "name": "Novita", "category": "llm", "url": "https://api.novita.ai/v3/openai/chat/completions", "models": [], "icon": "▲", "color": "#22C55E"},
+    {"code": "wuxiang_cn", "name": "无问芯穹 CN", "category": "llm", "url": "https://api.infini-ai.com/v1/chat/completions", "models": [], "icon": "💜", "color": "#7C3AED"},
+    {"code": "azure_openai", "name": "Azure OpenAI", "category": "llm", "url": "", "models": ["gpt-4o", "gpt-4o-mini", "o3-mini"], "icon": "🔷", "color": "#0078D4"},
+    {"code": "ollama_cloud", "name": "Ollama Cloud", "category": "llm", "url": "https://ollama.com/api/chat", "models": [], "icon": "🐑", "color": "#000000"},
+    {"code": "minimax_cn", "name": "MiniMax CN", "category": "llm", "url": "https://api.minimaxi.chat/v1/text/chatcompletion_v2", "models": ["abab6.5s-chat", "abab6.5t-chat"], "icon": "🩷", "color": "#FF6B9D"},
+    {"code": "volcengine", "name": "火山引擎", "category": "llm", "url": "https://ark.cn-beijing.volces.com/api/v3/chat/completions", "models": [], "icon": "🔺", "color": "#FF4D4F"},
+
+    # ── 右列 ──
+    {"code": "openai", "name": "OpenAI", "category": "llm", "url": "https://api.openai.com/v1/chat/completions", "models": ["gpt-5.4", "gpt-5.4-mini", "gpt-4o", "gpt-4o-mini", "o3-mini"], "icon": "🤖", "color": "#10A37F"},
+    {"code": "anthropic", "name": "Anthropic", "category": "llm", "url": "https://api.anthropic.com/v1/messages", "models": ["claude-sonnet-4-20250514", "claude-opus-4-20250514", "claude-haiku-4-20250514"], "icon": "🅰️", "color": "#D97757"},
+    {"code": "zai", "name": "Zai", "category": "llm", "url": "", "models": [], "icon": "Z", "color": "#000000"},
+    {"code": "kimi_global", "name": "Kimi Global", "category": "llm", "url": "https://api.moonshot.cn/v1/chat/completions", "models": ["moonshot-v1-auto", "moonshot-v1-128k"], "icon": "K", "color": "#7C3AED"},
+    {"code": "openrouter", "name": "OpenRouter", "category": "llm", "url": "https://openrouter.ai/api/v1/chat/completions", "models": [], "icon": "◁", "color": "#000000"},
+    {"code": "wuxiang_global", "name": "无问芯穹 Global", "category": "llm", "url": "https://api.infini-ai.com/v1/chat/completions", "models": [], "icon": "💜", "color": "#7C3AED"},
+    {"code": "aws_bedrock", "name": "AWS Bedrock", "category": "llm", "url": "", "models": ["anthropic.claude-3-sonnet-20240229-v1:0"], "icon": "AWS", "color": "#FF9900"},
+    {"code": "vercel_ai_gateway", "name": "Vercel AI Gateway", "category": "llm", "url": "https://ai.gateway.vercel.sh/v1/chat/completions", "models": [], "icon": "▲", "color": "#000000"},
+    {"code": "bigmodel", "name": "Bigmodel (智谱)", "category": "llm", "url": "https://open.bigmodel.cn/api/paas/v4/chat/completions", "models": ["glm-4.6v", "glm-5.1", "glm-4.5-air", "glm-4-plus"], "icon": "Z", "color": "#000000"},
+    {"code": "kimi_cn", "name": "Kimi CN", "category": "llm", "url": "https://api.moonshot.cn/v1/chat/completions", "models": ["moonshot-v1-auto", "moonshot-v1-128k", "moonshot-v1-32k"], "icon": "K", "color": "#7C3AED"},
+    {"code": "aliyun", "name": "阿里云 (通义千问)", "category": "llm", "url": "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions", "models": ["qwen3-turbo", "qwen3-max", "qwen-vl-plus", "qwen2.5-72b-instruct"], "icon": "⟨⟩", "color": "#FF6A00"},
+
+    # ── 非大模型 ──
+    {"code": "gaode_weather", "name": "高德天气", "category": "weather", "url": "https://restapi.amap.com/v3/weather/weatherInfo", "models": [], "icon": "🌤️", "color": "#4ade80"},
+    {"code": "hefeng_weather", "name": "和风天气", "category": "weather", "url": "https://devapi.qweather.com/v7/weather/now", "models": [], "icon": "🌧️", "color": "#38bdf8"},
+    {"code": "gaode_map", "name": "高德地图", "category": "navigation", "url": "https://restapi.amap.com/v3/geocode/geo", "models": [], "icon": "🗺️", "color": "#fb923c"},
+    {"code": "baidu_map", "name": "百度地图", "category": "navigation", "url": "https://map.baidu.com/", "models": [], "icon": "📍", "color": "#2563EB"},
 ]
 
 

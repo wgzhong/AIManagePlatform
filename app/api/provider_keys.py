@@ -23,6 +23,17 @@ router = APIRouter()
 svc = ProviderKeyService()
 
 
+# ── 分类与模板信息（公开接口，无需登录）──
+
+@router.get("/api/provider-keys/meta")
+def get_provider_keys_meta():
+    """返回分类定义和预置模板（公开接口，仅静态配置信息）"""
+    from app.schemas.provider_keys import CATEGORIES, PRESET_PROVIDERS
+    return {"categories": CATEGORIES, "presets": PRESET_PROVIDERS}
+
+
+# ── 以下所有端点需要登录 ──
+
 # ── 列表 ──
 
 @router.get("/api/provider-keys", response_model=ProviderKeyListResponse)
@@ -64,7 +75,6 @@ def create_provider_key(
     user=Depends(get_current_user),
 ):
     """创建新的外部 API Key"""
-    # 检查 provider_code 唯一性
     from app.models.database import ExternalApiKey
     existing = db.query(ExternalApiKey).filter(
         ExternalApiKey.provider_code == data.provider_code
@@ -85,7 +95,6 @@ def update_provider_key(
     user=Depends(get_current_user),
 ):
     """更新指定 API Key"""
-    # 如果修改了 code，检查唯一性
     from app.models.database import ExternalApiKey
     record = db.query(ExternalApiKey).filter(ExternalApiKey.id == key_id).first()
     if not record:
@@ -142,15 +151,3 @@ def test_provider_key_connection(
 ):
     """测试 Key 是否可用"""
     return svc.test_connection(db, key_id)
-
-
-# ── 分类与模板信息 ──
-
-@router.get("/api/provider-keys/meta")
-def get_provider_keys_meta(user=Depends(get_current_user)):
-    """返回分类定义和预置模板（前端用于下拉选择）"""
-    from app.schemas.provider_keys import CATEGORIES, PRESET_PROVIDERS
-    return {
-        "categories": CATEGORIES,
-        "presets": PRESET_PROVIDERS,
-    }

@@ -63,9 +63,48 @@ def skills_page():
 
 @router.get("/apikeys")
 def apikeys_page():
-    """API Key 管理中心页面"""
+    """大模型配置页面（兼容旧书签）"""
     return FileResponse(
-        os.path.join(STATIC_DIR, "apikeys.html"),
+        os.path.join(STATIC_DIR, "llm-config.html"),
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
+
+
+@router.get("/modelsetting")
+def modelsetting_page():
+    """大模型配置页面（兼容旧书签）"""
+    return FileResponse(
+        os.path.join(STATIC_DIR, "llm-config.html"),
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
+
+
+@router.get("/llm-config")
+def llm_config_page():
+    """大模型配置页面"""
+    return FileResponse(
+        os.path.join(STATIC_DIR, "llm-config.html"),
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
+
+
+@router.get("/service-config")
+def service_config_page():
+    """多领域服务配置页面"""
+    return FileResponse(
+        os.path.join(STATIC_DIR, "service-config.html"),
         headers={
             "Cache-Control": "no-cache, no-store, must-revalidate",
             "Pragma": "no-cache",

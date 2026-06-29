@@ -106,7 +106,7 @@ def update_provider_key(
         if dup:
             raise HTTPException(status_code=400, detail=f"标识「{data.provider_code}」已被使用")
 
-    result = svc.update_key(key_id, db, data.model_dump())
+    result = svc.update_key(db, key_id, data.model_dump())
     if not result:
         raise HTTPException(status_code=404, detail="更新失败")
     return MessageResponse(message=f"✅ {data.provider_name} 已更新")

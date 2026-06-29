@@ -132,6 +132,7 @@ class ExternalApiKey(Base):
     is_active = Column(Boolean, default=True)                     # 是否启用
     priority = Column(Integer, default=0)                         # 优先级
     description = Column(Text, default="")                        # 备注
+    config = Column(JSON, default={})                            # 额外配置（天气/导航等分类专属配置）
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
@@ -156,6 +157,8 @@ def init_db():
     Base.metadata.create_all(bind=engine)
     # 自适应迁移：给 devices 表添加 user_id 列（如果不存在）
     _ensure_device_user_id_column()
+    # 自适应迁移：给 external_api_keys 表添加 config 列
+    _ensure_external_api_key_config_column()
 
 def _ensure_device_user_id_column():
     """确保 devices 表有 user_id 列，没有则 ALTER TABLE 添加。
@@ -175,6 +178,23 @@ def _ensure_device_user_id_column():
             )
             conn.commit()
             logger.info("✅ devices 表已添加 user_id 列，旧数据默认归用户 id=1")
+    finally:
+        conn.close()
+
+
+def _ensure_external_api_key_config_column():
+    """确保 external_api_keys 表有 config 列，没有则 ALTER TABLE 添加。"""
+    import sqlite3, os, logging
+    logger = logging.getLogger(__name__)
+    db_path = os.path.join(_data_dir, "app.db")
+    conn = sqlite3.connect(db_path)
+    try:
+        cursor = conn.execute("PRAGMA table_info(external_api_keys)")
+        columns = {row[1] for row in cursor.fetchall()}
+        if "config" not in columns:
+            conn.execute("ALTER TABLE external_api_keys ADD COLUMN config TEXT DEFAULT '{}'")
+            conn.commit()
+            logger.info("✅ external_api_keys 表已添加 config 列")
     finally:
         conn.close()
 

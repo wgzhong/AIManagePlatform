@@ -87,9 +87,14 @@
           <span>系统日志</span>
           <span class="menu-arrow">→</span>
         </div>
-        <div class="menu-item" onclick="navigateTo('/apikeys')">
-          <span class="menu-icon">🔑</span>
-          <span>API Key 管理</span>
+        <div class="menu-item" onclick="navigateTo('/llm-config')">
+          <span class="menu-icon">🤖</span>
+          <span>大模型配置</span>
+          <span class="menu-arrow">→</span>
+        </div>
+        <div class="menu-item" onclick="navigateTo('/service-config')">
+          <span class="menu-icon">🌐</span>
+          <span>多领域服务</span>
           <span class="menu-arrow">→</span>
         </div>
         <div class="menu-divider"></div>
@@ -301,15 +306,27 @@
         </div>
       </div>
 
-      <!-- API Key 管理卡片 -->
-      <div class="bottom-card" onclick="navigateTo('/apikeys')">
+      <!-- 大模型配置卡片 -->
+      <div class="bottom-card" onclick="navigateTo('/llm-config')">
         <div class="bottom-card-header">
-          <span class="bottom-card-icon">🔑</span>
-          <h4>API Key 管理</h4>
-          <span class="bottom-card-link">— 密钥中心</span>
+          <span class="bottom-card-icon">🤖</span>
+          <h4>大模型配置</h4>
+          <span class="bottom-card-link">— LLM 管理</span>
         </div>
         <div class="bottom-card-body">
-          <p class="bottom-desc">管理大模型、天气、导航等第三方服务密钥</p>
+          <p class="bottom-desc">管理大模型服务商 API Key、API 地址及可用模型</p>
+        </div>
+      </div>
+
+      <!-- 多领域服务配置卡片 -->
+      <div class="bottom-card" onclick="navigateTo('/service-config')">
+        <div class="bottom-card-header">
+          <span class="bottom-card-icon">🌐</span>
+          <h4>多领域服务</h4>
+          <span class="bottom-card-link">— 第三方配置</span>
+        </div>
+        <div class="bottom-card-body">
+          <p class="bottom-desc">管理天气、导航、搜索、翻译等第三方服务配置</p>
         </div>
       </div>
     </div>
@@ -330,9 +347,13 @@
         <span class="recent-icon">🖥️</span>
         <span class="recent-text">设备管理</span>
       </div>
-      <div class="recent-item" onclick="navigateTo('/apikeys')">
-        <span class="recent-icon">🔑</span>
-        <span class="recent-text">API Key 管理</span>
+      <div class="recent-item" onclick="navigateTo('/llm-config')">
+        <span class="recent-icon">🤖</span>
+        <span class="recent-text">大模型配置</span>
+      </div>
+      <div class="recent-item" onclick="navigateTo('/service-config')">
+        <span class="recent-icon">🌐</span>
+        <span class="recent-text">多领域服务</span>
       </div>
     </div>
   </div>

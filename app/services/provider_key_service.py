@@ -64,6 +64,7 @@ class ProviderKeyService:
                 "is_active": r.is_active,
                 "priority": r.priority,
                 "description": r.description or "",
+                "config": r.config or {},
                 "created_at": r.created_at.isoformat() if r.created_at else "",
                 "updated_at": r.updated_at.isoformat() if r.updated_at else "",
             })
@@ -87,6 +88,7 @@ class ProviderKeyService:
             "is_active": record.is_active,
             "priority": record.priority,
             "description": record.description or "",
+            "config": record.config or {},
             "created_at": record.created_at.isoformat() if record.created_at else "",
             "updated_at": record.updated_at.isoformat() if record.updated_at else "",
         }
@@ -104,6 +106,7 @@ class ProviderKeyService:
             is_active=data.get("is_active", True),
             priority=data.get("priority", 0),
             description=data.get("description", ""),
+            config=data.get("config", {}),
         )
         db.add(record)
         db.commit()
@@ -125,6 +128,7 @@ class ProviderKeyService:
         record.is_active = data.get("is_active", record.is_active)
         record.priority = data.get("priority", record.priority)
         record.description = data.get("description", record.description)
+        record.config = data.get("config", record.config or {})
 
         # 如果传了新的 key_value 则重新加密
         if "key_value" in data and data["key_value"]:

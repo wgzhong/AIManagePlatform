@@ -68,6 +68,7 @@ class ProviderKeyCreate(BaseModel):
     is_active: bool = Field(True, description="是否启用")
     priority: int = Field(0, ge=0, le=100, description="优先级")
     description: Optional[str] = Field("", max_length=500, description="备注")
+    config: Optional[dict] = Field(default={}, description="额外配置（天气/导航等分类专属）")
 
 
 class ProviderKeyResponse(BaseModel):
@@ -82,6 +83,7 @@ class ProviderKeyResponse(BaseModel):
     is_active: bool
     priority: int
     description: str
+    config: dict = {}                  # 额外配置
     created_at: datetime
     updated_at: datetime
 

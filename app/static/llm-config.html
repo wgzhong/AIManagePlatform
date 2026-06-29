@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大模型配置 — AIManagePlatform</title>
+<style>
+/* ════════════════════════════════════════
+   大模型配置 — 浅色卡片网格风格（类 OpenRouter）
+   ════════════════════════════════════════ */
+:root {
+  --bg: #f0f2f5;
+  --card-bg: #ffffff;
+  --card-border: #e8eaed;
+  --card-border-active: #7c6fff;
+  --text-primary: #1a1a2e;
+  --text-secondary: #666;
+  --text-muted: #999;
+  --accent: #6366f1;
+  --accent-light: rgba(99,102,241,.08);
+  --success: #10b981;
+  --danger: #ef4444;
+  --radius: 14px;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body {
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
+  background:var(--bg); color:var(--text-primary);
+  min-height:100vh; line-height:1.55; font-size:14px;
+}
+
+/* ── Top Bar ── */
+.top-bar {
+  display:flex; align-items:center; gap:12px; padding:16px 28px;
+  background:#fff; border-bottom:1px solid var(--card-border);
+}
+.top-logo { font-size:15px; font-weight:700; color:var(--accent); }
+.top-ver {
+  font-size:11px; padding:2px 8px; border-radius:10px; background:var(--accent-light); color:var(--accent);
+  font-weight:600;
+}
+.top-spacer { flex:1; }
+.top-link { font-size:13px; color:var(--text-secondary); text-decoration:none; }
+.top-link:hover { color:var(--accent); }
+
+/* ── Page ── */
+.page-wrap { max-width:1280px; margin:0 auto; padding:32px 24px 80px; }
+
+/* Header */
+.page-header { margin-bottom:28px; }
+.page-title { font-size:22px; font-weight:700; color:var(--text-primary); }
+.page-desc { font-size:13px; color:var(--text-muted); margin-top:4px; }
+
+/* ═══ Provider Card Grid ═══ */
+.provider-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(155px, 1fr));
+  gap:16px;
+}
+
+.provider-card {
+  background:var(--card-bg);
+  border:1.5px solid var(--card-border);
+  border-radius:var(--radius);
+  padding:22px 16px 16px;
+  cursor:pointer;
+  transition:all .2s ease;
+  display:flex; flex-direction:column; align-items:center;
+  position:relative;
+  user-select:none;
+}
+.provider-card:hover {
+  border-color:#b8b5ff; box-shadow:0 2px 12px rgba(99,102,241,.08); transform:translateY(-1px);
+}
+.provider-card.selected {
+  border-color:var(--card-border-active);
+  box-shadow:0 0 0 3px rgba(124,111,255,.12), 0 4px 16px rgba(99,102,241,.1);
+}
+.provider-card.has-key::after {
+  content:''; position:absolute; top:10px; right:10px;
+  width:8px; height:8px; border-radius:50%; background:var(--success);
+}
+
+/* Icon */
+.p-icon {
+  width:48px; height:48px; display:flex; align-items:center; justify-content:center;
+  font-size:28px; margin-bottom:10px;
+  /* For text icons that look like logos */
+  font-weight:700; letter-spacing:-1px;
+  border-radius:12px; background:#f7f8fa;
+}
+.p-name {
+  font-size:13px; font-weight:600; color:var(--text-primary);
+  text-align:center; line-height:1.35; max-width:100%;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.p-arrow {
+  margin-top:auto; padding-top:8px;
+  font-size:11px; color:var(--text-muted);
+}
+
+/* Disabled — visual only, still clickable so user can re-enable */
+.provider-card.disabled { opacity:.45; }
+
+/* ── Detail Panel (right side when card selected) ── */
+.detail-panel {
+  display:none; position:fixed; top:0; right:0; bottom:0; width:420px;
+  background:#fff; border-left:1px solid var(--card-border); z-index:300;
+  flex-direction:column; animation:slideIn .25s ease;
+  box-shadow:-4px 0 30px rgba(0,0,0,.08);
+}
+.detail-panel.open { display:flex; }
+@keyframes slideIn { from{transform:translateX(100%)} to{transform:translateX(0)} }
+
+.dp-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:20px 24px; border-bottom:1px solid var(--card-border);
+}
+.dp-title { font-size:17px; font-weight:700; display:flex; align-items:center; gap:10px; }
+.dp-close {
+  width:32px; height:32px; border-radius:8px; border:none; background:#f0f0f0;
+  cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center;
+  transition:background .15s;
+}
+.dp-close:hover { background:#e0e0e0; }
+
+.dp-body { flex:1; overflow-y:auto; padding:20px 24px; }
+.dp-field { margin-bottom:16px; }
+.dp-label { font-size:12px; color:var(--text-muted); margin-bottom:5px; font-weight:500; }
+.dp-value { font-size:14px; color:var(--text-primary); word-break:break-all; }
+.dp-value.code { font-family:'SF Mono','Cascadia Code','Courier New',monospace; font-size:12.5px; background:#f7f8fa; padding:8px 12px; border-radius:8px; }
+
+.dp-models { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+.model-tag {
+  font-size:11.5px; padding:4px 10px; border-radius:8px;
+  background:var(--accent-light); color:var(--accent); font-weight:500;
+  border:1px solid rgba(99,102,241,.15);
+}
+
+.dp-actions { display:flex; gap:8px; padding:16px 24px; border-top:1px solid var(--card-border); flex-wrap:wrap; }
+.dp-btn {
+  padding:8px 18px; border-radius:9px; font-size:13px; font-weight:600;
+  border:none; cursor:pointer; transition:all .15s;
+}
+.btn-dp-edit { background:var(--accent-light); color:var(--accent); }
+.btn-dp-edit:hover { background:rgba(99,102,241,.16); }
+.btn-dp-test { background:rgba(16,185,129,.1); color:var(--success); }
+.btn-dp-test:hover { background:rgba(16,185,129,.18); }
+.btn-dp-toggle { background:#f5f5f5; color:var(--text-secondary); }
+.btn-dp-toggle:hover { background:#eee; }
+.btn-dp-delete { background:rgba(239,68,94,.07); color:var(--danger); margin-left:auto; }
+.btn-dp-delete:hover { background:rgba(239,68,94,.12); }
+
+/* ── Add Provider Button ── */
+.add-provider-btn {
+  background:var(--card-bg); border:2px dashed #d0d4dc; border-radius:var(--radius);
+  padding:22px 16px 16px; cursor:pointer; transition:all .2s;
+  display:flex; flex-direction:column; align-items:center;
+  min-height:108px;
+}
+.add-provider-btn:hover { border-color:var(--accent); background:rgba(99,102,241,.02); }
+.add-provider-btn .p-icon { font-size:22px; color:var(--text-muted); background:transparent; }
+.add-provider-btn .p-name { color:var(--text-muted); font-weight:400; font-size:12.5px; }
+
+/* ═══ Modal (Add/Edit) ═══ */
+.modal-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,.4);
+  z-index:400; display:none; align-items:center; justify-content:center;
+  backdrop-filter:blur(4px);
+}
+.modal-overlay.show { display:flex; }
+.modal-box {
+  background:#fff; border-radius:20px; width:540px; max-height:88vh;
+  overflow-y:auto; padding:30px; box-shadow:0 20px 60px rgba(0,0,0,.15);
+}
+.modal-title { font-size:18px; font-weight:700; margin-bottom:22px; color:var(--text-primary); }
+
+.fg { margin-bottom:16px; }
+.fl { font-size:12.5px; color:var(--text-secondary); margin-bottom:6px; font-weight:500; }
+.fi {
+  width:100%; padding:10px 14px; border-radius:10px;
+  background:#f7f8fa; border:1.5px solid #e8eaed;
+  color:var(--text-primary); font-size:13.5px; outline:none; transition:border-color .15s;
+}
+.fi:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(99,102,241,.1); }
+.fi::placeholder { color:#bbb; }
+textarea.fi { resize:vertical; min-height:72px; font-family:inherit; }
+select.fi { cursor:pointer; }
+
+.fr { display:flex; gap:12px; } .fr > .fg { flex:1; }
+
+.model-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+.mc {
+  padding:5px 12px; border-radius:8px; font-size:12px; font-weight:500;
+  background:#f0f0f5; border:1.5px solid #e0e0e8; cursor:pointer;
+  user-select:none; transition:all .15s; color:var(--text-secondary);
+}
+.mc.sel { background:var(--accent-light); border-color:var(--accent); color:var(--accent); }
+.mc:hover:not(.sel) { border-color:#ccc; }
+
+.fa-row { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-secondary); cursor:pointer; }
+
+.fb { display:flex; gap:10px; margin-top:24px; }
+.btn-cancel {
+  flex:1; padding:10px; border-radius:10px; border:1.5px solid #e0e0e8;
+  background:transparent; color:var(--text-secondary); font-size:13.5px; font-weight:600;
+  cursor:pointer;
+}
+.btn-cancel:hover { background:#f7f8fa; }
+.btn-save {
+  flex:2; padding:10px; border-radius:10px; border:none;
+  background:var(--accent); color:#fff; font-size:13.5px; font-weight:700;
+  cursor:pointer; transition:all .15s;
+}
+.btn-save:hover { transform:translateY(-1px); box-shadow:0 4px 16px rgba(99,102,243,.25); }
+
+/* ═══ Advanced Config Section ═══ */
+.adv-section {
+  border:1.5px solid #e8eaed; border-radius:12px; overflow:hidden;
+  margin-top:4px;
+}
+.adv-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 16px; cursor:pointer; user-select:none; background:#fafbfc;
+  font-size:13.5px; font-weight:600; color:var(--text-primary);
+  transition:background .15s;
+}
+.adv-header:hover { background:#f0f2f5; }
+.adv-arrow {
+  font-size:11px; transition:transform .25s ease; color:var(--text-muted);
+}
+.adv-section.open .adv-arrow { transform:rotate(180deg); }
+.adv-body {
+  display:none; padding:14px 16px 16px;
+  border-top:1.5px solid #e8eaed;
+}
+.adv-section.open .adv-body { display:block; }
+
+.adv-fg { margin-bottom:12px; }
+.adv-fl {
+  font-size:12px; color:var(--text-secondary); margin-bottom:5px; font-weight:500;
+  display:block;
+}
+.adv-fi {
+  width:100%; padding:9px 12px; border-radius:8px;
+  background:#fff; border:1.5px solid #e0e0e8;
+  color:var(--text-primary); font-size:13px; outline:none; transition:border-color .15s;
+}
+.adv-fi:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(99,102,241,.08); }
+.adv-fi::placeholder { color:#bbb; }
+
+.radio-group { display:flex; gap:20px; margin-top:6px; }
+.radio-item {
+  display:flex; align-items:center; gap:6px; cursor:pointer; font-size:13px;
+  color:var(--text-secondary); user-select:none;
+}
+.radio-item input[type="radio"] { accent-color:var(--accent); cursor:pointer; }
+.radio-item input[type="radio"]:checked + span { color:var(--text-primary); font-weight:500; }
+
+/* Toast */
+.toast-stack { position:fixed; top:64px; right:24px; z-index:500; display:flex; flex-direction:column; gap:8px; }
+.toast-msg {
+  padding:10px 20px; border-radius:10px; font-size:13px; font-weight:600;
+  animation:toastIn .25s ease; backdrop-filter:blur(8px);
+}
+.toast-ok { background:rgba(16,185,129,.15); border:1px solid rgba(16,185,129,.3); color:var(--success); }
+.toast-err { background:rgba(239,68,94,.1); border:1px solid rgba(239,68,94,.2); color:var(--danger); }
+@keyframes toastIn { from{opacity:0; transform:translateX(24px)} to{opacity:1; transform:translateX(0)} }
+
+/* Empty State */
+.empty-grid {
+  grid-column:1/-1; text-align:center; padding:50px 20px;
+  color:var(--text-muted); font-size:14px;
+}
+
+/* Responsive */
+@media(max-width:768px){
+  .provider-grid { grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); gap:12px; }
+  .detail-panel { width:90vw; }
+  .modal-box { width:95vw; margin:16px; }
+  .page-wrap { padding:20px 16px 60px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="top-bar">
+  <span class="top-logo">AIManagePlatform</span>
+  <span class="top-ver">v1.0</span>
+  <div class="top-spacer"></div>
+  <a class="top-link" href="/">← 返回主页</a>
+</div>
+
+<div class="page-wrap">
+  <div class="page-header">
+    <h1 class="page-title">大模型配置</h1>
+    <p class="page-desc">选择并配置 LLM 服务商 API Key</p>
+  </div>
+
+  <div class="provider-grid" id="providerGrid"></div>
+</div>
+
+<!-- Detail Panel -->
+<div class="detail-panel" id="dpPanel">
+  <div class="dp-header">
+    <div class="dp-title"><span id="dpIcon"></span><span id="dpName"></span></div>
+    <button class="dp-close" onclick="closeDetail()">✕</button>
+  </div>
+  <div class="dp-body" id="dpBody"></div>
+  <div class="dp-actions" id="dpActions"></div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <h2 class="modal-title" id="modalTitle">添加配置</h2>
+    <div id="modalFormContent"></div>
+    <div class="fb">
+      <button class="btn-cancel" onclick="closeModal()">取消</button>
+      <button class="btn-save" onclick="saveKey()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-stack" id="toastStack"></div>
+
+<script>
+/* ════════════════════════════════════════
+   大模型配置 — 浅色卡片网格逻辑
+   ════════════════════════════════════════ */
+
+var PRESETS = [];
+var allKeys = [];          // 用户已配置的 keys
+var keyMap = {};           // code -> key record
+var selectedCode = null;   // 当前选中的预设 code
+var editKeyId = null;
+
+function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function toast(msg, type) {
+  var c = document.getElementById('toastStack');
+  var t = document.createElement('div');
+  t.className = 'toast-msg toast-' + (type || 'ok');
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(function() { if (t.parentNode) t.parentNode.removeChild(t); }, 2800);
+}
+function hdr() {
+  try {
+    var t = localStorage.getItem('access_token');
+    return t ? {'Authorization': 'Bearer ' + t, 'Content-Type': 'application/json'} : {'Content-Type': 'application/json'};
+  } catch(e) { return {'Content-Type': 'application/json'}; }
+}
+
+// ── Load Presets ──
+async function loadMeta() {
+  try {
+    var r = await fetch('/api/provider-keys/meta');
+    if (r.ok) {
+      var d = await r.json();
+      PRESETS = (d.presets || []).filter(function(p) { return p.category === 'llm'; });
+    }
+  } catch(e) {}
+}
+
+// ── Load User Keys ──
+async function loadKeys() {
+  try {
+    var r = await fetch('/api/provider-keys?category=llm', {headers: hdr()});
+    if (r.status === 401) { allKeys = []; keyMap = {}; renderGrid(); return; }
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    var d = await r.json();
+    allKeys = d.keys || [];
+    // Build lookup map
+    keyMap = {};
+    allKeys.forEach(function(k) { keyMap[k.provider_code] = k; });
+  } catch(e) {
+    allKeys = []; keyMap = {};
+  }
+  renderGrid();
+  // Re-render detail panel if open
+  if (selectedCode && keyMap[selectedCode]) showDetail(selectedCode);
+}
+
+// ── Render Grid ──
+function renderGrid() {
+  var g = document.getElementById('providerGrid');
+  if (!PRESETS.length) {
+    g.innerHTML = '<div class="empty-grid">加载中...</div>';
+    return;
+  }
+
+  var h = '';
+  PRESETS.forEach(function(p) {
+    var hasKey = !!keyMap[p.code];
+    var k = keyMap[p.code] || {};
+    h += '<div class="provider-card' + (hasKey ? ' has-key' : '') +
+         (k.is_active === false ? ' disabled' : '') +
+         '" data-code="' + esc(p.code) + '" onclick="selectCard(this,\'' + p.code + '\')">' +
+      '<div class="p-icon" style="color:' + (p.color || '#333') + '">' + (p.icon || '?') + '</div>' +
+      '<div class="p-name">' + esc(p.name) + '</div>' +
+      '<div class="p-arrow">⋮</div>' +
+    '</div>';
+  });
+  // Add custom button
+  h += '<div class="add-provider-btn" onclick="addCustom()">' +
+    '<div class="p-icon">+</div>' +
+    '<div class="p-name">自定义服务商</div>' +
+  '</div>';
+  g.innerHTML = h;
+}
+
+// ── Select Card ──
+function selectCard(el, code) {
+  // Toggle selection
+  var wasSelected = el.classList.contains('selected');
+
+  // Deselect all
+  document.querySelectorAll('.provider-card').forEach(function(c) { c.classList.remove('selected'); });
+
+  if (wasSelected) {
+    closeDetail();
+    selectedCode = null;
+    return;
+  }
+
+  el.classList.add('selected');
+  selectedCode = code;
+  showDetail(code);
+}
+
+// ── Show Detail Panel ──
+function showDetail(code) {
+  var preset = findPreset(code);
+  var k = keyMap[code];
+
+  document.getElementById('dpIcon').textContent = preset ? (preset.icon || '🤖') : '🤖';
+  document.getElementById('dpName').textContent = preset ? preset.name : code;
+
+  var body = '';
+  if (k) {
+    // Has config - show details
+    body += '<div class="dp-field"><div class="dp-label">标识</div><div class="dp-value code">' + esc(k.provider_code) + '</div></div>';
+
+    if (k.api_url) {
+      body += '<div class="dp-field"><div class="dp-label">API 地址</div><div class="dp-value code">' + esc(k.api_url) + '</div></div>';
+    }
+    if (k.key_masked) {
+      body += '<div class="dp-field"><div class="dp-label">API Key</div><div class="dp-value code">' + esc(k.key_masked) + '</div></div>';
+    }
+    if (k.models && k.models.length) {
+      var mHtml = k.models.map(function(m) { return '<span class="model-tag">' + esc(m) + '</span>'; }).join('');
+      body += '<div class="dp-field"><div class="dp-label">支持模型</div><div class="dp-models">' + mHtml + '</div></div>';
+    }
+    if (k.description) {
+      body += '<div class="dp-field"><div class="dp-label">备注</div><div class="dp-value">' + esc(k.description) + '</div></div>';
+    }
+
+    body += '<div class="dp-field"><div class="dp-label">状态</div><div class="dp-value">' +
+      (k.is_active !== false ? '<span style="color:var(--success)">● 已启用</span>' : '<span style="color:var(--danger)">○ 已禁用</span>') +
+      '</div></div>';
+  } else {
+    // No config yet
+    if (preset) {
+      body += '<div class="dp-field"><div class="dp-label">API 地址</div><div class="dp-value code">' + (preset.url || '待填写') + '</div></div>';
+      if (preset.models && preset.models.length) {
+        var mHtml2 = preset.models.slice(0, 6).map(function(m) { return '<span class="model-tag">' + esc(m) + '</span>'; }).join('');
+        body += '<div class="dp-field"><div class="dp-label">推荐模型</div><div class="dp-models">' + mHtml2 + '</div></div>';
+      }
+    }
+    body += '<div style="margin-top:16px;padding:14px;border-radius:10px;background:#f7f8fa;text-align:center;color:var(--text-muted);font-size:13px;">' +
+      '尚未配置 API Key<br><span style="font-size:12px;">点击下方「配置」按钮添加</span></div>';
+  }
+
+  document.getElementById('dpBody').innerHTML = body;
+
+  // Actions
+  var actHtml = '';
+  if (k) {
+    actHtml +=
+      '<button class="dp-btn btn-dp-edit" onclick="editKey(' + k.id + ')">编辑</button>' +
+      '<button class="dp-btn btn-dp-test" onclick="testKey(' + k.id + ')">测试连接</button>' +
+      '<button class="dp-btn btn-dp-toggle" onclick="toggleKey(' + k.id + ')">' + (k.is_active !== false ? '禁用' : '启用') + '</button>' +
+      '<button class="dp-btn btn-dp-delete" onclick="confirmDelete(' + k.id + ')">删除</button>';
+  } else {
+    actHtml += '<button class="dp-btn btn-dp-save" style="flex:1;background:var(--accent);color:#fff;" onclick="addForPreset(\'' + code + '\')">配置此服务商</button>';
+  }
+  document.getElementById('dpActions').innerHTML = actHtml;
+
+  document.getElementById('dpPanel').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('dpPanel').classList.remove('open');
+  document.querySelectorAll('.provider-card').forEach(function(c) { c.classList.remove('selected'); });
+  selectedCode = null;
+}
+
+// ── Find Preset ──
+function findPreset(code) {
+  for (var i = 0; i < PRESETS.length; i++) {
+    if (PRESETS[i].code === code) return PRESETS[i];
+  }
+  return null;
+}
+
+// ── Add Custom Provider ──
+function addCustom() {
+  closeDetail();
+  editKeyId = null;
+  openModal({
+    name: '', code: '', url: '',
+    models: [], isCustom: true,
+    icon: '🔑', color: '#666',
+  });
+}
+
+// ── Add for Preset ──
+function addForPreset(code) {
+  var p = findPreset(code);
+  if (!p) return;
+  editKeyId = null;
+  openModal(p);
+}
+
+// ── Open Modal ──
+function openModal(preset) {
+  document.getElementById('modalTitle').textContent =
+    editKeyId ? '编辑配置' :
+    (preset.isCustom ? '添加自定义服务商' : '配置 ' + preset.name);
+
+  var isEdit = !!editKeyId;
+  var k = isEdit ? null : keyMap[preset ? preset.code : ''];  // won't use in add mode
+
+  var modelsHtml = '';
+  var modelsList = preset.models || [];
+  modelsList.forEach(function(m) {
+    modelsHtml += '<span class="mc" onclick="this.classList.toggle(\'sel\')">' + esc(m) + '</span>';
+  });
+
+  document.getElementById('modalFormContent').innerHTML =
+    '<div class="fr">' +
+      '<div class="fg"><label class="fl"><span style="color:var(--danger)">*</span> 服务商名称</label>' +
+        '<input class="fi" id="mfName" value="' + esc(preset.name || '') + '" placeholder="如：智谱 AI"></div>' +
+      '<div class="fg"><label class="fl"><span style="color:var(--danger)">*</span> 唯一标识</label>' +
+        '<input class="fi" id="mfCode" value="' + esc(preset.code || '') + '"' + (preset.code ? ' readonly style="opacity:.5"' : '') + ' placeholder="如：zhipu"></div>' +
+    '</div>' +
+    '<div class="fg"><label class="fl"><span style="color:var(--danger)">*</span> API Key</label>' +
+      '<input type="password" class="fi" id="mfKey" placeholder="输入密钥"></div>' +
+    '<div class="fg"><label class="fl">API 地址（可选）</label>' +
+      '<input class="fi" id="mfUrl" value="' + esc(preset.url || '') + '" placeholder="如：https://api.openai.com/..."></div>' +
+    (modelsList.length ?
+      '<div class="fg"><label class="fl">支持模型（可多选）</label><div class="model-chips">' + modelsHtml + '</div></div>'
+      : '') +
+    '<div class="fg"><label class="fl">备注</label>' +
+      '<textarea class="fi" id="mfDesc" placeholder="可选备注"></textarea></div>' +
+    '<div class="fg"><label class="fa-row"><input type="checkbox" id="mfActive" checked checked> <span>启用此配置</span></label></div>' +
+
+    /* ── 高级配置 ── */
+    '<div class="adv-section" id="advSection">' +
+      '<div class="adv-header" onclick="toggleAdv(this)"><span>高级配置</span><span class="adv-arrow">∧</span></div>' +
+      '<div class="adv-body">' +
+        '<div class="adv-fg"><label class="adv-fl">上下文窗口-输入</label>' +
+          '<input class="adv-fi" id="advCtxIn" placeholder="为空，系统则默认使用最优配置"></div>' +
+        '<div class="adv-fg"><label class="adv-fl">上下文窗口-输出</label>' +
+          '<input class="adv-fi" id="advCtxOut" placeholder="为空，系统则默认使用最优配置"></div>' +
+        '<div class="adv-fg"><label class="adv-fl">工具调用轮次</label>' +
+          '<input class="adv-fi" id="advToolRounds" placeholder="为空，系统则默认使用最优配置"></div>' +
+        '<div class="adv-fg"><label class="adv-fl">支持多模态</label>' +
+          '<div class="radio-group">' +
+            '<label class="radio-item"><input type="radio" name="advMultimodal" value="false" checked> <span>不支持</span></label>' +
+            '<label class="radio-item"><input type="radio" name="advMultimodal" value="true"> <span>支持</span></label>' +
+          '</div></div>' +
+      '</div>' +
+    '</div>' +
+
+    '<div id="testResultArea"></div>';
+
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+// ── Edit Existing Key ──
+async function editKey(id) {
+  editKeyId = id;
+  try {
+    var r = await fetch('/api/provider-keys/' + id, {headers: hdr()});
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    var d = await r.json();
+
+    // Find matching preset or create virtual
+    var preset = findPreset(d.provider_code) || {
+      name: d.provider_name,
+      code: d.provider_code,
+      url: d.api_url || '',
+      models: d.models || [],
+      icon: '🤖', color: '#666', isCustom: true
+    };
+
+    document.getElementById('modalTitle').textContent = '编辑 ' + d.provider_name;
+
+    var modelsHtml = '';
+    (d.models || []).forEach(function(m) {
+      modelsHtml += '<span class="mc sel" onclick="this.classList.toggle(\'sel\')">' + esc(m) + '</span>';
+    });
+
+    document.getElementById('modalFormContent').innerHTML =
+      '<div class="fr">' +
+        '<div class="fg"><label class="fl"><span style="color:var(--danger)">*</span> 服务商名称</label>' +
+          '<input class="fi" id="mfName" value="' + esc(d.provider_name || '') + '"></div>' +
+        '<div class="fg"><label class="fl"><span style="color:var(--danger)">*</span> 唯一标识</label>' +
+          '<input class="fi" id="mfCode" value="' + esc(d.provider_code || '') + '" readonly style="opacity:.5"></div>' +
+      '</div>' +
+      '<div class="fg"><label class="fl">API Key（留空不修改）</label>' +
+        '<input type="password" class="fi" id="mfKey" placeholder="' + (d.key_masked ? '当前：' + esc(d.key_masked) : '') + '"></div>' +
+      '<div class="fg"><label class="fl">API 地址</label>' +
+        '<input class="fi" id="mfUrl" value="' + esc(d.api_url || '') + '"></div>' +
+      ((d.models && d.models.length) ?
+        '<div class="fg"><label class="fl">支持模型</label><div class="model-chips">' + modelsHtml + '</div></div>'
+        : '') +
+      '<div class="fg"><label class="fl">备注</label>' +
+        '<textarea class="fi" id="mfDesc" placeholder="可选备注">' + esc(d.description || '') + '</textarea></div>' +
+      '<div class="fg"><label class="fa-row"><input type="checkbox" id="mfActive" ' + (d.is_active !== false ? 'checked' : '') + '> <span>启用此配置</span></label></div>' +
+
+    /* ── 高级配置（编辑模式回显）── */
+    '<div class="adv-section" id="advSection">' +
+      '<div class="adv-header" onclick="toggleAdv(this)"><span>高级配置</span><span class="adv-arrow">∧</span></div>' +
+      '<div class="adv-body">' +
+        '<div class="adv-fg"><label class="adv-fl">上下文窗口-输入</label>' +
+          '<input class="adv-fi" id="advCtxIn" value="' + esc((d.config && d.config.context_input) || '') + '" placeholder="为空，系统则默认使用最优配置"></div>' +
+        '<div class="adv-fg"><label class="adv-fl">上下文窗口-输出</label>' +
+          '<input class="adv-fi" id="advCtxOut" value="' + esc((d.config && d.config.context_output) || '') + '" placeholder="为空，系统则默认使用最优配置"></div>' +
+        '<div class="adv-fg"><label class="adv-fl">工具调用轮次</label>' +
+          '<input class="adv-fi" id="advToolRounds" value="' + esc((d.config && d.config.tool_rounds) || '') + '" placeholder="为空，系统则默认使用最优配置"></div>' +
+        '<div class="adv-fg"><label class="adv-fl">支持多模态</label>' +
+          '<div class="radio-group">' +
+            '<label class="radio-item"><input type="radio" name="advMultimodal" value="false" ' + ((d.config && d.config.multimodal) ? '' : 'checked') + '> <span>不支持</span></label>' +
+            '<label class="radio-item"><input type="radio" name="advMultimodal" value="true" ' + ((d.config && d.config.multimodal) ? 'checked' : '') + '> <span>支持</span></label>' +
+          '</div></div>' +
+      '</div>' +
+    '</div>' +
+
+      '<div id="testResultArea"></div>';
+
+    document.getElementById('modalOverlay').classList.add('show');
+  } catch(e) {
+    toast('加载失败：' + e.message, 'err');
+  }
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+  editKeyId = null;
+}
+
+// ── Toggle Advanced Config ──
+function toggleAdv(headerEl) {
+  var section = headerEl.closest('.adv-section');
+  section.classList.toggle('open');
+}
+
+// ── Save ──
+async function saveKey() {
+  var name = document.getElementById('mfName').value.trim();
+  var code = document.getElementById('mfCode').value.trim();
+  var keyValue = document.getElementById('mfKey').value.trim();
+
+  if (!name || !code) { toast('请填写名称和标识', 'err'); return; }
+  if (!editKeyId && !keyValue) { toast('请填写 API Key', 'err'); return; }
+
+  var models = [];
+  document.querySelectorAll('#modalFormContent .mc.sel').forEach(function(el) {
+    models.push(el.textContent.trim());
+  });
+
+  var data = {
+    provider_name: name,
+    provider_code: code,
+    category: 'llm',
+    key_value: keyValue,
+    api_url: document.getElementById('mfUrl').value.trim(),
+    models: models,
+    is_active: document.getElementById('mfActive').checked,
+    description: document.getElementById('mfDesc').value.trim(),
+    config: {
+      context_input: document.getElementById('advCtxIn').value.trim(),
+      context_output: document.getElementById('advCtxOut').value.trim(),
+      tool_rounds: document.getElementById('advToolRounds').value.trim(),
+      multimodal: document.querySelector('input[name="advMultimodal"]:checked')?.value === 'true',
+    }
+  };
+
+  try {
+    var url, method;
+    if (editKeyId) {
+      url = '/api/provider-keys/' + editKeyId;
+      method = 'PUT';
+      if (!keyValue) delete data.key_value;
+    } else {
+      url = '/api/provider-keys';
+      method = 'POST';
+    }
+
+    var r = await fetch(url, {method: method, headers: hdr(), body: JSON.stringify(data)});
+    if (!r.ok) {
+      var err = await r.json().catch(function(){});
+      throw new Error((err && err.detail) || 'HTTP ' + r.status);
+    }
+
+    toast(editKeyId ? '更新成功 ✅' : '添加成功 ✅', 'ok');
+    closeModal();
+    closeDetail();
+    await loadKeys();
+  } catch(e) {
+    toast('保存失败：' + e.message, 'err');
+  }
+}
+
+// ── Toggle Active ──
+async function toggleKey(id) {
+  try {
+    var r = await fetch('/api/provider-keys/' + id + '/toggle', {method: 'PATCH', headers: hdr()});
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    toast('已切换状态', 'ok');
+    await loadKeys();
+  } catch(e) { toast('操作失败：' + e.message, 'err'); }
+}
+
+// ── Test Connection ──
+async function testKey(id) {
+  toast('正在测试连接...', 'ok');
+  try {
+    var r = await fetch('/api/provider-keys/' + id + '/test', {method: 'POST', headers: hdr()});
+    var d = await r.json();
+    if (d.success) { toast('✅ ' + d.message, 'ok'); }
+    else { toast('❌ ' + (d.error || '测试失败'), 'err'); }
+  } catch(e) { toast('测试异常：' + e.message, 'err'); }
+}
+
+// ── Delete ──
+function confirmDelete(id) {
+  if (!confirm('确定删除？不可恢复')) return;
+  (async function() {
+    try {
+      var r = await fetch('/api/provider-keys/' + id, {method: 'DELETE', headers: hdr()});
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      toast('已删除', 'ok');
+      closeDetail(); await loadKeys();
+    } catch(e) { toast('删除失败：' + e.message, 'err'); }
+  })();
+}
+
+// ── Click outside to close detail ──
+document.addEventListener('click', function(e) {
+  var dp = document.getElementById('dpPanel');
+  if (dp.classList.contains('open') && !dp.contains(e.target) && !e.target.closest('.provider-card')) {
+    // Don't auto-close - let user click X
+  }
+});
+
+// ── Init ──
+(async function() {
+  await loadMeta();
+  await loadKeys();
+})();
+</script>
+</body>
+</html>

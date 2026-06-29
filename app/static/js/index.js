@@ -74,22 +74,26 @@ function loadStoredConfig() {
   var storedUrl = localStorage.getItem(API_URL_STORAGE) || DEFAULT_API_URL;
   var storedModel = localStorage.getItem(MODEL_STORAGE) || 'glm-4.6v';
 
-  document.getElementById('apiKeyInput').value = storedKey;
-  document.getElementById('apiUrlInput').value = storedUrl;
+  var elKey = document.getElementById('apiKeyInput');
+  var elUrl = document.getElementById('apiUrlInput');
+  if (elKey) { elKey.value = storedKey; }
+  if (elUrl) { elUrl.value = storedUrl; }
 
   loadCustomModels();
 
   var modelSelect = document.getElementById('modelSelect');
-  modelSelect.value = storedModel;
+  if (modelSelect) { modelSelect.value = storedModel; }
 
-  if (storedKey) {
-    document.getElementById('apiKeyInput').classList.add('success');
+  if (storedKey && elKey) {
+    elKey.classList.add('success');
   }
 }
 
 function loadCustomModels() {
-  var customModels = getCustomModels();
   var modelSelect = document.getElementById('modelSelect');
+  if (!modelSelect) return;
+
+  var customModels = getCustomModels();
   var existingOptions = Array.from(modelSelect.options).map(function(o) { return o.value; });
 
   customModels.forEach(function(model) {
@@ -174,13 +178,17 @@ function addCustomModel() {
   saveConfigToBackend({ custom_models: JSON.stringify(customModels) });
 
   var modelSelect = document.getElementById('modelSelect');
-  var option = document.createElement('option');
-  option.value = modelId;
-  option.textContent = modelName;
-  modelSelect.appendChild(option);
+  if (modelSelect) {
+    var option = document.createElement('option');
+    option.value = modelId;
+    option.textContent = modelName;
+    modelSelect.appendChild(option);
+  }
 
-  document.getElementById('newModelId').value = '';
-  document.getElementById('newModelName').value = '';
+  var elNewId = document.getElementById('newModelId');
+  var elNewName = document.getElementById('newModelName');
+  if (elNewId) elNewId.value = '';
+  if (elNewName) elNewName.value = '';
 
   showModelManager();
 }
@@ -193,10 +201,12 @@ function deleteModel(modelId) {
   saveConfigToBackend({ custom_models: JSON.stringify(customModels) });
 
   var modelSelect = document.getElementById('modelSelect');
-  for (var i = modelSelect.options.length - 1; i >= 0; i--) {
-    if (modelSelect.options[i].value === modelId) {
-      modelSelect.remove(i);
-      break;
+  if (modelSelect) {
+    for (var i = modelSelect.options.length - 1; i >= 0; i--) {
+      if (modelSelect.options[i].value === modelId) {
+        modelSelect.remove(i);
+        break;
+      }
     }
   }
 
@@ -205,7 +215,8 @@ function deleteModel(modelId) {
 
 function setAsDefault(modelId) {
   localStorage.setItem(MODEL_STORAGE, modelId);
-  document.getElementById('modelSelect').value = modelId;
+  var modelSelect = document.getElementById('modelSelect');
+  if (modelSelect) { modelSelect.value = modelId; }
   saveConfigToBackend({ default_model: modelId });
   closeModelManager();
 }
@@ -213,6 +224,7 @@ function setAsDefault(modelId) {
 /* ===== 输入校验与保存 ===== */
 function validateKey() {
   var input = document.getElementById('apiKeyInput');
+  if (!input) return;
   var value = input.value.trim();
   if (value) {
     input.classList.remove('error');
@@ -226,6 +238,7 @@ function validateKey() {
 
 function validateUrl() {
   var input = document.getElementById('apiUrlInput');
+  if (!input) return;
   var value = input.value.trim();
   if (value) {
     localStorage.setItem(API_URL_STORAGE, value);
@@ -234,7 +247,9 @@ function validateUrl() {
 }
 
 function saveModel() {
-  var model = document.getElementById('modelSelect').value;
+  var modelSelect = document.getElementById('modelSelect');
+  if (!modelSelect) return;
+  var model = modelSelect.value;
   localStorage.setItem(MODEL_STORAGE, model);
   saveConfigToBackend({ default_model: model });
 }
@@ -258,21 +273,20 @@ async function saveConfigToBackend(configData) {
 
 /* ===== 页面导航 ===== */
 async function navigateTo(path) {
-  var apiKey = document.getElementById('apiKeyInput').value.trim();
-  if (!apiKey && path !== '/chat') {
-    document.getElementById('apiKeyInput').classList.add('error');
-    document.getElementById('apiKeyInput').focus();
-    return;
-  }
+  // 读取已有配置（不再依赖顶部输入框）
+  var apiKey = localStorage.getItem(API_KEY_STORAGE) || '';
+  var url = localStorage.getItem(API_URL_STORAGE) || DEFAULT_API_URL;
+  var model = localStorage.getItem(MODEL_STORAGE) || DEFAULT_MODELS[1].id;
 
-  var model = document.getElementById('modelSelect').value;
-  var url = document.getElementById('apiUrlInput').value.trim() || DEFAULT_API_URL;
+  // 尝试从残留 DOM 读取（兼容保留输入框的情况）
+  var elKey = document.getElementById('apiKeyInput');
+  var elUrl = document.getElementById('apiUrlInput');
+  var elModel = document.getElementById('modelSelect');
+  if (elKey) apiKey = elKey.value.trim() || apiKey;
+  if (elUrl) url = elUrl.value.trim() || url;
+  if (elModel) model = elModel.value;
 
-  if (apiKey) {
-    localStorage.setItem(API_KEY_STORAGE, apiKey);
-  }
-  await saveConfigToBackend({ api_key: apiKey || '', api_url: url, default_model: model });
-
+  // 保存 chat 配置供聊天页使用
   var chatConfig = {
     mode: 'custom',
     url: url,
@@ -351,22 +365,26 @@ async function checkHealth() {
     var tooltipStatus = document.getElementById('tooltipStatus');
     var tooltipLatency = document.getElementById('tooltipLatency');
 
-    switch (data.status_color) {
-      case 'green':
-        dot.className = 'status-dot';
-        tooltipStatus.textContent = '在线';
-        break;
-      case 'orange':
-        dot.className = 'status-dot orange';
-        tooltipStatus.textContent = '限流';
-        break;
-      case 'red':
-        dot.className = 'status-dot red';
-        tooltipStatus.textContent = '离线';
-        break;
+    if (dot && tooltipStatus) {
+      switch (data.status_color) {
+        case 'green':
+          dot.className = 'status-dot';
+          tooltipStatus.textContent = '在线';
+          break;
+        case 'orange':
+          dot.className = 'status-dot orange';
+          tooltipStatus.textContent = '限流';
+          break;
+        case 'red':
+          dot.className = 'status-dot red';
+          tooltipStatus.textContent = '离线';
+          break;
+      }
     }
 
-    tooltipLatency.textContent = data.latency ? data.latency + 'ms' : '-';
+    if (tooltipLatency) {
+      tooltipLatency.textContent = data.latency ? data.latency + 'ms' : '-';
+    }
 
   } catch (err) {
     document.getElementById('statusDot').className = 'status-dot red';
@@ -374,15 +392,19 @@ async function checkHealth() {
 }
 
 function toggleStatusTooltip() {
-  document.getElementById('statusTooltip').classList.toggle('show');
+  var el = document.getElementById('statusTooltip');
+  if (el) { el.classList.toggle('show'); }
 }
 
 /* ===== 弹窗与工具 ===== */
 function exportConfig() {
+  var elKey = document.getElementById('apiKeyInput');
+  var elUrl = document.getElementById('apiUrlInput');
+  var elModel = document.getElementById('modelSelect');
   var config = {
-    apiKey: document.getElementById('apiKeyInput').value,
-    apiUrl: document.getElementById('apiUrlInput').value,
-    model: document.getElementById('modelSelect').value,
+    apiKey: elKey ? elKey.value : (localStorage.getItem(API_KEY_STORAGE) || ''),
+    apiUrl: elUrl ? elUrl.value : (localStorage.getItem(API_URL_STORAGE) || ''),
+    model: elModel ? elModel.value : (localStorage.getItem(MODEL_STORAGE) || ''),
     exportedAt: new Date().toISOString()
   };
   var blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
@@ -747,3 +769,22 @@ loadUserInfo = async function() {
     document.getElementById('floatingAvatarFallback').style.display = 'flex';
   }
 };
+
+/* ===== 事件委托：data-navigate 属性（不依赖 navigateTo 全局函数）===== */
+document.addEventListener('DOMContentLoaded', function() {
+  document.body.addEventListener('click', function(e) {
+    var target = e.target.closest('[data-navigate]');
+    if (target) {
+      var path = target.getAttribute('data-navigate');
+      if (path) {
+        // 读取已有配置（不依赖顶部输入框）
+        var apiKey = localStorage.getItem('ai_platform_api_key') || '';
+        var url = localStorage.getItem('ai_platform_api_url') || 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+        var model = localStorage.getItem('ai_platform_model') || 'glm-4.5-air';
+        var chatConfig = { mode: 'custom', url: url, key: apiKey, model: model, timestamp: Date.now() };
+        localStorage.setItem('ai_chat_config', JSON.stringify(chatConfig));
+        window.location.href = path;
+      }
+    }
+  });
+});

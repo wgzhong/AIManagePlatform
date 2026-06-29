@@ -15,40 +15,8 @@
         <h1>AIManagePlatform</h1>
         <span class="nav-tag">v1.0.5</span>
       </div>
-      <div class="key-input-wrapper">
-        <input type="text" class="key-input" id="apiKeyInput" placeholder="🔑 API Key" onkeyup="validateKey()">
-        <input type="text" class="key-url" id="apiUrlInput" placeholder="🌐 API 地址" onkeyup="validateUrl()">
-      </div>
     </div>
-    <div class="nav-center">
-      <div class="model-select-wrapper">
-        <select class="model-select" id="modelSelect" onchange="saveModel()">
-          <option value="glm-5.1">GLM-5.1</option>
-          <option value="glm-4.5-air" selected>GLM-4.5 Air</option>
-          <option value="glm-4.6v">GLM-4.6V</option>
-          <option value="deepseek-chat">DeepSeek-Chat</option>
-          <option value="qwen3-turbo">Qwen3-Turbo</option>
-        </select>
-        <button class="btn btn-secondary model-add-btn" onclick="showModelManager()">+ 添加模型</button>
-      </div>
-      <div class="status-indicator" id="statusIndicator" onclick="toggleStatusTooltip()" title="点击查看连接详情">
-        <span class="status-dot" id="statusDot"></span>
-      </div>
-      <div class="status-tooltip" id="statusTooltip">
-        <div class="tooltip-row">
-          <span class="tooltip-label">服务状态</span>
-          <span class="tooltip-value" id="tooltipStatus">在线</span>
-        </div>
-        <div class="tooltip-row">
-          <span class="tooltip-label">延迟</span>
-          <span class="tooltip-value" id="tooltipLatency">-</span>
-        </div>
-        <div class="tooltip-row">
-          <span class="tooltip-label">成功率</span>
-          <span class="tooltip-value">99.9%</span>
-        </div>
-      </div>
-    </div>
+    <div class="nav-spacer"></div>
     <div class="nav-right">
       <div class="user-profile" id="userProfile" onclick="toggleUserMenu()">
         <div class="profile-avatar" id="userAvatar">L</div>
@@ -87,12 +55,12 @@
           <span>系统日志</span>
           <span class="menu-arrow">→</span>
         </div>
-        <div class="menu-item" onclick="navigateTo('/llm-config')">
+        <div class="menu-item" data-navigate="/llm-config" onclick="navigateTo('/llm-config')">
           <span class="menu-icon">🤖</span>
           <span>大模型配置</span>
           <span class="menu-arrow">→</span>
         </div>
-        <div class="menu-item" onclick="navigateTo('/service-config')">
+        <div class="menu-item" data-navigate="/service-config" onclick="navigateTo('/service-config')">
           <span class="menu-icon">🌐</span>
           <span>多领域服务</span>
           <span class="menu-arrow">→</span>
@@ -156,7 +124,7 @@
       </div>
 
       <!-- 卡片2: 已注册设备 -->
-      <div class="stat-card stat-card-clickable" onclick="navigateTo('/devices')">
+      <div class="stat-card stat-card-clickable" data-navigate="/devices" onclick="navigateTo('/devices')">
         <div class="stat-header">
           <span class="stat-icon">🖥️</span>
         </div>
@@ -224,7 +192,7 @@
   <div class="cards-section">
     <div class="cards-grid-premium">
       <!-- 卡片1: AI 推理对话 -->
-      <div class="premium-card" onclick="navigateTo('/chat')">
+      <div class="premium-card" data-navigate="/chat" onclick="navigateTo('/chat')">
         <div class="premium-card-left">
           <div class="card-icon card-icon-ai">🤖</div>
           <div class="card-text-content">
@@ -238,7 +206,7 @@
       </div>
 
       <!-- 卡片2: 硬件设备管理（带警告 + 设备画廊） -->
-      <div class="premium-card premium-card-device" onclick="navigateTo('/devices')">
+      <div class="premium-card premium-card-device" data-navigate="/devices" onclick="navigateTo('/devices')">
         <div class="premium-card-left">
           <div class="card-icon card-icon-dev">🖥️</div>
           <div class="card-text-content">
@@ -295,7 +263,7 @@
       </div>
 
       <!-- 快捷操作卡片 -->
-      <div class="bottom-card" onclick="navigateTo('/skills')">
+      <div class="bottom-card" data-navigate="/skills" onclick="navigateTo('/skills')">
         <div class="bottom-card-header">
           <span class="bottom-card-icon">🧠</span>
           <h4>技能中心</h4>
@@ -307,7 +275,7 @@
       </div>
 
       <!-- 大模型配置卡片 -->
-      <div class="bottom-card" onclick="navigateTo('/llm-config')">
+      <div class="bottom-card" data-navigate="/llm-config" onclick="navigateTo('/llm-config')">
         <div class="bottom-card-header">
           <span class="bottom-card-icon">🤖</span>
           <h4>大模型配置</h4>
@@ -319,7 +287,7 @@
       </div>
 
       <!-- 多领域服务配置卡片 -->
-      <div class="bottom-card" onclick="navigateTo('/service-config')">
+      <div class="bottom-card" data-navigate="/service-config" onclick="navigateTo('/service-config')">
         <div class="bottom-card-header">
           <span class="bottom-card-icon">🌐</span>
           <h4>多领域服务</h4>
@@ -339,19 +307,19 @@
       <span class="stat-sub-text-sm" style="margin-bottom:0">快速访问</span>
     </div>
     <div class="recent-list" id="recentList">
-      <div class="recent-item" onclick="navigateTo('/chat')">
+      <div class="recent-item" data-navigate="/chat" onclick="navigateTo('/chat')">
         <span class="recent-icon">🤖</span>
         <span class="recent-text">AI 对话</span>
       </div>
-      <div class="recent-item" onclick="navigateTo('/devices')">
+      <div class="recent-item" data-navigate="/devices" onclick="navigateTo('/devices')">
         <span class="recent-icon">🖥️</span>
         <span class="recent-text">设备管理</span>
       </div>
-      <div class="recent-item" onclick="navigateTo('/llm-config')">
+      <div class="recent-item" data-navigate="/llm-config" onclick="navigateTo('/llm-config')">
         <span class="recent-icon">🤖</span>
         <span class="recent-text">大模型配置</span>
       </div>
-      <div class="recent-item" onclick="navigateTo('/service-config')">
+      <div class="recent-item" data-navigate="/service-config" onclick="navigateTo('/service-config')">
         <span class="recent-icon">🌐</span>
         <span class="recent-text">多领域服务</span>
       </div>
@@ -516,6 +484,32 @@
   </div>
 </div>
 
+<script>
+// 全局 JS 错误捕获
+window.onerror = function(msg, url, line, col, err) {
+  var div = document.createElement('div');
+  div.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#ef4444;color:#fff;padding:8px 12px;font-size:13px;z-index:99999;word-break:break-all;';
+  div.textContent = 'JS Error: ' + msg + ' (line ' + line + ')';
+  if (document.body) document.body.appendChild(div);
+};
+
+// 最小化事件委托 —— 不依赖 index.js，保证点击必响应
+document.addEventListener('DOMContentLoaded', function() {
+  document.body.addEventListener('click', function(e) {
+    var el = e.target.closest('[data-navigate]');
+    if (!el) return;
+    var path = el.getAttribute('data-navigate');
+    if (!path) return;
+    try {
+      var ak = localStorage.getItem('ai_platform_api_key') || '';
+      var au = localStorage.getItem('ai_platform_api_url') || 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+      var am = localStorage.getItem('ai_platform_model') || 'glm-4.5-air';
+      localStorage.setItem('ai_chat_config', JSON.stringify({mode:'custom',url:au,key:ak,model:am,timestamp:Date.now()}));
+    } catch(ex) {}
+    window.location.href = path;
+  });
+});
+</script>
 <script src="/static/js/index.js"></script>
 </body>
 </html>

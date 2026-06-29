@@ -1,0 +1,66 @@
+<!-- ===== 功能卡片区（6张卡片统一） ===== -->
+  <div class="cards-section">
+    <div class="cards-grid-premium">
+
+      <!-- 卡片1: AI 推理对话 -->
+      <div class="premium-card" data-navigate="/chat" onclick="navigateTo('/chat')">
+        <div class="card-icon card-icon-ai">🤖</div>
+        <div class="card-text-content">
+          <h3>AI 推理对话</h3>
+          <p>与 AI 模型进行实时对话，支持技能调用（时间查询、数学计算、天气查询），体验各式问答效果</p>
+        </div>
+        <span class="card-arrow-bottom">→</span>
+      </div>
+
+      <!-- 卡片2: 硬件设备管理 -->
+      <div class="premium-card premium-card-device" data-navigate="/devices" onclick="navigateTo('/devices')">
+        <div class="card-icon card-icon-dev">🖥️</div>
+        <div class="card-text-content">
+          <h3>硬件设备管理</h3>
+          <p>管理 ESP32 等硬件设备的设备码，分配管理员 API Key，支持设备使用记录查询向导</p>
+        </div>
+        <span class="card-arrow-bottom card-arrow-pink">→</span>
+      </div>
+
+      <!-- 卡片3: 运行状态 -->
+      <div class="premium-card" onclick="showLogs()">
+        <div class="card-icon card-icon-status">⚙️</div>
+        <div class="card-text-content">
+          <h3>运行状态</h3>
+          <p>实时监控系统健康状态、在线设备数量及服务运行情况</p>
+        </div>
+        <span class="card-arrow-bottom">→</span>
+      </div>
+
+      <!-- 卡片4: 技能中心 -->
+      <div class="premium-card" data-navigate="/skills" onclick="navigateTo('/skills')">
+        <div class="card-icon card-icon-skill">🧠</div>
+        <div class="card-text-content">
+          <h3>技能中心</h3>
+          <p>管理所有技能的启用状态与触发规则，扩展 AI 能力边界</p>
+        </div>
+        <span class="card-arrow-bottom">→</span>
+      </div>
+
+      <!-- 卡片5: 大模型配置 -->
+      <div class="premium-card" data-navigate="/llm-config" onclick="navigateTo('/llm-config')">
+        <div class="card-icon card-icon-llm">🤖</div>
+        <div class="card-text-content">
+          <h3>大模型配置</h3>
+          <p>管理大模型服务商 API Key、API 地址及可用模型，支持多供应商切换</p>
+        </div>
+        <span class="card-arrow-bottom">→</span>
+      </div>
+
+      <!-- 卡片6: 多领域服务 -->
+      <div class="premium-card" data-navigate="/service-config" onclick="navigateTo('/service-config')">
+        <div class="card-icon card-icon-service">🌐</div>
+        <div class="card-text-content">
+          <h3>多领域服务</h3>
+          <p>管理天气、导航、搜索、翻译等第三方服务配置，一键接入外部能力</p>
+        </div>
+        <span class="card-arrow-bottom">→</span>
+      </div>
+
+    </div>
+  </div>

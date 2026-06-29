@@ -6,22 +6,22 @@
 <title>多领域服务配置 — AIManagePlatform</title>
 <style>
 /* ═════════════════════════════════════════
-   多领域服务配置 — 玻璃拟态风格
+   多领域服务配置 — 浅色卡片网格风格
    ═════════════════════════════════════════ */
 :root {
-  --bg: #0a0a1f;
-  --card-bg: rgba(255,255,255,.06);
-  --card-border: rgba(255,255,255,.1);
-  --input-bg: rgba(255,255,255,.08);
-  --text: #e2e8f0;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --bg: #f0f2f5;
+  --card-bg: #ffffff;
+  --card-border: #e8ecf0;
+  --input-bg: #f7f8fa;
+  --text: #1a1a2e;
+  --text-secondary: #5a6474;
+  --text-muted: #9aa4b2;
   --accent: #6366f1;
   --accent-2: #8b5cf6;
-  --accent-cyan: #72e0e0;
-  --danger: #f43f5e;
+  --accent-cyan: #0891b2;
+  --danger: #ef4444;
   --success: #10b981;
-  --warning: #facc15;
+  --warning: #f59e0b;
   --radius: 14px;
   --radius-sm: 10px;
 }
@@ -30,192 +30,210 @@ body {
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
   background:var(--bg); color:var(--text);
   min-height:100vh; line-height:1.55; font-size:14px;
-  background-image:
-    radial-gradient(ellipse at 20% -10%, rgba(16,185,129,.15) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 110%, rgba(99,102,241,.12) 0%, transparent 50%);
-  background-attachment: fixed;
 }
-a { color:var(--accent-cyan); text-decoration:none; }
+a { color:var(--accent); text-decoration:none; }
 
 /* ── Top Nav ── */
 .top-nav {
   position:sticky; top:0; z-index:100;
-  background:rgba(10,10,31,.85); backdrop-filter:saturate(180%) blur(16px);
-  border-bottom:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.92); backdrop-filter:saturate(180%) blur(12px);
+  border-bottom:1px solid var(--card-border);
   padding:0 28px; height:54px; display:flex; align-items:center; gap:14px;
 }
 .nav-brand { display:flex; align-items:center; gap:9px; text-decoration:none; color:inherit; }
-.nav-brand .logo { font-size:17px; font-weight:700; background:linear-gradient(135deg,var(--accent), var(--accent-2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.nav-brand .logo { font-size:17px; font-weight:700; color:var(--text); }
 .nav-link { color:var(--text-secondary); text-decoration:none; font-size:13px; padding:6px 14px; border-radius:8px; transition:all .18s; }
-.nav-link:hover { background:rgba(99,102,241,.15); color:var(--accent-cyan); }
+.nav-link:hover { background:rgba(99,102,241,.08); color:var(--accent); }
 
 /* ── Page ── */
-.page-wrap { max-width:1200px; margin:0 auto; padding:32px 28px 90px; }
+.page-wrap { max-width:1100px; margin:0 auto; padding:28px 24px 80px; }
 
 /* Header */
-.page-header { margin-bottom:24px; }
-.page-title { font-size:26px; font-weight:800; background:linear-gradient(135deg,var(--accent-cyan), var(--accent-2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-.page-desc { color:var(--text-secondary); font-size:13.5px; margin-top:6px; }
+.page-header { margin-bottom:20px; }
+.page-title { font-size:24px; font-weight:800; color:var(--text); }
+.page-title span { background:linear-gradient(135deg,var(--accent), var(--accent-cyan)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.page-desc { color:var(--text-secondary); font-size:13.5px; margin-top:4px; }
 
 /* ═══ 分类标签栏 ═══ */
-.cat-tabs { display:flex; gap:8px; margin-bottom:24px; flex-wrap:wrap; }
+.cat-tabs { display:flex; gap:6px; margin-bottom:20px; flex-wrap:wrap; }
 .cat-tab {
-  padding:8px 18px; border-radius:20px; font-size:13px; font-weight:600;
+  padding:7px 16px; border-radius:20px; font-size:13px; font-weight:600;
   background:var(--card-bg); border:1.5px solid var(--card-border);
-  cursor:pointer; transition:all .2s; display:flex; align-items:center; gap:7px;
+  cursor:pointer; transition:all .2s; display:flex; align-items:center; gap:6px;
   color:var(--text-secondary); user-select:none;
 }
-.cat-tab:hover { border-color:rgba(16,185,129,.3); color:var(--text); }
+.cat-tab:hover { border-color:var(--accent); color:var(--text); }
 .cat-tab.active {
-  background:linear-gradient(135deg, rgba(16,185,129,.18), rgba(99,102,241,.15));
-  border-color:var(--success); color:var(--accent-cyan);
+  background:linear-gradient(135deg, rgba(99,102,241,.08), rgba(8,145,178,.06));
+  border-color:var(--accent); color:var(--accent);
+  box-shadow:0 2px 8px rgba(99,102,241,.12);
 }
-.cat-tab .cat-count { font-size:11px; background:rgba(255,255,255,.1); padding:1px 8px; border-radius:10px; }
 
-/* ═══ 配置卡片网格 ═══ */
-.key-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(340px, 1fr)); gap:16px; }
-.key-card {
+/* ═══ 服务商卡片网格（核心） ═══ */
+.svc-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(160px, 1fr));
+  gap:12px;
+}
+
+.svc-card {
   background:var(--card-bg); border:1.5px solid var(--card-border);
-  border-radius:var(--radius); padding:20px; transition:all .25s;
-  position:relative; overflow:hidden;
+  border-radius:var(--radius-sm); padding:18px 14px; cursor:pointer;
+  transition:all .22s ease; position:relative; display:flex; flex-direction:column;
+  align-items:center; gap:8px; text-align:center; min-height:120px;
 }
-.key-card::before {
-  content:''; position:absolute; top:0; left:0; right:0; height:3px;
-  background:linear-gradient(90deg, var(--success), var(--accent-2));
-  opacity:0; transition:opacity .25s;
+.svc-card:hover {
+  border-color:var(--accent); transform:translateY(-3px);
+  box-shadow:0 6px 20px rgba(99,102,241,.12);
 }
-.key-card:hover::before { opacity:1; }
-.key-card:hover { border-color:rgba(16,185,129,.3); transform:translateY(-2px); }
-.key-card.disabled { opacity:.55; }
-.key-card.disabled::after {
-  content:''; position:absolute; top:0; left:0; right:0; bottom:0;
-  background:rgba(0,0,0,.15); pointer-events:none; border-radius:var(--radius);
+.svc-card.configured {
+  border-color:var(--success); background:#f0fdf4;
 }
+.svc-card.configured:hover { border-color:var(--success); box-shadow:0 6px 20px rgba(16,185,129,.15); }
+.svc-card.disabled-card { opacity:.45; }
 
-/* Card Header */
-.key-header { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
-.key-icon { font-size:28px; width:44px; height:44px; display:flex; align-items:center; justify-content:center;
-  background:rgba(255,255,255,.06); border-radius:12px; flex-shrink:0; }
-.key-name { font-size:15px; font-weight:700; flex:1; }
-.key-badge {
-  font-size:10px; padding:3px 10px; border-radius:12px; font-weight:600; white-space:nowrap;
+/* 已配置绿点 */
+.svc-dot {
+  position:absolute; top:10px; right:10px; width:10px; height:10px;
+  border-radius:50%; background:var(--success); display:none;
 }
-.badge-active { background:rgba(16,185,129,.15); color:var(--success); }
-.badge-inactive { background:rgba(244,63,94,.12); color:var(--danger); }
+.svc-card.configured .svc-dot { display:block; }
+.svc-dot.inactive { background:var(--warning); }
 
-/* Card Body */
-.key-field { margin-bottom:10px; }
-.key-field-label { font-size:11px; color:var(--text-muted); margin-bottom:3px; text-transform:uppercase; letter-spacing:.5px; }
-.key-value { font-size:13px; font-family:'Courier New', monospace; color:var(--accent-cyan); }
-.key-url { font-size:12px; color:var(--text-secondary); word-break:break-all; }
-.key-desc { font-size:12.5px; color:var(--text-secondary); line-height:1.5; }
+/* 卡片图标 */
+.svc-icon { font-size:32px; line-height:1; }
+.svc-name { font-size:13px; font-weight:700; color:var(--text); line-height:1.3; }
+.svc-code { font-size:11px; color:var(--text-muted); font-family:'Courier New',monospace; }
 
-/* Config rows (weather/navigation specific) */
-.key-config-rows { margin-top:10px; display:flex; flex-direction:column; gap:6px; }
-.key-config-row { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-secondary); }
-.key-config-row .cfg-label { color:var(--text-muted); min-width:60px; font-size:11px; text-transform:uppercase; letter-spacing:.5px; }
-.key-config-row .cfg-value { color:var(--accent-cyan); }
+/* 自定义添加卡片 */
+.svc-add {
+  background:rgba(99,102,241,.03); border:2px dashed var(--card-border);
+  border-radius:var(--radius-sm); min-height:120px; cursor:pointer;
+  transition:all .22s; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:6px;
+}
+.svc-add:hover { border-color:var(--accent); background:rgba(99,102,241,.06); }
+.svc-add-icon { font-size:26px; color:var(--text-muted); }
+.svc-add-text { font-size:12.5px; color:var(--text-muted); font-weight:600; }
 
-/* Card Actions */
-.key-actions { display:flex; gap:8px; margin-top:16px; padding-top:14px; border-top:1px solid rgba(255,255,255,.06); flex-wrap:wrap; }
-.key-btn {
-  padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600;
+/* ═══ 右侧详情面板 ═══ */
+.detail-panel {
+  position:fixed; top:0; right:-420px; width:400px; height:100vh;
+  background:var(--card-bg); border-left:1px solid var(--card-border);
+  z-index:150; transition:right .3s cubic-bezier(.25,.8,.25,1);
+  display:flex; flex-direction:column; overflow:hidden;
+  box-shadow:-4px 0 30px rgba(0,0,0,.06);
+}
+.detail-panel.open { right:0; }
+.detail-overlay {
+  position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,.2);
+  z-index:140; display:none; backdrop-filter:blur(2px);
+}
+.detail-overlay.show { display:block; }
+
+.dp-header {
+  padding:20px 22px; border-bottom:1px solid var(--card-border);
+  display:flex; align-items:center; gap:12px;
+}
+.dp-close {
+  width:30px; height:30px; border-radius:8px; border:none; background:var(--input-bg);
+  font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  transition:all .18s; color:var(--text-secondary); flex-shrink:0;
+}
+.dp-close:hover { background:#e8ecf0; color:var(--text); }
+.dp-title { font-size:16px; font-weight:700; flex:1; }
+.dp-badge { font-size:11px; padding:3px 10px; border-radius:12px; font-weight:600; }
+.badge-on { background:#dcfce7; color:#16a34a; }
+.badge-off { background:#fef2f2; color:#dc2626; }
+
+.dp-body { flex:1; overflow-y:auto; padding:20px 22px; }
+.dp-field { margin-bottom:14px; }
+.dp-label { font-size:11.5px; color:var(--text-muted); margin-bottom:4px; font-weight:600; text-transform:uppercase; letter-spacing:.4px; }
+.dp-value { font-size:13.5px; color:var(--text); word-break:break-all; }
+.dp-value-mono { font-family:'Courier New',monospace; font-size:12.5px; color:var(--accent-cyan); background:var(--input-bg); padding:6px 10px; border-radius:8px; }
+.dp-config-row { display:flex; gap:8px; font-size:12px; color:var(--text-secondary); margin-bottom:6px; }
+.dp-config-row .cl { color:var(--text-muted); min-width:56px; font-size:11px; }
+.dp-desc { font-size:12.5px; color:var(--text-secondary); line-height:1.55; background:var(--input-bg); padding:10px 12px; border-radius:8px; margin-top:4px; }
+
+.dp-actions { padding:16px 22px; border-top:1px solid var(--card-border); display:flex; gap:8px; flex-wrap:wrap; }
+.dpb {
+  padding:8px 16px; border-radius:9px; font-size:12.5px; font-weight:700;
   border:none; cursor:pointer; transition:all .18s; white-space:nowrap;
 }
-.btn-edit { background:rgba(99,102,241,.15); color:var(--accent-cyan); }
-.btn-edit:hover { background:rgba(99,102,241,.25); }
-.btn-test { background:rgba(16,185,129,.12); color:var(--success); }
-.btn-test:hover { background:rgba(16,185,129,.22); }
-.btn-toggle { background:rgba(255,255,255,.06); color:var(--text-secondary); }
-.btn-toggle:hover { background:rgba(255,255,255,.12); }
-.btn-delete { background:rgba(244,63,94,.1); color:var(--danger); margin-left:auto; }
-.btn-delete:hover { background:rgba(244,63,94,.2); }
+.dpb-primary { background:linear-gradient(135deg,var(--accent), var(--accent-cyan)); color:#fff; }
+.dpb-primary:hover { transform:translateY(-1px); box-shadow:0 4px 16px rgba(99,102,241,.3); }
+.dpb-outline { background:transparent; border:1.5px solid var(--card-border); color:var(--text-secondary); }
+.dpb-outline:hover { border-color:var(--accent); color:var(--accent); background:rgba(99,102,241,.04); }
+.dpb-danger { background:rgba(239,68,68,.06); color:var(--danger); }
+.dpb-danger:hover { background:rgba(239,68,68,.12); }
 
-/* ═══ 添加按钮 ═══ */
-.add-card {
-  background:rgba(255,255,255,.03); border:2px dashed rgba(255,255,255,.12);
-  border-radius:var(--radius); padding:20px; display:flex; flex-direction:column;
-  align-items:center; justify-content:center; gap:10px; cursor:pointer;
-  transition:all .25s; min-height:180px;
-}
-.add-card:hover { border-color:rgba(16,185,129,.4); background:rgba(16,185,129,.06); }
-.add-icon { font-size:32px; color:var(--text-muted); }
-.add-text { font-size:13px; color:var(--text-muted); }
+/* 空状态（已弃用，保留备用） */
+.empty-state { text-align:center; padding:60px 20px; color:var(--text-muted); grid-column:1/-1; display:none; }
+.empty-icon { font-size:48px; margin-bottom:12px; opacity:.5; }
+.empty-text { font-size:14px; }
 
 /* ═══ 弹窗/表单 ═══ */
 .modal-bg {
-  position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,.65);
-  z-index:200; display:none; align-items:center; justify-content:center;
-  backdrop-filter:blur(6px);
+  position:fixed; top:0; left:0; right:0; bottom:0;
+  background:rgba(0,0,0,.4); z-index:200; display:none;
+  align-items:center; justify-content:center; backdrop-filter:blur(4px);
 }
 .modal-bg.open { display:flex; }
 .modal {
-  background:linear-gradient(180deg, rgba(20,20,50,.99) 0%, rgba(15,15,38,.995) 100%);
-  border:1.5px solid rgba(255,255,255,.12); border-radius:20px;
-  width:600px; max-height:92vh; overflow-y:auto; padding:28px;
-  box-shadow:0 20px 60px rgba(0,0,0,.5);
+  background:var(--card-bg); border:1px solid var(--card-border);
+  border-radius:18px; width:560px; max-height:90vh; overflow-y:auto;
+  padding:28px; box-shadow:0 20px 60px rgba(0,0,0,.15);
 }
-.modal-title { font-size:18px; font-weight:700; margin-bottom:20px;
-  background:linear-gradient(135deg,var(--accent-cyan), var(--accent-2));
-  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-}
-.f-group { margin-bottom:16px; }
-.f-label { font-size:12.5px; color:var(--text-secondary); margin-bottom:6px; display:flex; align-items:center; gap:6px; }
+.modal-title { font-size:17px; font-weight:700; margin-bottom:20px; color:var(--text); }
+.f-group { margin-bottom:14px; }
+.f-label { font-size:12.5px; color:var(--text-secondary); margin-bottom:5px; display:flex; align-items:center; gap:5px; font-weight:600; }
 .f-input {
-  width:100%; padding:10px 14px; border-radius:10px;
-  background:var(--input-bg); border:1.5px solid rgba(255,255,255,.1);
-  color:var(--text); font-size:13.5px; transition:border-color .2s; outline:none;
+  width:100%; padding:9px 12px; border-radius:9px;
+  background:var(--input-bg); border:1.5px solid var(--card-border);
+  color:var(--text); font-size:13px; transition:border-color .2s; outline:none;
 }
-.f-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(99,102,241,.15); }
-.f-input::placeholder { color:var(--text-muted); }
-textarea.f-input { min-height:80px; resize:vertical; font-family:inherit; }
+.f-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(99,102,241,.1); }
+textarea.f-input { min-height:70px; resize:vertical; font-family:inherit; }
 select.f-input { cursor:pointer; }
-.f-row { display:flex; gap:12px; }
+.f-row { display:flex; gap:10px; }
 .f-row .f-group { flex:1; }
 
-/* Extra fields (weather/navigation/search/translation) */
-.extra-fields { margin-top:12px; }
-.extra-field-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
-.extra-field-label { font-size:12px; color:var(--text-muted); min-width:80px; }
+/* Extra fields */
+.extra-fields { margin-top:8px; padding:12px; background:var(--input-bg); border-radius:10px; }
+.extra-fields .f-group { margin-bottom:10px; }
+.extra-fields .f-group:last-child { margin-bottom:0; }
+.extra-section-title { font-size:11.5px; color:var(--accent); font-weight:700; margin-bottom:8px; letter-spacing:.3px; }
 
 /* Test result */
 .test-result { margin-top:10px; padding:10px 14px; border-radius:10px; font-size:12.5px; font-weight:600; display:none; }
-.test-result.ok { display:block; background:rgba(16,185,129,.12); border:1px solid rgba(16,185,129,.25); color:var(--success); }
-.test-result.err { display:block; background:rgba(244,63,94,.1); border:1px solid rgba(244,63,94,.2); color:var(--danger); }
+.test-result.ok { display:block; background:#dcfce7; border:1px solid #bbf7d0; color:#16a34a; }
+.test-result.err { display:block; background:#fef2f2; border:1px solid #fecaca; color:#dc2626; }
 
-/* Form Actions */
-.form-actions { display:flex; gap:10px; margin-top:24px; }
-.btn-cancel { flex:1; padding:10px; border-radius:10px; border:1.5px solid rgba(255,255,255,.1);
+.form-actions { display:flex; gap:10px; margin-top:20px; }
+.btn-cancel { flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--card-border);
   background:transparent; color:var(--text-secondary); font-size:13.5px; font-weight:600;
   cursor:pointer; transition:all .18s; }
-.btn-cancel:hover { background:rgba(255,255,255,.06); }
+.btn-cancel:hover { background:var(--input-bg); }
 .btn-save { flex:2; padding:10px; border-radius:10px; border:none;
-  background:linear-gradient(135deg,var(--accent), var(--accent-2));
+  background:linear-gradient(135deg,var(--accent), var(--accent-cyan));
   color:#fff; font-size:13.5px; font-weight:700; cursor:pointer; transition:all .2s; }
-.btn-save:hover { transform:translateY(-1px); box-shadow:0 4px 20px rgba(99,102,241,.35); }
+.btn-save:hover { transform:translateY(-1px); box-shadow:0 4px 16px rgba(99,102,241,.3); }
 
-/* ═══ Toast ═══ */
+/* Toast */
 .toast-container { position:fixed; top:70px; right:24px; z-index:999; display:flex; flex-direction:column; gap:8px; }
-.toast {
-  padding:10px 20px; border-radius:10px; font-size:13px; font-weight:600;
-  animation:toastIn .3s ease; backdrop-filter:blur(8px);
-}
-.toast-ok { background:rgba(16,185,129,.2); border:1px solid rgba(16,185,129,.3); color:var(--success); }
-.toast-err { background:rgba(244,63,94,.15); border:1px solid rgba(244,63,94,.25); color:var(--danger); }
+.toast { padding:10px 20px; border-radius:10px; font-size:13px; font-weight:600; animation:toastIn .3s ease; backdrop-filter:blur(8px); box-shadow:0 4px 16px rgba(0,0,0,.1); }
+.toast-ok { background:#f0fdf4; border:1px solid #bbf7d0; color:#16a34a; }
+.toast-err { background:#fef2f2; border:1px solid #fecaca; color:#dc2626; }
 @keyframes toastIn { from{opacity:0;transform:translateX(30px)} to{opacity:1;transform:translateX(0)} }
 
-/* ═══ 空状态 ═══ */
-.empty-state { text-align:center; padding:60px 20px; color:var(--text-muted); grid-column:1/-1; }
-.empty-icon { font-size:48px; margin-bottom:16px; opacity:.6; }
-.empty-text { font-size:14px; }
-
-/* ═══ 响应式 ═══ */
+/* 响应式 */
 @media(max-width:640px){
-  .key-grid { grid-template-columns:1fr; }
-  .modal { width:95%; padding:20px; }
-  .page-wrap { padding:20px 16px 60px; }
-  .cat-tabs { gap:5px; }
-  .cat-tab { padding:6px 12px; font-size:12px; }
+  .svc-grid { grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); gap:10px; }
+  .detail-panel { width:88%; right:-100%; }
+  .modal { width:94%; padding:20px; }
+  .page-wrap { padding:16px 14px 60px; }
+  .cat-tabs { gap:4px; }
+  .cat-tab { padding:5px 10px; font-size:12px; }
 }
 </style>
 </head>
@@ -225,7 +243,6 @@ select.f-input { cursor:pointer; }
 <nav class="top-nav">
   <a class="nav-brand" href="/">
     <span class="logo">AIManagePlatform</span>
-    <span class="nav-tag" style="font-size:11px;padding:2px 8px;border-radius:6px;background:rgba(16,185,129,.18);color:var(--accent-cyan);">多领域服务</span>
   </a>
   <div style="flex:1"></div>
   <a class="nav-link" href="/">← 返回主页</a>
@@ -233,15 +250,33 @@ select.f-input { cursor:pointer; }
 
 <div class="page-wrap">
   <div class="page-header">
-    <h1 class="page-title">🌐 多领域服务配置</h1>
+    <h1 class="page-title"><span>🌐 多领域服务配置</span></h1>
     <p class="page-desc">管理天气、导航、搜索、翻译等第三方服务的 API 配置与参数</p>
   </div>
 
   <!-- Category Tabs -->
   <div class="cat-tabs" id="catTabs"></div>
 
-  <!-- Key Grid -->
-  <div class="key-grid" id="keyGrid"></div>
+  <!-- Provider Card Grid -->
+  <div class="svc-grid" id="svcGrid"></div>
+
+  <!-- Empty state (hidden by default) -->
+  <div class="empty-state" id="emptyState" style="display:none;">
+    <div class="empty-icon">📭</div>
+    <div class="empty-text">暂无此分类的配置</div>
+  </div>
+</div>
+
+<!-- Detail Panel (right slide-in) -->
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetail()"></div>
+<div class="detail-panel" id="detailPanel">
+  <div class="dp-header">
+    <button class="dp-close" onclick="closeDetail()">✕</button>
+    <div class="dp-title" id="dpTitle">服务商详情</div>
+    <div class="dp-badge badge-on" id="dpBadge">已启用</div>
+  </div>
+  <div class="dp-body" id="dpBody"></div>
+  <div class="dp-actions" id="dpActions"></div>
 </div>
 
 <!-- Add/Edit Modal -->
@@ -264,11 +299,11 @@ select.f-input { cursor:pointer; }
       <div class="f-row">
         <div class="f-group">
           <label class="f-label"><span style="color:var(--danger)">*</span> 服务商名称</label>
-          <input class="f-input" id="fName" placeholder="如：高德天气、和风天气">
+          <input class="f-input" id="fName" placeholder="如：和风天气、高德地图">
         </div>
         <div class="f-group">
           <label class="f-label"><span style="color:var(--danger)">*</span> 唯一标识</label>
-          <input class="f-input" id="fCode" placeholder="如：amap-weather、qweather">
+          <input class="f-input" id="fCode" placeholder="如：qweather、amap">
         </div>
       </div>
       <div class="f-group">
@@ -277,16 +312,17 @@ select.f-input { cursor:pointer; }
       </div>
       <div class="f-group">
         <label class="f-label">API 地址（可选）</label>
-        <input class="f-input" id="fApiUrl" placeholder="如：https://restapi.amap.com/v3/weather/weatherInfo">
+        <input class="f-input" id="fApiUrl" placeholder="如：https://devapi.qweather.com/v7/weather/now">
       </div>
 
       <!-- Weather extra fields -->
       <div class="extra-fields" id="fWeatherFields">
-        <div class="f-group">
-          <label class="f-label">默认城市</label>
-          <input class="f-input" id="fWeatherCity" placeholder="如：北京、上海、深圳">
-        </div>
+        <div class="extra-section-title">🌤️ 天气专属参数</div>
         <div class="f-row">
+          <div class="f-group">
+            <label class="f-label">默认城市</label>
+            <input class="f-input" id="fWeatherCity" placeholder="如：北京、上海、深圳">
+          </div>
           <div class="f-group">
             <label class="f-label">温度单位</label>
             <select class="f-input" id="fWeatherUnit">
@@ -294,18 +330,19 @@ select.f-input { cursor:pointer; }
               <option value="fahrenheit">华氏度 °F</option>
             </select>
           </div>
-          <div class="f-group">
-            <label class="f-label">语言</label>
-            <select class="f-input" id="fWeatherLang">
-              <option value="zh">中文</option>
-              <option value="en">English</option>
-            </select>
-          </div>
+        </div>
+        <div class="f-group">
+          <label class="f-label">语言</label>
+          <select class="f-input" id="fWeatherLang">
+            <option value="zh">中文</option>
+            <option value="en">English</option>
+          </select>
         </div>
       </div>
 
       <!-- Navigation extra fields -->
       <div class="extra-fields" id="fNavFields" style="display:none;">
+        <div class="extra-section-title">🗺️ 导航专属参数</div>
         <div class="f-group">
           <label class="f-label">默认出发地</label>
           <input class="f-input" id="fNavOrigin" placeholder="如：北京市朝阳区">
@@ -333,23 +370,27 @@ select.f-input { cursor:pointer; }
 
       <!-- Search extra fields -->
       <div class="extra-fields" id="fSearchFields" style="display:none;">
-        <div class="f-group">
-          <label class="f-label">搜索引擎偏好</label>
-          <select class="f-input" id="fSearchEngine">
-            <option value="google">Google</option>
-            <option value="bing">Bing</option>
-            <option value="baidu">百度</option>
-            <option value="sogou">搜狗</option>
-          </select>
-        </div>
-        <div class="f-group">
-          <label class="f-label">结果数量（每次返回）</label>
-          <input type="number" class="f-input" id="fSearchCount" placeholder="默认 10" min="1" max="50">
+        <div class="extra-section-title">🔍 搜索专属参数</div>
+        <div class="f-row">
+          <div class="f-group">
+            <label class="f-label">搜索引擎偏好</label>
+            <select class="f-input" id="fSearchEngine">
+              <option value="google">Google</option>
+              <option value="bing">Bing</option>
+              <option value="baidu">百度</option>
+              <option value="sogou">搜狗</option>
+            </select>
+          </div>
+          <div class="f-group">
+            <label class="f-label">结果数量</label>
+            <input type="number" class="f-input" id="fSearchCount" placeholder="默认 10" min="1" max="50">
+          </div>
         </div>
       </div>
 
       <!-- Translation extra fields -->
       <div class="extra-fields" id="fTransFields" style="display:none;">
+        <div class="extra-section-title">🌐 翻译专属参数</div>
         <div class="f-row">
           <div class="f-group">
             <label class="f-label">源语言</label>
@@ -364,8 +405,8 @@ select.f-input { cursor:pointer; }
           <div class="f-group">
             <label class="f-label">目标语言</label>
             <select class="f-input" id="fTransDst">
-              <option value="zh">中文</option>
               <option value="en">English</option>
+              <option value="zh">中文</option>
               <option value="ja">日本語</option>
               <option value="ko">한국어</option>
               <option value="fr">Français</option>
@@ -376,17 +417,16 @@ select.f-input { cursor:pointer; }
 
       <div class="f-group">
         <label class="f-label">备注说明</label>
-        <textarea class="f-input" id="fDesc" placeholder="可选：记录此配置的用途、限制等信息"></textarea>
+        <textarea class="f-input" id="fDesc" placeholder="可选：记录此配置的用途等信息"></textarea>
       </div>
       <div class="f-group">
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-          <input type="checkbox" id="fIsActive" checked>
-          <span class="f-label" style="margin:0;">启用此配置</span>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text-secondary);">
+          <input type="checkbox" id="fIsActive" checked style="width:16px;height:16px;accent-color:var(--accent);">
+          启用此配置
         </label>
       </div>
 
-      <!-- Test result -->
-      <div class="test-result" id="testResult"></div>
+      <div class="test-result" id="testResultArea"></div>
 
       <div class="form-actions">
         <button class="btn-cancel" type="button" onclick="closeModal()">取消</button>
@@ -405,350 +445,344 @@ select.f-input { cursor:pointer; }
    ═════════════════════════════════════════ */
 
 var allKeys = [];
-var currentCategory = 'weather';  // 默认显示天气
+var currentCategory = 'weather';
 var editKeyId = null;
 
-function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-function toast(msg, type) {
-  var c = document.getElementById('toastContainer');
-  var t = document.createElement('div');
-  t.className = 'toast toast-' + (type || 'ok');
-  t.textContent = msg;
-  c.appendChild(t);
-  setTimeout(function() { if (t.parentNode) t.parentNode.removeChild(t); }, 3000);
-}
-function hdr() {
-  try {
-    var t = localStorage.getItem('access_token');
-    return t ? {'Authorization': 'Bearer ' + t, 'Content-Type': 'application/json'} : {'Content-Type': 'application/json'};
-  } catch(e) { return {'Content-Type': 'application/json'}; }
-}
+// ── 预设服务商（每个分类的常用服务商） ──
+var PRESETS = {
+  weather: [
+    {code:'qweather', name:'和风天气', icon:'🌤️', url:'https://devapi.qweather.com'},
+    {code:'amap-weather', name:'高德天气', icon:'🌦️', url:'https://restapi.amap.com'},
+    {code:'openweathermap', name:'OpenWeather', icon:'🌩️', url:'https://api.openweathermap.org'},
+    {code:'cma', name:'中国气象局', icon:'🏛️', url:'https://data.cma.cn'},
+    {code:'weather-cn', name:'中国天气网', icon:'🌈', url:'https://www.weather.com.cn'},
+  ],
+  navigation: [
+    {code:'amap', name:'高德地图', icon:'🗺️', url:'https://restapi.amap.com'},
+    {code:'baidu-map', name:'百度地图', icon:'🧭', url:'https://api.map.baidu.com'},
+    {code:'tencent-map', name:'腾讯地图', icon:'📍', url:'https://apis.map.qq.com'},
+    {code:'tianditu', name:'天地图', icon:'🌏', url:'https://api.tianditu.gov.cn'},
+  ],
+  search: [
+    {code:'google-search', name:'Google Search', icon:'🔎', url:'https://www.googleapis.com'},
+    {code:'bing-search', name:'Bing Search', icon:'🔍', url:'https://api.bing.microsoft.com'},
+    {code:'baidu-search', name:'百度搜索', icon:'🔎', url:'https://api.baidu.com'},
+    {code:'serp-api', name:'SerpAPI', icon:'🕷️', url:'https://serpapi.com'},
+  ],
+  translation: [
+    {code:'youdao', name:'有道翻译', icon:'📖', url:'https://openapi.youdao.com'},
+    {code:'baidu-trans', name:'百度翻译', icon:'🌐', url:'https://fanyi-api.baidu.com'},
+    {code:'google-trans', name:'Google翻译', icon:'💬', url:'https://translation.googleapis.com'},
+    {code:'deepl', name:'DeepL', icon:'📘', url:'https://api-free.deepl.com'},
+  ],
+  storage: [
+    {code:'aliyun-oss', name:'阿里云 OSS', icon:'☁️', url:'https://oss-cn-hangzhou.aliyuncs.com'},
+    {code:'tencent-cos', name:'腾讯 COS', icon:'☁️', url:'https://cos.ap-beijing.myqcloud.com'},
+    {code:'aws-s3', name:'AWS S3', icon:'🪣', url:'https://s3.amazonaws.com'},
+    {code:'qiniu', name:'七牛云', icon:'📦', url:'https://up.qbox.me'},
+  ],
+  notification: [
+    {code:'jpush', name:'极光推送', icon:'📬', url:'https://api.jpush.cn'},
+    {code:'getui', name:'个推', icon:'🔔', url:'https://restapi.getui.com'},
+    {code:'ali-push', name:'阿里推送', icon:'📮', url:'https://cloudpush.aliyuncs.com'},
+    {code:'wx-template', name:'微信模板消息', icon:'💬', url:'https://api.weixin.qq.com'},
+  ],
+  other: []
+};
 
-// ── Category config ──
 var CAT_ICONS = {weather:'🌤️', navigation:'🗺️', search:'🔍', translation:'🌐', storage:'☁️', notification:'📬', other:'🔑'};
 var CAT_LABELS = {weather:'天气', navigation:'导航', search:'搜索', translation:'翻译', storage:'存储', notification:'推送', other:'其他'};
 
-// ── Load Keys ──
-async function loadKeys() {
-  try {
-    var url = '/api/provider-keys?category=' + encodeURIComponent(currentCategory);
-    var r = await fetch(url, {headers: hdr()});
-    if (r.status === 401) { allKeys = []; render(); return; }
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    var d = await r.json();
-    allKeys = d.keys || [];
-  } catch(e) {
-    console.warn('[loadKeys]', e.message);
-    allKeys = [];
-  }
-  render();
+function esc(s) { var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+function toast(msg,type){var c=document.getElementById('toastContainer'),t=document.createElement('div');
+  t.className='toast toast-'+(type||'ok'); t.textContent=msg; c.appendChild(t);
+  setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t)},3000);}
+function hdr(){
+  try{var t=localStorage.getItem('access_token');
+  return t?{'Authorization':'Bearer '+t,'Content-Type':'application/json'}:{'Content-Type':'application/json'};}
+  catch(e){return{'Content-Type':'application/json'};}
 }
 
-// ── Render Category Tabs ──
-function renderCatTabs() {
-  var cats = ['weather','navigation','search','translation','storage','notification','other'];
-  var h = '';
-  cats.forEach(function(k) {
-    var cnt = 0;
-    // Count from all keys (we need to load all for accurate counts)
-    var cntUrl = '/api/provider-keys';
-    // Use sync XHR for simplicity in tab rendering (only for count)
-    try {
-      var xhr = new XMLHttpRequest();
-      xhr.open('GET', cntUrl, false);
-      var h2 = hdr();
-      xhr.setRequestHeader('Content-Type', 'application/json');
-      if (h2['Authorization']) xhr.setRequestHeader('Authorization', h2['Authorization']);
-      xhr.send(null);
-      if (xhr.status === 200) {
-        var all = JSON.parse(xhr.responseText);
-        all.keys.forEach(function(k2) { if (k2.category === k) cnt++; });
-      }
-    } catch(e) {}
-    h += '<div class="cat-tab' + (currentCategory === k ? ' active' : '') + '" onclick="switchCat(\'' + k + '\')">' +
-      '<span>' + CAT_ICONS[k] + '</span><span>' + CAT_LABELS[k] + '</span>' +
-      '<span class="cat-count">' + cnt + '</span></div>';
-  });
-  document.getElementById('catTabs').innerHTML = h;
-}
-
-// ── Render Key Grid ──
-function render() {
-  var grid = document.getElementById('keyGrid');
-
-  if (allKeys.length === 0) {
-    grid.innerHTML = '<div class="empty-state">' +
-      '<div class="empty-icon">' + CAT_ICONS[currentCategory] + '</div>' +
-      '<div class="empty-text">暂无' + CAT_LABELS[currentCategory] + '配置，点击下方卡片添加</div></div>';
-  } else {
-    var h = '';
-    allKeys.forEach(function(k) {
-      // Extra config display
-      var extraHtml = '';
-      if (k.config && typeof k.config === 'object') {
-        extraHtml = '<div class="key-config-rows">';
-        var cfg = k.config;
-        if (k.category === 'weather') {
-          if (cfg.city) extraHtml += '<div class="key-config-row"><span class="cfg-label">城市</span><span class="cfg-value">' + esc(cfg.city) + '</span></div>';
-          if (cfg.unit) extraHtml += '<div class="key-config-row"><span class="cfg-label">单位</span><span class="cfg-value">' + esc(cfg.unit === 'celsius' ? '°C' : '°F') + '</span></div>';
-        } else if (k.category === 'navigation') {
-          if (cfg.origin) extraHtml += '<div class="key-config-row"><span class="cfg-label">出发地</span><span class="cfg-value">' + esc(cfg.origin) + '</span></div>';
-          if (cfg.mode) extraHtml += '<div class="key-config-row"><span class="cfg-label">交通</span><span class="cfg-value">' + esc(cfg.mode) + '</span></div>';
-        } else if (k.category === 'search') {
-          if (cfg.engine) extraHtml += '<div class="key-config-row"><span class="cfg-label">引擎</span><span class="cfg-value">' + esc(cfg.engine) + '</span></div>';
-          if (cfg.count) extraHtml += '<div class="key-config-row"><span class="cfg-label">数量</span><span class="cfg-value">' + esc(String(cfg.count)) + '</span></div>';
-        } else if (k.category === 'translation') {
-          if (cfg.src) extraHtml += '<div class="key-config-row"><span class="cfg-label">源语言</span><span class="cfg-value">' + esc(cfg.src) + '</span></div>';
-          if (cfg.dst) extraHtml += '<div class="key-config-row"><span class="cfg-label">目标</span><span class="cfg-value">' + esc(cfg.dst) + '</span></div>';
-        }
-        extraHtml += '</div>';
-      }
-
-      h += '<div class="key-card' + (k.is_active ? '' : ' disabled') + '">' +
-        '<div class="key-header">' +
-          '<div class="key-icon">' + CAT_ICONS[k.category] + '</div>' +
-          '<div class="key-name">' + esc(k.provider_name) + '</div>' +
-          '<span class="key-badge ' + (k.is_active ? 'badge-active' : 'badge-inactive') + '">' +
-            (k.is_active ? '已启用' : '已禁用') + '</span>' +
-        '</div>' +
-        '<div class="key-field">' +
-          '<div class="key-field-label">标识</div>' +
-          '<div class="key-value">' + esc(k.provider_code) + '</div>' +
-        '</div>' +
-        (k.api_url ? '<div class="key-field"><div class="key-field-label">API 地址</div><div class="key-url">' + esc(k.api_url) + '</div></div>' : '') +
-        (k.key_masked ? '<div class="key-field"><div class="key-field-label">密钥</div><div class="key-value">' + esc(k.key_masked) + '</div></div>' : '') +
-        (k.description ? '<div class="key-desc">' + esc(k.description) + '</div>' : '') +
-        extraHtml +
-        '<div class="key-actions">' +
-          '<button class="key-btn btn-edit" onclick="editKey(' + k.id + ')">编辑</button>' +
-          '<button class="key-btn btn-test" onclick="testKey(' + k.id + ')">测试</button>' +
-          '<button class="key-btn btn-toggle" onclick="toggleKey(' + k.id + ')">' + (k.is_active ? '禁用' : '启用') + '</button>' +
-          '<button class="key-btn btn-delete" onclick="confirmDelete(' + k.id + ')">删除</button>' +
-        '</div>' +
+// ── 渲染分类标签 ──
+function renderCatTabs(){
+  var cats=['weather','navigation','search','translation','storage','notification','other'];
+  var h='';
+  cats.forEach(function(k){
+    var cnt=0;
+    try{var xhr=new XMLHttpRequest();xhr.open('GET','/api/provider-keys',false);
+      var h2=hdr();xhr.setRequestHeader('Content-Type','application/json');
+      if(h2['Authorization'])xhr.setRequestHeader('Authorization',h2['Authorization']);xhr.send(null);
+      if(xhr.status===200){var a=JSON.parse(xhr.responseText);(a.keys||[]).forEach(function(k2){if(k2.category===k)cnt++;});}}
+    catch(e){}
+    h+='<div class="cat-tab'+(currentCategory===k?' active':'')+'" data-cat="'+k+'">'+
+      '<span>'+CAT_ICONS[k]+'</span><span>'+CAT_LABELS[k]+'</span>'+
       '</div>';
-    });
-    // Add "Add" card
-    h += '<div class="add-card" onclick="addKey()">' +
-      '<div class="add-icon">➕</div>' +
-      '<div class="add-text">添加' + CAT_LABELS[currentCategory] + '配置</div>' +
+  });
+  document.getElementById('catTabs').innerHTML=h;
+  // 绑定事件
+  document.querySelectorAll('.cat-tab').forEach(function(el){
+    el.addEventListener('click',function(){switchCat(this.getAttribute('data-cat'));});
+  });
+}
+
+// ── 加载当前分类的数据 ──
+async function loadKeys(){try{
+  var r=await fetch('/api/provider-keys?category='+encodeURIComponent(currentCategory),{headers:hdr()});
+  if(r.status===401){allKeys=[];render();return;}if(!r.ok)throw new Error('HTTP '+r.status);
+  var d=await r.json();allKeys=d.keys||[];
+}catch(e){console.warn('[loadKeys]',e.message);allKeys=[];}render();}
+
+// ── 核心渲染：预设卡片 + 已配置数据 + 添加按钮 ──
+function render(){
+  var grid=document.getElementById('svcGrid');
+  var presets=PRESETS[currentCategory]||[];
+  var h='';
+
+  // 1. 渲染预设服务商卡片
+  presets.forEach(function(p){
+    var found=null;var configured=false;var active=true;
+    allKeys.forEach(function(k){if(k.provider_code===p.code){found=k;configured=true;active=k.is_active!==false;}});
+    h+='<div class="svc-card'+(configured?' configured':'')+(configured&&!active?' disabled-card':'')+'" data-code="'+esc(p.code)+'" data-preset="'+esc(p.name)+'" data-url="'+esc(p.url||'')+'">'+
+      '<div class="svc-dot'+(!active?' inactive':'')+'"></div>'+
+      '<div class="svc-icon">'+p.icon+'</div>'+
+      '<div class="svc-name">'+esc(p.name)+'</div>'+
+      '<div class="svc-code">'+esc(p.code)+'</div>'+
+      (configured?'<div style="font-size:10.5px;color:var(--success);font-weight:600;margin-top:2px;">✓ 已配置</div>':'')+
+      '</div>';
+  });
+
+  // 2. 渲染非预设的自定义已配置项（不在预设列表里的）
+  allKeys.forEach(function(k){
+    var isPreset=false;presets.forEach(function(p){if(p.code===k.provider_code)isPreset=true;});
+    if(!isPreset){
+      h+='<div class="svc-card configured'+(k.is_active===false?' disabled-card':'')+'" data-id="'+k.id+'" data-custom="1">'+
+        '<div class="svc-dot'+(k.is_active===false?' inactive':'')+'"></div>'+
+        '<div class="svc-icon">'+CAT_ICONS[currentCategory]+'</div>'+
+        '<div class="svc-name">'+esc(k.provider_name)+'</div>'+
+        '<div class="svc-code">'+esc(k.provider_code)+'</div>'+
+        '<div style="font-size:10.5px;color:var(--accent);font-weight:600;margin-top:2px;">自定义</div>'+
+        '</div>';
+    }
+  });
+
+  // 3. "添加自定义" 按钮 — 始终显示
+  h+='<div class="svc-add" id="addCustomBtn">'+
+    '<div class="svc-add-icon">➕</div>'+
+    '<div class="svc-add-text">添加 '+CAT_LABELS[currentCategory]+' 服务</div>'+
     '</div>';
-    grid.innerHTML = h;
+
+  grid.innerHTML=h;
+
+  // 绑定点击事件
+  grid.querySelectorAll('.svc-card').forEach(function(el){
+    el.addEventListener('click',function(){handleCardClick(this);});
+  });
+  var addBtn=document.getElementById('addCustomBtn');
+  if(addBtn) addBtn.addEventListener('click',function(){addKey();});
+}
+
+// ── 处理卡片点击 ──
+function handleCardClick(card){
+  var code=card.getAttribute('data-code');
+  var customId=card.getAttribute('data-id');
+  var presetName=card.getAttribute('data-preset');
+
+  if(customId && customId!=='null'){
+    // 已配置的自定义项 → 打开详情面板
+    openDetail(parseInt(customId));
+  }else if(code){
+    // 预设卡片 → 查找是否已配置
+    var foundKey=null;
+    allKeys.forEach(function(k){if(k.provider_code===code)foundKey=k;});
+
+    if(foundKey){
+      // 已配置 → 打开详情面板
+      openDetail(foundKey.id);
+    }else{
+      // 未配置 → 弹出添加表单并预填
+      addKeyForPreset(code,presetName,card.getAttribute('data-url'));
+    }
   }
 }
 
-// ── Category Switch ──
-function switchCat(cat) {
-  currentCategory = cat;
-  renderCatTabs();
-  loadKeys();
+// ── 详情面板 ──
+async function openDetail(id){
+  try{
+    var r=await fetch('/api/provider-keys/'+id,{headers:hdr()});if(!r.ok)throw new Error('HTTP '+r.status);
+    var d=await r.json();
+    var body=document.getElementById('dpBody');
+    var actions=document.getElementById('dpActions');
+
+    document.getElementById('dpTitle').textContent=d.provider_name;
+    var badge=document.getElementById('dpBadge');
+    if(d.is_active!==false){badge.textContent='已启用';badge.className='dp-badge badge-on';}
+    else{badge.textContent='已禁用';badge.className='dp-badge badge-off';}
+
+    var extraHtml='';
+    if(d.config&&typeof d.config==='object'){
+      extraHtml='<div style="margin:14px 0;padding:12px;background:var(--input-bg);border-radius:10px;"><div class="extra-section-title">⚙️ 专属参数</div>';
+      var cfg=d.config;
+      if(cfg.city)extraHtml+='<div class="dp-config-row"><span class="cl">城市</span><span>'+esc(cfg.city)+'</span></div>';
+      if(cfg.unit)extraHtml+='<div class="dp-config-row"><span class="cl">温度单位</span><span>'+esc(cfg.unit==='celsius'?'°C':'°F')+'</span></div>';
+      if(cfg.lang)extraHtml+='<div class="dp-config-row"><span class="cl">语言</span><span>'+esc(cfg.lang==='zh'?'中文':'English')+'</span></div>';
+      if(cfg.origin)extraHtml+='<div class="dp-config-row"><span class="cl">出发地</span><span>'+esc(cfg.origin)+'</span></div>';
+      if(cfg.mode)extraHtml+='<div class="dp-config-row"><span class="cl">交通方式</span><span>'+esc({driving:'驾车',transit:'公交地铁',walking:'步行',cycling:'骑行'}[cfg.mode]||cfg.mode)+'</span></div>';
+      if(cfg.coord)extraHtml+='<div class="dp-config-row"><span class="cl">坐标系</span><span>'+esc({autonavi:'GCJ-02',gps:'WGS-84',baidu:'BD-09'}[cfg.coord]||cfg.coord)+'</span></div>';
+      if(cfg.engine)extraHtml+='<div class="dp-config-row"><span class="cl">引擎</span><span>'+esc(cfg.engine)+'</span></div>';
+      if(cfg.count)extraHtml+='<div class="dp-config-row"><span class="cl">结果数</span><span>'+esc(String(cfg.count))+'</span></div>';
+      if(cfg.src)extraHtml+='<div class="dp-config-row"><span class="cl">源语言</span><span>'+esc(cfg.src)+'</span></div>';
+      if(cfg.dst)extraHtml+='<div class="dp-config-row"><span class="cl">目标语言</span><span>'+esc(cfg.dst)+'</span></div>';
+      extraHtml+='</div>';
+    }
+
+    body.innerHTML=
+      '<div class="dp-field"><div class="dp-label">唯一标识</div><div class="dp-value-mono">'+esc(d.provider_code)+'</div></div>'+
+      '<div class="dp-field"><div class="dp-label">API 密钥</div><div class="dp-value-mono">'+esc(d.key_masked||'-')+'</div></div>'+
+      (d.api_url?'<div class="dp-field"><div class="dp-label">API 地址</div><div class="dp-value" style="word-break:break-all;font-size:12px;color:var(--accent-cyan);">'+esc(d.api_url)+'</div></div>':'')+
+      (d.description?'<div class="dp-field"><div class="dp-label">备注</div><div class="dp-desc">'+esc(d.description)+'</div></div>':'')+
+      extraHtml+
+      '<div class="dp-field" style="margin-top:12px;"><div class="dp-label">创建时间</div><div class="dp-value" style="font-size:12px;color:var(--text-muted);">'+(d.created_at||'-')+'</div></div>'+
+      '<div class="dp-field"><div class="dp-label">更新时间</div><div class="dp-value" style="font-size:12px;color:var(--text-muted);">'+(d.updated_at||'-')+'</div></div>';
+
+    actions.innerHTML=
+      '<button class="dpb dpb-primary" onclick="editKey('+id+');closeDetail();">✏️ 编辑</button>'+
+      '<button class="dpb dpb-outline" onclick="testKey('+id+')">🔗 测试连接</button>'+
+      '<button class="dpb dpb-outline" onclick="toggleKey('+id+')">'+(d.is_active!==false?'⏸ 禁用':'▶ 启用')+'</button>'+
+      '<button class="dpb dpb-danger" onclick="confirmDelete('+id+');closeDetail();">🗑 删除</button>';
+
+    document.getElementById('detailPanel').classList.add('open');
+    document.getElementById('detailOverlay').classList.add('show');
+  }catch(e){toast('加载详情失败：'+e.message,'err');}
 }
 
-// ── Add Key ──
-function addKey() {
-  editKeyId = null;
-  document.getElementById('modalTitle').textContent = '添加服务配置';
+function closeDetail(){document.getElementById('detailPanel').classList.remove('open');document.getElementById('detailOverlay').classList.remove('show');}
+
+// ── 为预设服务商快速添加 ──
+function addKeyForPreset(code,name,url){
+  editKeyId=null;
+  document.getElementById('modalTitle').textContent='配置 '+name;
   document.getElementById('keyForm').reset();
-  document.getElementById('fCategory').value = currentCategory;
-  document.getElementById('fIsActive').checked = true;
-  document.getElementById('testResult').className = 'test-result';
-  document.getElementById('testResult').style.display = 'none';
+  document.getElementById('fCategory').value=currentCategory;
+  document.getElementById('fName').value=name||'';
+  document.getElementById('fCode').value=code||'';
+  document.getElementById('fApiUrl').value=url||'';
+  document.getElementById('fIsActive').checked=true;
   onCategoryChange();
   document.getElementById('modalBg').classList.add('open');
 }
 
-// ── Edit Key ──
-async function editKey(id) {
-  editKeyId = id;
-  document.getElementById('modalTitle').textContent = '编辑服务配置';
-  try {
-    var r = await fetch('/api/provider-keys/' + id, {headers: hdr()});
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    var d = await r.json();
-    document.getElementById('fCategory').value = d.category || 'weather';
-    document.getElementById('fName').value = d.provider_name || '';
-    document.getElementById('fCode').value = d.provider_code || '';
-    document.getElementById('fApiUrl').value = d.api_url || '';
-    document.getElementById('fDesc').value = d.description || '';
-    document.getElementById('fIsActive').checked = d.is_active !== false;
-    document.getElementById('fKeyValue').value = '';
-    document.getElementById('fKeyValue').placeholder = d.key_masked ? '当前：' + d.key_masked + '（留空不修改）' : '输入新密钥';
-
-    // Fill extra config fields
-    var cfg = d.config || {};
-    document.getElementById('fWeatherCity').value = cfg.city || '';
-    document.getElementById('fWeatherUnit').value = cfg.unit || 'celsius';
-    document.getElementById('fWeatherLang').value = cfg.lang || 'zh';
-    document.getElementById('fNavOrigin').value = cfg.origin || '';
-    document.getElementById('fNavMode').value = cfg.mode || 'driving';
-    document.getElementById('fNavCoord').value = cfg.coord || 'autonavi';
-    document.getElementById('fSearchEngine').value = cfg.engine || 'google';
-    document.getElementById('fSearchCount').value = cfg.count || 10;
-    document.getElementById('fTransSrc').value = cfg.src || 'auto';
-    document.getElementById('fTransDst').value = cfg.dst || 'zh';
-
-    onCategoryChange();
-    document.getElementById('testResult').className = 'test-result';
-    document.getElementById('testResult').style.display = 'none';
-  } catch(e) {
-    toast('加载失败：' + e.message, 'err');
-    return;
-  }
+// ── 添加自定义 ──
+function addKey(){
+  editKeyId=null;
+  document.getElementById('modalTitle').textContent='添加 '+CAT_LABELS[currentCategory]+' 服务';
+  document.getElementById('keyForm').reset();
+  document.getElementById('fCategory').value=currentCategory;
+  document.getElementById('fIsActive').checked=true;
+  onCategoryChange();
   document.getElementById('modalBg').classList.add('open');
 }
 
-// ── Category Change (show/hide extra fields) ──
-function onCategoryChange() {
-  var cat = document.getElementById('fCategory').value;
-  document.getElementById('fWeatherFields').style.display = cat === 'weather' ? 'block' : 'none';
-  document.getElementById('fNavFields').style.display = cat === 'navigation' ? 'block' : 'none';
-  document.getElementById('fSearchFields').style.display = cat === 'search' ? 'block' : 'none';
-  document.getElementById('fTransFields').style.display = cat === 'translation' ? 'block' : 'none';
+// ── 编辑 ──
+async function editKey(id){
+  editKeyId=id;document.getElementById('modalTitle').textContent='编辑服务配置';
+  try{var r=await fetch('/api/provider-keys/'+id,{headers:hdr()});if(!r.ok)throw new Error('HTTP '+r.status);
+    var d=await r.json();
+    document.getElementById('fCategory').value=d.category||'weather';
+    document.getElementById('fName').value=d.provider_name||'';
+    document.getElementById('fCode').value=d.provider_code||'';
+    document.getElementById('fApiUrl').value=d.api_url||'';
+    document.getElementById('fDesc').value=d.description||'';
+    document.getElementById('fIsActive').checked=d.is_active!==false;
+    document.getElementById('fKeyValue').value='';
+    document.getElementById('fKeyValue').placeholder=d.key_masked?'当前：'+d.key_masked+'（留空不修改）':'输入新密钥';
+
+    var cfg=d.config||{};
+    document.getElementById('fWeatherCity').value=cfg.city||'';
+    document.getElementById('fWeatherUnit').value=cfg.unit||'celsius';
+    document.getElementById('fWeatherLang').value=cfg.lang||'zh';
+    document.getElementById('fNavOrigin').value=cfg.origin||'';
+    document.getElementById('fNavMode').value=cfg.mode||'driving';
+    document.getElementById('fNavCoord').value=cfg.coord||'autonavi';
+    document.getElementById('fSearchEngine').value=cfg.engine||'google';
+    document.getElementById('fSearchCount').value=cfg.count||10;
+    document.getElementById('fTransSrc').value=cfg.src||'auto';
+    document.getElementById('fTransDst').value=cfg.dst||'en';
+    onCategoryChange();
+  }catch(e){toast('加载失败：'+e.message,'err');return;}
+  document.getElementById('modalBg').classList.add('open');
 }
 
-// ── Collect extra config ──
-function collectConfig() {
-  var cat = document.getElementById('fCategory').value;
-  var cfg = {};
-  if (cat === 'weather') {
-    cfg.city = document.getElementById('fWeatherCity').value.trim();
-    cfg.unit = document.getElementById('fWeatherUnit').value;
-    cfg.lang = document.getElementById('fWeatherLang').value;
-  } else if (cat === 'navigation') {
-    cfg.origin = document.getElementById('fNavOrigin').value.trim();
-    cfg.mode = document.getElementById('fNavMode').value;
-    cfg.coord = document.getElementById('fNavCoord').value;
-  } else if (cat === 'search') {
-    cfg.engine = document.getElementById('fSearchEngine').value;
-    cfg.count = parseInt(document.getElementById('fSearchCount').value) || 10;
-  } else if (cat === 'translation') {
-    cfg.src = document.getElementById('fTransSrc').value;
-    cfg.dst = document.getElementById('fTransDst').value;
-  }
-  // Only return non-empty config
-  var hasValue = false;
-  for (var k in cfg) { if (cfg[k]) { hasValue = true; break; } }
-  return hasValue ? cfg : undefined;
+// ── 分类切换显示额外字段 ──
+function onCategoryChange(){
+  var cat=document.getElementById('fCategory').value;
+  document.getElementById('fWeatherFields').style.display=cat==='weather'?'block':'none';
+  document.getElementById('fNavFields').style.display=cat==='navigation'?'block':'none';
+  document.getElementById('fSearchFields').style.display=cat==='search'?'block':'none';
+  document.getElementById('fTransFields').style.display=cat==='translation'?'block':'none';
 }
 
-// ── Save Key ──
-async function saveKey() {
-  var name = document.getElementById('fName').value.trim();
-  var code = document.getElementById('fCode').value.trim();
-  var keyValue = document.getElementById('fKeyValue').value.trim();
-
-  if (!name || !code) { toast('请填写服务商名称和唯一标识', 'err'); return; }
-  if (!editKeyId && !keyValue) { toast('请填写 API Key', 'err'); return; }
-
-  var cat = document.getElementById('fCategory').value;
-  var data = {
-    provider_name: name,
-    provider_code: code,
-    category: cat,
-    key_value: keyValue,
-    api_url: document.getElementById('fApiUrl').value.trim(),
-    is_active: document.getElementById('fIsActive').checked,
-    description: document.getElementById('fDesc').value.trim(),
-    config: collectConfig(),
-  };
-
-  try {
-    var url, method;
-    if (editKeyId) {
-      url = '/api/provider-keys/' + editKeyId;
-      method = 'PUT';
-      if (!keyValue) delete data.key_value;
-    } else {
-      url = '/api/provider-keys';
-      method = 'POST';
-    }
-
-    var r = await fetch(url, {
-      method: method,
-      headers: hdr(),
-      body: JSON.stringify(data),
-    });
-
-    if (!r.ok) {
-      var err = await r.json().catch(function() {});
-      throw new Error(err && err.detail || 'HTTP ' + r.status);
-    }
-
-    toast(editKeyId ? '更新成功' : '添加成功', 'ok');
-    closeModal();
-    loadKeys();
-    // Refresh tab counts
-    renderCatTabs();
-  } catch(e) {
-    toast('保存失败：' + e.message, 'err');
-  }
+// ── 收集额外配置 ──
+function collectConfig(){
+  var cat=document.getElementById('fCategory').value;var cfg={};
+  if(cat==='weather'){cfg.city=document.getElementById('fWeatherCity').value.trim();cfg.unit=document.getElementById('fWeatherUnit').value;cfg.lang=document.getElementById('fWeatherLang').value;}
+  else if(cat==='navigation'){cfg.origin=document.getElementById('fNavOrigin').value.trim();cfg.mode=document.getElementById('fNavMode').value;cfg.coord=document.getElementById('fNavCoord').value;}
+  else if(cat==='search'){cfg.engine=document.getElementById('fSearchEngine').value;cfg.count=parseInt(document.getElementById('fSearchCount').value)||10;}
+  else if(cat==='translation'){cfg.src=document.getElementById('fTransSrc').value;cfg.dst=document.getElementById('fTransDst').value;}
+  var hasValue=false;for(var k in cfg){if(cfg[k]){hasValue=true;break;}}return hasValue?cfg:undefined;
 }
 
-// ── Toggle Active ──
-async function toggleKey(id) {
-  try {
-    var r = await fetch('/api/provider-keys/' + id + '/toggle', {method: 'PATCH', headers: hdr()});
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    loadKeys();
-  } catch(e) {
-    toast('操作失败：' + e.message, 'err');
-  }
+// ── 保存 ──
+async function saveKey(){
+  var name=document.getElementById('fName').value.trim();
+  var code=document.getElementById('fCode').value.trim();
+  var keyValue=document.getElementById('fKeyValue').value.trim();
+  if(!name||!code){toast('请填写名称和标识','err');return;}
+  if(!editKeyId&&!keyValue){toast('请填写 API Key','err');return;}
+
+  var cat=document.getElementById('fCategory').value;
+  var data={provider_name:name,provider_code:code,category:cat,key_value:keyValue,
+    api_url:document.getElementById('fApiUrl').value.trim(),
+    is_active:document.getElementById('fIsActive').checked,
+    description:document.getElementById('fDesc').value.trim(),config:collectConfig()};
+  try{var url,method;
+    if(editKeyId){url='/api/provider-keys/'+editKeyId;method='PUT';if(!keyValue)delete data.key_value;}
+    else{url='/api/provider-keys';method='POST';}
+    var r=await fetch(url,{method:method,headers:hdr(),body:JSON.stringify(data)});
+    if(!r.ok){var err=await r.json().catch(function(){});throw new Error(err&&err.detail||'HTTP '+r.status);}
+    toast(editKeyId?'更新成功 ✅':'添加成功 ✅','ok');
+    closeModal();loadKeys();renderCatTabs();
+  }catch(e){toast('保存失败：'+e.message,'err');}
 }
 
-// ── Test Connection ──
-async function testKey(id) {
-  var resultEl = document.getElementById('testResult');
-  resultEl.className = 'test-result';
-  resultEl.style.display = 'none';
-  toast('正在测试连接...', 'ok');
-  try {
-    var r = await fetch('/api/provider-keys/' + id + '/test', {method: 'POST', headers: hdr()});
-    var d = await r.json();
-    if (d.success) {
-      toast('✅ ' + d.message, 'ok');
-      resultEl.textContent = '✅ ' + d.message;
-      resultEl.className = 'test-result ok';
-      resultEl.style.display = 'block';
-    } else {
-      toast('❌ 测试失败：' + (d.error || '未知错误'), 'err');
-      resultEl.textContent = '❌ ' + (d.error || '未知错误');
-      resultEl.className = 'test-result err';
-      resultEl.style.display = 'block';
-    }
-  } catch(e) {
-    toast('测试异常：' + e.message, 'err');
-    resultEl.textContent = '❌ ' + e.message;
-    resultEl.className = 'test-result err';
-    resultEl.style.display = 'block';
-  }
-}
+// ── 切换启用/禁用 ──
+async function toggleKey(id){try{
+  var r=await fetch('/api/provider-keys/'+id+'/toggle',{method:'PATCH',headers:hdr()});
+  if(!r.ok)throw new Error('HTTP '+r.status);loadKeys();
+}catch(e){toast('操作失败：'+e.message,'err');}}
 
-// ── Delete ──
-function confirmDelete(id) {
-  if (!confirm('确定删除此配置？此操作不可恢复。')) return;
-  (async function() {
-    try {
-      var r = await fetch('/api/provider-keys/' + id, {method: 'DELETE', headers: hdr()});
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      toast('已删除', 'ok');
-      loadKeys();
-      renderCatTabs();
-    } catch(e) {
-      toast('删除失败：' + e.message, 'err');
-    }
-  })();
-}
+// ── 测试连接 ──
+async function testKey(id){try{
+  var rEl=document.getElementById('testResultArea');rEl.className='test-result';rEl.style.display='none';
+  toast('正在测试连接...','ok');
+  var r=await fetch('/api/provider-keys/'+id+'/test',{method:'POST',headers:hdr()});
+  var d=await r.json();
+  if(d.success){toast('✅ '+d.message,'ok');}else{toast('❌ '+(d.error||'测试失败'),'err');}
+}catch(e){toast('测试异常：'+e.message,'err');}}
 
-// ── Close Modal ──
-function closeModal() {
-  document.getElementById('modalBg').classList.remove('open');
-  editKeyId = null;
-}
+// ── 删除 ──
+function confirmDelete(id){if(!confirm('确定删除此配置？不可恢复'))return;
+  (async function(){try{var r=await fetch('/api/provider-keys/'+id,{method:'DELETE',headers:hdr()});
+    if(!r.ok)throw new Error('HTTP '+r.status);toast('已删除','ok');loadKeys();renderCatTabs();}
+  catch(e){toast('删除失败：'+e.message,'err');}})();}
+
+// ── 关闭弹窗 ──
+function closeModal(){document.getElementById('modalBg').classList.remove('open');editKeyId=null;}
+
+// ── 分类切换 ──
+function switchCat(cat){currentCategory=cat;renderCatTabs();loadKeys();}
 
 // ── Init ──
-(async function() {
-  renderCatTabs();
-  await loadKeys();
-})();
+(async function(){renderCatTabs();await loadKeys();})();
 </script>
 </body>
 </html>

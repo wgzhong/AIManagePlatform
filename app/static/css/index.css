@@ -775,7 +775,7 @@ body::before {
 
 .cards-grid-premium {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 24px;
 }
 
@@ -858,6 +858,11 @@ body::before {
 .card-icon-service {
   background: linear-gradient(145deg, rgba(255, 200, 150, 0.12), rgba(255, 200, 150, 0.04));
   border: 1px solid rgba(255, 200, 150, 0.15);
+}
+
+.card-icon-home {
+  background: linear-gradient(145deg, rgba(52, 211, 153, 0.12), rgba(52, 211, 153, 0.04));
+  border: 1px solid rgba(52, 211, 153, 0.15);
 }
 
 .premium-card:hover .card-icon {

@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智能家居 — AIManagePlatform</title>
+<style>
+:root {
+  --bg: #f4f5f7; --card-bg: #ffffff; --card-border: #e2e6ec;
+  --input-bg: #f7f8fa; --text: #1a1a2e; --text-secondary: #5a6474;
+  --text-muted: #9aa4b2; --accent: #41b883; --accent-2: #35c990;
+  --accent-light: rgba(65,184,131,.06); --danger: #ef4444;
+  --success: #10b981; --warning: #f59e0b;
+  --radius: 16px; --radius-sm: 12px;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; line-height:1.55; font-size:14px; }
+
+.top-nav { position:sticky; top:0; z-index:100; background:rgba(255,255,255,.92); backdrop-filter:saturate(180%) blur(12px); border-bottom:1px solid var(--card-border); padding:0 28px; height:54px; display:flex; align-items:center; gap:14px; }
+.nav-brand { display:flex; align-items:center; gap:9px; text-decoration:none; color:inherit; }
+.nav-brand .logo { font-size:17px; font-weight:700; color:var(--text); }
+.nav-link { color:var(--text-secondary); text-decoration:none; font-size:13px; padding:6px 14px; border-radius:8px; transition:all .18s; }
+.nav-link:hover { background:rgba(65,184,131,.08); color:var(--accent); }
+
+.page-wrap { max-width:1100px; margin:0 auto; padding:24px 20px 80px; }
+.page-header { margin-bottom:22px; }
+.page-title { font-size:23px; font-weight:800; color:var(--text); display:flex; align-items:center; gap:10px; }
+.ha-status-dot { display:inline-flex; width:11px; height:11px; border-radius:50%; vertical-align:middle; }
+.ha-status-dot.online { background:var(--success); box-shadow:0 0 8px rgba(16,185,129,.5); animation:pulseDot 2s infinite; }
+.ha-status-dot.offline { background:var(--danger); }
+@keyframes pulseDot { 0%,100%{box-shadow:0 0 8px rgba(16,185,129,.5);} 50%{box-shadow:0 0 16px rgba(16,185,129,.3);} }
+.page-desc { color:var(--text-secondary); font-size:13px; margin-top:4px; }
+
+/* ── 连接配置区 ── */
+.ha-connect-card { background:var(--card-bg); border:1.5px solid var(--card-border); border-radius:var(--radius); padding:18px 22px; margin-bottom:24px; display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+.ha-connect-icon { width:52px; height:52px; border-radius:14px; background:linear-gradient(135deg,#41b883,#35c990); display:flex; align-items:center; justify-content:center; font-size:26px; flex-shrink:0; box-shadow:0 4px 16px rgba(65,184,131,.25); }
+.ha-connect-info { flex:1; min-width:200px; }
+.ha-connect-info h3 { font-size:15px; font-weight:700; margin-bottom:2px; }
+.ha-connect-info p { font-size:12px; color:var(--text-secondary); }
+.ha-connect-info p.connected { color:var(--success); font-weight:600; }
+.ha-connect-form { display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end; }
+.f-group { margin-bottom:0; min-width:170px; }
+.f-label { font-size:11px; color:var(--text-muted); margin-bottom:3px; font-weight:600; letter-spacing:.3px; text-transform:uppercase; }
+.f-input { width:100%; padding:8px 11px; border-radius:9px; background:var(--input-bg); border:1.5px solid var(--card-border); color:var(--text); font-size:13px; transition:border-color .2s; outline:none; }
+.f-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(65,184,131,.08); }
+.btn-ha { padding:8px 18px; border-radius:10px; border:none; background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:#fff; font-size:13px; font-weight:700; cursor:pointer; transition:all .2s; white-space:nowrap; }
+.btn-ha:hover { transform:translateY(-1px); box-shadow:0 4px 14px rgba(65,184,130,.28); }
+.btn-ha:disabled { opacity:.55; cursor:not-allowed; transform:none; box-shadow:none; }
+
+/* ══════════════════ 核心样式：电器卡片 ══════════════════ */
+.appliance-card {
+  background:var(--card-bg);
+  border:1.5px solid var(--card-border);
+  border-radius:var(--radius);
+  margin-bottom:18px;
+  overflow:hidden;
+  transition:all .25s ease;
+}
+.appliance-card:hover { border-color:rgba(65,184,131,.35); box-shadow:0 6px 24px rgba(65,184,131,.07); }
+
+/* 卡片头部 */
+.appliance-header {
+  display:flex; align-items:center; gap:12px;
+  padding:16px 20px 14px;
+  cursor:pointer;
+  user-select:none;
+  transition:background .2s;
+}
+.appliance-header:hover { background:rgba(0,0,0,.015); }
+.appliance-header-icon {
+  width:46px; height:46px; border-radius:13px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:24px; flex-shrink:0;
+}
+.appliance-header-info { flex:1; min-width:0; }
+.appliance-name { font-size:16px; font-weight:700; color:var(--text); line-height:1.3; }
+.appliance-meta { font-size:11.5px; color:var(--text-muted); margin-top:2px; font-weight:500; }
+.appliance-badge {
+  padding:3px 10px; border-radius:20px; font-size:11.5px; font-weight:600;
+  background:var(--input-bg); color:var(--text-muted);
+  white-space:nowrap; flex-shrink:0;
+}
+.appliance-arrow { font-size:12px; color:var(--text-muted); transition:transform .25s; flex-shrink:0; }
+.appliance-card.collapsed .appliance-arrow { transform:rotate(-90deg); }
+
+/* 卡片内容：子控件列表 */
+.appliance-body { padding:0 20px 18px; display:block; }
+.appliance-card.collapsed .appliance-body { display:none; }
+
+/* 单个子控件行 */
+.ctrl-row {
+  display:flex; align-items:center; gap:10px;
+  padding:9px 12px;
+  margin:4px 0;
+  border-radius:10px;
+  background:var(--input-bg);
+  transition:background .15s;
+  border:1.5px solid transparent;
+}
+.ctrl-row:hover { background:#fff; border-color:var(--card-border); }
+.ctrl-row-icon { font-size:17px; flex-shrink:0; width:26px; text-align:center; }
+.ctrl-row-info { flex:1; min-width:0; }
+.ctrl-row-name { font-size:12.5px; font-weight:600; color:var(--text); line-height:1.3; }
+.ctrl-row-state { font-size:11px; color:var(--text-muted); font-weight:500; }
+.ctrl-row-actions { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+
+/* ── 控制按钮 ── */
+.power-toggle {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:38px; height:26px; border-radius:13px;
+  border:1.5px solid var(--card-border); background:var(--card-border);
+  cursor:pointer; transition:all .2s ease; position:relative;
+  flex-shrink:0;
+}
+.power-toggle::after {
+  content:''; position:absolute; top:2.5px; left:2.5px;
+  width:18px; height:18px; border-radius:50%;
+  background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.12);
+  transition:left .2s ease;
+}
+.power-toggle.on { background:var(--success); border-color:var(--success); }
+.power-toggle.on::after { left:calc(100% - 21.5px); }
+.power-toggle.loading { pointer-events:none; opacity:.55; }
+
+/* 模式按钮组 */
+.mode-btns { display:flex; gap:4px; }
+.mode-btn {
+  padding:4px 10px; border-radius:6px; border:1.5px solid var(--card-border);
+  background:var(--card-bg); font-size:11px; font-weight:600;
+  cursor:pointer; transition:all .15s; color:var(--text-secondary);
+  white-space:nowrap;
+}
+.mode-btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-light); }
+.mode-btn.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+/* 数值状态 */
+.state-tag {
+  font-size:11.5px; font-weight:700; padding:3px 9px; border-radius:6px;
+  white-space:nowrap;
+}
+.state-tag-on   { color:var(--success); background:rgba(16,185,129,.08); }
+.state-tag-off  { color:var(--text-muted); background:transparent; }
+.state-tag-warm { color:var(--warning); background:rgba(245,158,11,.08); }
+.state-tag-cool { color:#3b82f6; background:rgba(59,130,246,.08); }
+.state-tag-num  { color:var(--accent); background:var(--accent-light); }
+
+/* 亮度滑块 */
+.bri-row { display:flex; align-items:center; gap:8px; flex:1; max-width:160px; }
+.bri-label { font-size:10.5px; color:var(--text-muted); font-weight:600; min-width:30px; text-align:right; }
+.bri-slider { -webkit-appearance:none; appearance:none; flex:1; height:5px; border-radius:3px; background:var(--card-border); outline:none; cursor:pointer; }
+.bri-slider::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:var(--accent); cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,.15); }
+
+/* ── 空/加载态 ── */
+.empty-state { text-align:center; padding:60px 20px; color:var(--text-muted); }
+.empty-icon { font-size:48px; opacity:.35; margin-bottom:10px; }
+.empty-text { font-size:14px; font-weight:500; }
+.loading-state { text-align:center; padding:50px 20px; }
+.spinner { width:32px; height:32px; border:3px solid var(--card-border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; margin:0 auto 12px; }
+@keyframes spin { to{transform:rotate(360deg)} }
+.loading-text { font-size:13px; color:var(--text-muted); }
+
+/* Toast */
+.toast-c { position:fixed; top:70px; right:20px; z-index:999; display:flex; flex-direction:column; gap:8px; }
+.toast { padding:10px 18px; border-radius:10px; font-size:12.5px; font-weight:600; animation:tIn .3s ease; backdrop-filter:blur(8px); box-shadow:0 4px 14px rgba(0,0,0,.1); max-width:340px; }
+.toast-ok { background:#f0fdf4; border:1px solid #bbf7d0; color:#16a34a; }
+.toast-err { background:#fef2f2; border:1px solid #fecaca; color:#dc2626; }
+@keyframes tIn { from{opacity:0;transform:translateX(30px)} to{opacity:1;transform:translateX(0)} }
+
+@media(max-width:640px){
+  .ha-connect-card { flex-direction:column; align-items:flex-start; padding:14px; }
+  .ha-connect-form { width:100%; } .ha-connect-form .f-group { min-width:100%; }
+  .page-wrap { padding:14px 12px 60px; }
+  .appliance-header { padding:12px 14px 10px; }
+  .appliance-body { padding:0 14px 14px; }
+  .ctrl-row { flex-wrap:wrap; padding:7px 10px; }
+  .ctrl-row-actions { width:100%; margin-top:4px; justify-content:flex-end; }
+}
+
+/* 详情弹窗 */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:200; display:none; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+.modal-overlay.show { display:flex; }
+.modal-box { background:var(--card-bg); border:1px solid var(--card-border); border-radius:18px; width:480px; max-height:85vh; overflow-y:auto; padding:24px; box-shadow:0 20px 60px rgba(0,0,0,.15); }
+.modal-title { font-size:16px; font-weight:700; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+.modal-close { margin-left:auto; width:30px; height:30px; border-radius:8px; border:none; background:var(--input-bg); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.attr-row { display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--card-border); font-size:12.5px; }
+.attr-row:last-child { border-bottom:none; }
+.attr-key { color:var(--text-muted); font-family:monospace; font-size:11.5px; }
+.attr-val { color:var(--text); word-break:break-all; max-width:70%; text-align:right; }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a class="nav-brand" href="/"><span class="logo">AIManagePlatform</span></a>
+  <div style="flex:1"></div>
+  <a class="nav-link" href="/">← 返回主页</a>
+</nav>
+
+<div class="page-wrap">
+  <!-- 页面标题 -->
+  <div class="page-header">
+    <h1 class="page-title">🏠 智能家居 <span class="ha-status-dot offline" id="haDot"></span></h1>
+    <p class="page-desc" id="haDesc">配置 Home Assistant 以管理和控制智能设备</p>
+  </div>
+
+  <!-- 连接配置 -->
+  <div class="ha-connect-card" id="connectCard">
+    <div class="ha-connect-icon">🏠</div>
+    <div class="ha-connect-info">
+      <h3>Home Assistant</h3>
+      <p id="connText">配置地址和令牌后即可控制设备</p>
+    </div>
+    <div class="ha-connect-form">
+      <div class="f-group"><label class="f-label">地址</label><input class="f-input" id="haUrl" placeholder="http://192.168.x.x:8123"></div>
+      <div class="f-group"><label class="f-label">令牌</label><input class="f-input" id="haToken" type="password" placeholder="Long-Lived Access Token"></div>
+      <button class="btn-ha" id="btnSave" onclick="saveConfig()">💾 保存连接</button>
+    </div>
+  </div>
+
+  <!-- 设备容器 -->
+  <div id="deviceContainer"><div class="loading-state"><div class="spinner"></div><div class="loading-text">正在连接...</div></div></div>
+</div>
+
+<!-- 弹窗 -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal-box">
+    <div class="modal-title" id="modalTitle">设备详情<button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<div class="toast-c" id="toastC"></div>
+
+<script>
+/* ══════════════════════════════════════════
+   智能家居 — 一个电器一张卡片
+   子控件内嵌在卡片中，紧凑直观
+   ══════════════════════════════════════════ */
+
+var connected = false;
+
+function esc(s){ var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+function toast(msg,type){
+  var c=document.getElementById('toastC'),t=document.createElement('div');
+  t.className='toast toast-'+(type||'ok'); t.textContent=msg; c.appendChild(t);
+  setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t)},3500);
+}
+function hdr(){
+  try{ var t=localStorage.getItem('access_token'); return t?{'Authorization':'Bearer '+t,'Content-Type':'application/json'}:{'Content-Type':'application/json'};}
+  catch(e){return{'Content-Type':'application/json'};}
+}
+
+// ─── 初始化 ───
+async function init(){
+  setLoading('正在连接 Home Assistant...');
+  try{
+    var r=await fetch('/api/ha/config',{headers:hdr()});
+    if(r.ok){
+      var cfg=await r.json();
+      if(cfg.url){
+        document.getElementById('haUrl').value=cfg.url;
+        document.getElementById('haToken').placeholder=cfg.token_masked||'输入令牌';
+        connected=true;
+        updateConnUI();
+        await loadDevices(); return;
+      }
+    }
+  }catch(e){}
+  hideLoading(); showEmpty('请先配置连接');
+}
+
+async function saveConfig(){
+  var url=document.getElementById('haUrl').value.trim(), token=document.getElementById('haToken').value.trim();
+  if(!url){ toast('请输入 HA 地址','err'); return; }
+  if(!token){ toast('请输入访问令牌','err'); return; }
+  var btn=document.getElementById('btnSave'); btn.disabled=true; btn.textContent='⏳...';
+  try{
+    var r=await fetch('/api/ha/config',{method:'POST',headers:hdr(),body:JSON.stringify({url:url,token:token})});
+    var d=await r.json();
+    if(r.ok){ connected=true; toast('已保存 ✅','ok');
+      document.getElementById('haToken').placeholder='已保存（留空保持不变）';
+      document.getElementById('haToken').value='';
+      updateConnUI(); loadDevices();
+    }else{ toast(d.detail||'保存失败','err'); }
+  }catch(e){ toast('请求异常','err'); }
+  btn.disabled=false; btn.textContent='💾 保存连接';
+}
+
+function updateConnUI(){
+  var dot=document.getElementById('haDot'), t=document.getElementById('connText');
+  dot.className='ha-status-dot '+(connected?'online':'offline');
+  t.textContent=connected?'已连接到 Home Assistant':'配置地址和令牌后即可控制设备';
+  t.className=connected?'connected':'';
+}
+
+// ─── 加载设备并按电器分组渲染 ───
+async function loadDevices(){
+  if(!connected){ hideLoading(); showEmpty('未连接'); return; }
+  setLoading('正在加载设备...');
+  try{
+    var r=await fetch('/api/ha/states',{headers:hdr()});
+    if(r.status===401){ connected=false; updateConnUI(); toast('认证已失效','err'); hideLoading(); showEmpty('认证失败'); return; }
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    var all=await r.json();
+
+    // 过滤可控制设备
+    var allow=['light','switch','climate','fan','cover','media_player'];
+    var devs=all.filter(function(s){
+      var dom=s.entity_id.split('.')[0];
+      return allow.indexOf(dom)!==-1 && s.entity_id.indexOf('_update')===-1;
+    });
+
+    renderAppliances(devs);
+  }catch(e){ console.warn('[load]',e); toast('加载失败','err'); hideLoading(); showEmpty('加载失败：'+e.message); }
+}
+
+// ═══ 核心：按电器分组 + 渲染 ═══
+function renderAppliances(devices){
+  hideLoading();
+  if(!devices.length){ showEmpty('未发现设备'); return; }
+
+  // Step 1: 按 entity_id 前缀聚类
+  var groups={};
+  devices.forEach(function(d){
+    var key=deviceKey(d.entity_id);
+    // 二次合并：友好名前缀相同也归入同一组
+    var fname=(d.attributes&&d.attributes.friendly_name)||'';
+    var prefix=fname.split(/\s+/)[0]||'';
+    var mergedKey=key;
+    // 尝试找到已有组（通过前缀匹配）
+    for(var k in groups){
+      var kn=k.toLowerCase(), pn=prefix.toLowerCase();
+      if(kn.indexOf(pn)!==-1 || pn.indexOf(kn)!==-1){
+        mergedKey=k; break;
+      }
+    }
+    if(!groups[mergedKey]) groups[mergedKey]=[];
+    groups[mergedKey].push(d);
+  });
+
+  // Step 2: 合并小组（<2个成员的尝试合并到名称包含它的更大的组）
+  mergeSmallGroups(groups);
+
+  // Step 3: 构建最终列表
+  var list=[];
+  for(var k in groups){
+    var items=groups[k], info=guessInfo(items);
+    list.push({name:info.name,icon:info.icon,color:info.color,items:items});
+  }
+  list.sort(function(a,b){ return a.name.localeCompare(b.name,'zh-CN'); });
+
+  // Step 4: 渲染
+  var html='';
+  list.forEach(function(g,i){
+    html+=buildApplianceCard(g,i);
+  });
+  document.getElementById('deviceContainer').innerHTML=html;
+  console.log('[HA] '+list.length+' 个电器, '+devices.length+' 个控件');
+}
+
+// 从 entity_id 提取设备标识
+function deviceKey(eid){
+  var id=eid.split('.')[1];
+  if(!id) return eid;
+  var parts=id.split('_');
+  if(parts.length<=2) return id;
+
+  var funcWords={
+    on:true,p:true,s:true,indicator:true,light:true,mute:true,sleep:true,
+    mode:true,fast:true,enable:true,auto:true,night:true,physical:true,
+    status:true,control:true,locked:true,prevent:true,remind:true,
+    bucket:true,water:true,eco:true,steam:true,damp:true,sterilize:true,
+    cycle:true,micro:true,eye:true,flocks:true,wind:true,
+    ultraviolet:true,relay:true,rotate:true,screen:true,saver:true,
+    reverse:true,slow:true,left:true,right:true,middle:true,top:true,bottom:true,
+    alarm:true,is_on:true,disturb:true,power_2:true
+  };
+  var cut=parts.length;
+  for(var i=parts.length-1;i>=Math.max(parts.length-5,1);i--){
+    if(funcWords[parts[i].toLowerCase()]){ cut=i; break; }
+  }
+  if(cut===parts.length) cut=Math.max(parts.length-2,2);
+  return parts.slice(0,Math.max(cut,2)).join('_');
+}
+
+// 合并小组到更大的组
+function mergeSmallGroups(groups){
+  var keys=Object.keys(groups);
+  // 多轮合并
+  var changed=true, rounds=0;
+  while(changed && rounds++<3){
+    changed=false;
+    keys=Object.keys(groups);
+    keys.sort(function(a,b){ return (groups[b]||[]).length-(groups[a]||[]).length; }); // 大的优先
+    keys.forEach(function(k){
+      if(!groups[k] || (groups[k]||[]).length>=3) return;
+      // 找最大的可能父组
+      var best=null, bestLen=-1;
+      keys.forEach(function(ok){
+        if(ok===k || !groups[ok]) return;
+        if(groups[ok].length<=groups[k].length) return;
+        // 检查k的所有entity是否以ok的某个成员的前缀开头
+        var matchCount=0;
+        groups[k].forEach(function(item){
+          var itemPrefix=item.entity_id.split('.')[1].split('_').slice(0,3).join('_');
+          groups[ok].forEach(function(parentItem){
+            var parentPrefix=parentItem.entity_id.split('.')[1];
+            if(parentPrefix.indexOf(itemPrefix)!==-1 || itemPrefix.indexOf(parentPrefix)!==-1)
+              matchCount++;
+          });
+        });
+        if(matchCount>bestLen){ best=ok; bestLen=matchCount; }
+      });
+      if(best && bestLen>0){
+        groups[best]=groups[best].concat(groups[k]);
+        delete groups[k];
+        changed=true;
+      }
+    });
+  }
+}
+
+// 推断电器信息
+function guessInfo(items){
+  var domains={}, names=[];
+  items.forEach(function(d){
+    domains[d.entity_id.split('.')[0]]=true;
+    names.push((d.attributes&&d.attributes.friendly_name)||d.entity_id);
+  });
+
+  // 取最短名作为基础名
+  var base='', minL=999;
+  names.forEach(function(n){
+    var first=n.trim().split(/[\s·\-]+/)[0]||n.trim();
+    if(first.length>=2 && first.length<minL){ minL=first.length; base=first; }
+  });
+  base=cleanName(base);
+
+  var icon='📦', color='#eef0f3';
+  var nl=(base+' '+names.join(',')).toLowerCase();
+
+  if(nl.indexOf('马桶')!==-1)           {icon='🚽';color='#f0f4fa';}
+  else if(nl.indexOf('电视')!==-1)       {icon='📺';color='#fdf4ff';}
+  else if(nl.indexOf('空调')!==-1||nl.indexOf('vrf')!==-1){icon='🌡️';color='#fff5f5';}
+  else if(nl.indexOf('窗帘')!==-1)       {icon='🪟';color='#f5f0ff';}
+  else if(nl.indexOf('干衣机')!==-1)     {icon='👕';color='#f0fdff';}
+  else if(nl.indexOf('洗衣机')!==-1)     {icon='🧺';color='#f0fdff';}
+  else if(nl.indexOf('晾衣')!==-1)       {icon='👔';color='#f0fff4';}
+  else if(nl.indexOf('音箱')!==-1||nl.indexOf('音响')!==-1||nl.indexOf('lx06')!==-1){icon='🔊';color='#fffbeb';}
+  else if(nl.indexOf('网关')!==-1||nl.indexOf('hub')!==-1){icon='🏠';color:'#eff6ff';}
+  else if(nl.indexOf('开关')!==-1)       {icon='🔘';color='#eff6ff';}
+  else if(nl.indexOf('灯')!==-1||domains['light']){icon='💡';color='#fffbeb';}
+  else if(nl.indexOf('风扇')!==-1)       {icon='🌀';color='#f0fdfc';}
+  else if(domains['cover'])              {icon='🪟';color='#f5f0ff';}
+  else if(domains['climate'])            {icon='🌡️';color='#fff5f5';}
+  else if(domains['fan'])                {icon='🌀';color='#f0fdfc';}
+  else if(domains['media_player'])       {icon='📺';color='#fdf4ff';}
+
+  return{name:base||'未知设备',icon:icon,color:color};
+}
+
+function cleanName(n){
+  n=n.replace(/^lupa的/i,'').replace(/^\s*\*?\s*/g,'').replace(/\s*\*\s*$/g,'')
+     .replace(/^switch\s*/i,'').replace(/^light\s*/i,'').trim();
+  if(n.length>16){ var i=n.search(/[\s\-_·]/); if(i>3) n=n.substring(0,i); }
+  return n||'未知设备';
+}
+
+// ═══ 构建单张电器卡片 HTML ═══
+function buildApplianceCard(group,idx){
+  var g=group, items=g.items;
+  var isCollapsed=g.items.length<=3?false:false; // 默认展开
+
+  var h='<div class="appliance-card" id="app_'+idx+'">';
+  // 头部
+  h+='<div class="appliance-header" onclick="toggleCard(\'app_'+idx+'\')">';
+  h+='  <div class="appliance-header-icon" style="background:'+g.color+'">'+g.icon+'</div>';
+  h+='  <div class="appliance-header-info">';
+  h+='    <div class="appliance-name">'+esc(g.name)+'</div>';
+  h+='    <div class="appliance-meta">'+items.length+' 个控制项</div>';
+  h+='  </div>';
+  // 头部右侧摘要状态
+  var summary=buildSummary(items);
+  h+='  <span class="appliance-badge">'+summary+'</span>';
+  h+='  <span class="appliance-arrow">▼</span>';
+  h+='</div>';
+  // 内容区
+  h+='<div class="appliance-body">';
+  items.forEach(function(d){ h+=buildCtrlRow(d); });
+  h+='</div></div>';
+  return h;
+}
+
+// 头部摘要文字
+function buildSummary(items){
+  var onCount=0, totalCount=items.length;
+  items.forEach(function(d){
+    var s=d.state;
+    if(s==='on'||s==='open'||s==='unlocked'||s==='heat'||s==='cool'||s==='playing') onCount++;
+  });
+  if(onCount===totalCount && totalCount>0) return '全部开启';
+  if(onCount===0) return '全部关闭';
+  return onCount+'/'+totalCount+' 开启';
+}
+
+// ═══ 构建单个子控件行 ═══
+function buildCtrlRow(d){
+  var eid=d.entity_id, domain=eid.split('.')[0];
+  var name=(d.attributes&&d.attributes.friendly_name)||eid;
+  var state=d.state||'unknown';
+  var isOn=state==='on'||state==='open'||state==='unlocked'||state==='heat'||state==='cool'||state==='playing';
+
+  // 图标映射
+  var ic={light:'💡',switch:'🔌',climate:'🌡️',fan:'🌀',cover:'🪟',media_player:'📺'};
+  var icon=ic[domain]||'📦';
+
+  // 状态中文
+  var sTxt=stateLabel(state,domain);
+
+  // 操作区
+  var actions='';
+  if(domain==='light'){
+    var bri=(d.attributes&&d.attributes.brightness)?Math.round(d.attributes.brightness/255*100):0;
+    actions+=toggleBtn(eid,isOn);
+    if(isOn && bri>0){
+      actions+='<div class="bri-row"><span class="bri-label">'+bri+'%</span>';
+      actions+='<input type="range" class="bri-slider" min="0" max="255" value="'+d.attributes.brightness+'" ';
+      actions+='onmousedown="event.stopPropagation()" onchange="event.stopPropagation();setBrightness(this,\''+eid+'\')" ';
+      actions+='oninput="this.previousElementSibling.textContent=Math.round(this.value/255*100)+\'%\'">';
+      actions+='</div>';
+    }else{
+      actions+='<span class="state-tag '+(isOn?'state-tag-on':'state-tag-off')+'">'+esc(sTxt)+'</span>';
+    }
+  }else if(domain==='switch'||domain==='fan'){
+    actions+=toggleBtn(eid,isOn);
+    actions+='<span class="state-tag '+(isOn?'state-tag-on':'state-tag-off')+'">'+esc(sTxt)+'</span>';
+  }else if(domain==='climate'){
+    var ct=(d.attributes&&d.attributes.current_temperature!=null)?d.attributes.current_temperature:'--';
+    var tt=(d.attributes&&d.attributes.temperature!=null)?d.attributes.temperature:'--';
+    var hm=(d.attributes&&d.attributes.current_humidity!=null)?d.attributes.current_humidity:'--';
+    actions+='<div class="mode-btns">';
+    actions+=modeBtn('❄️制冷',domain,'set_hvac_mode',eid,{hvac_mode:'cool'},state==='cool');
+    actions+=modeBtn('🔥制热',domain,'set_hvac_mode',eid,{hvac_mode:'heat'},state==='heat');
+    actions+=modeBtn('⏻关闭',domain,'turn_off',eid,{});
+    actions+='</div>';
+    actions+='<span class="state-tag state-tag-num">'+ct+'°C / 目标'+tt+'°C</span>';
+  }else if(domain==='cover'){
+    var pos=(d.attributes&&d.attributes.current_position!=null)?d.attributes.current_position:null;
+    actions+='<div class="mode-btns">';
+    actions+=modeBtn('⬆️开',domain,'open_cover',eid,{});
+    actions+=modeBtn('⬇️关',domain,'close_cover',eid,{});
+    actions+=modeBtn('⏹停',domain,'stop_cover',eid,{});
+    actions+='</div>';
+    if(pos!=null) actions+='<span class="state-tag state-tag-num">'+pos+'%</span>';
+  }else if(domain==='media_player'){
+    actions+='<div class="mode-btns">';
+    actions+=modeBtn('▶',domain,'media_play',eid,{},state==='playing');
+    actions+=modeBtn('⏸',domain,'media_pause',eid,{},state==='paused'||state==='idle');
+    actions+='</div>';
+    actions+='<span class="state-tag '+(isOn?'state-tag-on':'state-tag-off')+'">'+esc(sTxt)+'</span>';
+  }
+
+  return '<div class="ctrl-row" onclick="event.stopPropagation();showDetail(\''+esc(eid)+'\')">'+
+    '<span class="ctrl-row-icon">'+icon+'</span>'+
+    '<div class="ctrl-row-info">'+
+      '<div class="ctrl-row-name" title="'+esc(name)+'">'+esc(shortName(name))+'</div>'+
+      '<div class="ctrl-row-state">'+esc(sTxt)+'</div>'+
+    '</div>'+
+    '<div class="ctrl-row-actions">'+actions+'</div>'+
+  '</div>';
+}
+
+function shortName(n){
+  // 去掉重复的设备前缀（如"马桶电源 电源"→"电源"）
+  n=n.trim().replace(/^[\s·\-]+/,'');
+  if(n.length>20) return n.substring(0,19)+'…';
+  return n;
+}
+
+function toggleBtn(eid,isOn){
+  return '<button class="power-toggle '+(isOn?'on':'')+'" onclick="event.stopPropagation();doToggle(\''+eid+'\')" title="'+(isOn?'关闭':'开启')+'"></button>';
+}
+
+function modeBtn(label,domain,svc,eid,extra,active){
+  var cls='mode-btn'+(active?' active':'');
+  return '<button class="'+cls+'" onclick="event.stopPropagation();callSvc(\''+domain+'\',\''+svc+'\',\''+eid+'\','+JSON.stringify(extra||{})+')">'+label+'</button>';
+}
+
+// ─── 状态标签映射 ───
+function stateLabel(state,domain){
+  var m={
+    on:'开启',off:'关闭',open:'打开',closed:'关闭',
+    locked:'上锁',unlocked:'解锁',
+    heat:'加热',cool:'制冷',dry:'除湿',fan_only:'送风',
+    auto:'自动',idle:'待机',
+    playing:'播放中',paused:'暂停',standby:'待机',
+    unavailable:'离线',unknown:'未知',
+    discharging:'放电中',charging:'充电中'
+  };
+  return m[state]||state;
+}
+
+// ─── 交互操作 ───
+function toggleCard(id){
+  var el=document.getElementById(id); if(!el)return;
+  el.classList.toggle('collapsed');
+}
+
+async function doToggle(eid){
+  var dom=eid.split('.')[0];
+  await callSvc(dom,'turn_on',eid,{}); // 简化：让 callSvc 自动判断当前状态
+}
+// 实际上 toggle 应该根据当前状态决定 turn_on 还是 turn_off
+// 改进版：
+async function _doToggle(btnEl,eid){
+  var dom=eid.split('.')[0];
+  // 找到对应设备数据判断当前状态
+  var isOn=btnEl.classList.contains('on');
+  btnEl.classList.add('loading');
+  try{
+    await callSvc(dom,isOn?'turn_off':'turn_on',eid,{});
+  }finally{ btnEl.classList.remove('loading'); }
+}
+
+// 覆盖 doToggle
+doToggle=function(eid){
+  var btn=event.currentTarget;
+  _doToggle(btn,eid);
+};
+
+async function setBrightness(slider,eid){
+  var v=parseInt(slider.value);
+  if(v<=0){ await callSvc('light','turn_off',eid,{}); return; }
+  await callSvc('light','turn_on',eid,{brightness:v});
+}
+
+async function callSvc(domain,service,entityId,extra){
+  var payload={entity_id:entityId};
+  for(var k in extra) payload[k]=extra[k];
+  toast('发送命令...');
+  try{
+    var r=await fetch('/api/ha/service/'+encodeURIComponent(domain)+'/'+encodeURIComponent(service),
+      {method:'POST',headers:hdr(),body:JSON.stringify(payload)});
+    var d=await r.json();
+    if(r.ok){ toast('已发送 ✅'); setTimeout(loadDevices,1200); }
+    else throw new Error(d.detail||'HTTP '+r.status);
+  }catch(e){ toast('失败：'+e.message,'err'); }
+}
+
+// ─── 详情弹窗 ───
+async function showDetail(entityId){
+  var dev=null;
+  try{ var r=await fetch('/api/ha/states/'+encodeURIComponent(entityId),{headers:hdr()}); if(r.ok)dev=await r.json();}
+  catch(e){}
+  if(!dev){
+    // 从缓存找
+  }
+  if(!dev){ toast('无法获取详情','err'); return; }
+
+  var name=(dev.attributes&&dev.attributes.friendly_name)||entityId;
+  var domain=entityId.split('.')[0];
+  document.getElementById('modalTitle').innerHTML=name+' <button class="modal-close" onclick="closeModal()">✕</button>';
+
+  var h='<div style="padding:10px 14px;border-radius:10px;background:var(--input-bg);margin-bottom:16px;font-size:14px;">';
+  h+='<b>当前状态：</b><span style="color:var(--accent);font-weight:700;">'+esc(stateLabel(dev.state||'',domain))+'</span>';
+  if(dev.last_updated) h+='<br><span style="font-size:11.5px;color:var(--text-muted);">'+new Date(dev.last_updated).toLocaleString()+'</span>';
+  h+='</div>';
+
+  if(dev.attributes){
+    h+='<div style="font-size:12px;color:var(--text-secondary);font-weight:600;margin-bottom:8px;">全部属性</div>';
+    var keys=Object.keys(dev.attributes).sort();
+    keys.forEach(function(k){
+      var v=dev.attributes[k], vs=(typeof v==='object'?JSON.stringify(v):String(v));
+      if(vs.length>100) vs=vs.substring(0,97)+'…';
+      h+='<div class="attr-row"><span class="attr-key">'+esc(k)+'</span><span class="attr-val">'+esc(vs)+'</span></div>';
+    });
+  }
+  document.getElementById('modalBody').innerHTML=h;
+  document.getElementById('detailModal').classList.add('show');
+}
+function closeModal(){ document.getElementById('detailModal').classList.remove('show'); }
+
+// ─── 工具函数 ───
+function setLoading(msg){
+  document.getElementById('deviceContainer').innerHTML=
+    '<div class="loading-state"><div class="spinner"></div><div class="loading-text">'+esc(msg)+'</div></div>';
+}
+function hideLoading(){}
+function showEmpty(msg){
+  document.getElementById('deviceContainer').innerHTML=
+    '<div class="empty-state"><div class="empty-icon">🏡</div><div class="empty-text">'+esc(msg)+'</div><div style="font-size:12px;margin-top:4px;opacity:.6;">确保 Home Assistant 已启动并可访问</div></div>';
+}
+
+init();
+</script>
+</body>
+</html>

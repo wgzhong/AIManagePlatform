@@ -65,6 +65,11 @@
           <span>多领域服务</span>
           <span class="menu-arrow">→</span>
         </div>
+        <div class="menu-item" onclick="openSettings()">
+          <span class="menu-icon">⚙️</span>
+          <span>个人设置</span>
+          <span class="menu-arrow">→</span>
+        </div>
         <div class="menu-divider"></div>
         <div class="menu-item" onclick="logout()">
           <span class="menu-icon">🚪</span>
@@ -247,6 +252,26 @@
         <div class="card-text-content">
           <h3>多领域服务</h3>
           <p>管理天气、导航、搜索、翻译等第三方服务配置，一键接入外部能力</p>
+        </div>
+        <span class="card-arrow-bottom">→</span>
+      </div>
+
+      <!-- 卡片7: 语音 ASR -->
+      <div class="premium-card" data-navigate="/voice-asr" onclick="navigateTo('/voice-asr')">
+        <div class="card-icon" style="background:linear-gradient(135deg,#8b5cf6,#06b6d4);">🎙️</div>
+        <div class="card-text-content">
+          <h3>语音 ASR</h3>
+          <p>配置语音识别服务，支持多语种转文本及音色、语速、音调等参数设置</p>
+        </div>
+        <span class="card-arrow-bottom">→</span>
+      </div>
+
+      <!-- 卡片8: 智能家居 -->
+      <div class="premium-card" data-navigate="/homeassistant" onclick="navigateTo('/homeassistant')">
+        <div class="card-icon card-icon-home">🏠</div>
+        <div class="card-text-content">
+          <h3>智能家居</h3>
+          <p>连接 Home Assistant，统一管理家中智能设备，语音控制灯光、空调、窗帘等</p>
         </div>
         <span class="card-arrow-bottom">→</span>
       </div>
@@ -462,6 +487,17 @@ document.addEventListener('DOMContentLoaded', function() {
     window.location.href = path;
   });
 });
+
+// 个人设置快捷跳转
+function openSettings() {
+  try {
+    var ak = localStorage.getItem('ai_platform_api_key') || '';
+    var au = localStorage.getItem('ai_platform_api_url') || 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+    var am = localStorage.getItem('ai_platform_model') || 'glm-4.5-air';
+    localStorage.setItem('ai_chat_config', JSON.stringify({mode:'custom',url:au,key:ak,model:am,timestamp:Date.now()}));
+  } catch(ex) {}
+  window.location.href = '/settings';
+}
 </script>
 <script src="/static/js/index.js"></script>
 </body>

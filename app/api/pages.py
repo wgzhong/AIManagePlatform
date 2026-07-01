@@ -111,3 +111,42 @@ def service_config_page():
             "Expires": "0",
         },
     )
+
+
+@router.get("/settings")
+def settings_page():
+    """个人设置页面"""
+    return FileResponse(
+        os.path.join(STATIC_DIR, "settings.html"),
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
+
+
+@router.get("/homeassistant")
+def homeassistant_page():
+    """智能家居页面"""
+    return FileResponse(
+        os.path.join(STATIC_DIR, "homeassistant.html"),
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
+
+
+@router.get("/voice-asr")
+def voice_asr_page():
+    """语音 ASR 转文本配置页面"""
+    return FileResponse(
+        os.path.join(STATIC_DIR, "voice-asr.html"),
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )

@@ -130,6 +130,7 @@ AI 推理对话平台 API 文档
     from app.api.user_history import router as user_history_router
     from app.api.admin_users import router as admin_users_router
     from app.api.provider_keys import router as provider_keys_router
+    from app.api.homeassistant import router as ha_router
 
     app.include_router(auth_router)
     app.include_router(user_config_router)
@@ -145,6 +146,7 @@ AI 推理对话平台 API 文档
     app.include_router(history_router)
     app.include_router(mood_router)
     app.include_router(pages_router)
+    app.include_router(ha_router)
 
     # 挂载静态文件服务（必须在 app 实例上 mount，router.mount 不生效）
     from fastapi.staticfiles import StaticFiles

@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>个人设置 — AIManagePlatform</title>
+<style>
+/* ═══════════════════════════════════════
+   个人设置页面 — 浅色风格
+   ═══════════════════════════════════════ */
+:root {
+  --bg: #f0f2f5;
+  --card-bg: #ffffff;
+  --card-border: #e8ecf0;
+  --input-bg: #f7f8fa;
+  --text: #1a1a2e;
+  --text-secondary: #5a6474;
+  --text-muted: #9aa4b2;
+  --accent: #6366f1;
+  --accent-2: #8b5cf6;
+  --accent-cyan: #0891b2;
+  --danger: #ef4444;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --radius: 14px;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body {
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  background:var(--bg); color:var(--text);
+  min-height:100vh; line-height:1.55; font-size:14px;
+}
+a { color:var(--accent); text-decoration:none; }
+
+/* ── Top Nav ── */
+.top-nav {
+  position:sticky; top:0; z-index:100;
+  background:rgba(255,255,255,.92); backdrop-filter:saturate(180%) blur(12px);
+  border-bottom:1px solid var(--card-border);
+  padding:0 28px; height:54px; display:flex; align-items:center; gap:14px;
+}
+.nav-brand { display:flex; align-items:center; gap:9px; text-decoration:none; color:inherit; }
+.nav-brand .logo { font-size:17px; font-weight:700; color:var(--text); }
+.nav-link { color:var(--text-secondary); text-decoration:none; font-size:13px; padding:6px 14px; border-radius:8px; transition:all .18s; }
+.nav-link:hover { background:rgba(99,102,241,.08); color:var(--accent); }
+
+/* ── Page ── */
+.page-wrap { max-width:900px; margin:0 auto; padding:28px 24px 80px; }
+
+.page-header { margin-bottom:28px; }
+.page-title { font-size:24px; font-weight:800; color:var(--text); }
+.page-title span { background:linear-gradient(135deg,var(--accent), var(--accent-cyan)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.page-desc { color:var(--text-secondary); font-size:13.5px; margin-top:4px; }
+
+/* ═══ 设置区块 ═══ */
+.setting-section {
+  background:var(--card-bg); border:1.5px solid var(--card-border);
+  border-radius:var(--radius); padding:24px; margin-bottom:20px;
+}
+.setting-section-title {
+  font-size:16px; font-weight:700; color:var(--text); margin-bottom:18px;
+  display:flex; align-items:center; gap:8px;
+}
+.setting-section-title .st-icon { font-size:20px; }
+
+/* Avatar */
+.avatar-section { display:flex; align-items:center; gap:20px; margin-bottom:20px; }
+.avatar-preview {
+  width:72px; height:72px; border-radius:50%; background:linear-gradient(135deg,var(--accent), var(--accent-2));
+  display:flex; align-items:center; justify-content:center;
+  font-size:28px; color:#fff; font-weight:700; flex-shrink:0;
+  position:relative; cursor:pointer; overflow:hidden;
+}
+.avatar-preview img { width:100%; height:100%; object-fit:cover; }
+.avatar-preview .avatar-overlay {
+  position:absolute; bottom:0; left:0; right:0; height:28px;
+  background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center;
+  font-size:10px; color:#fff; opacity:0; transition:opacity .2s;
+}
+.avatar-preview:hover .avatar-overlay { opacity:1; }
+.avatar-info { flex:1; }
+.avatar-info .user-name { font-size:18px; font-weight:700; color:var(--text); }
+.avatar-info .user-email { font-size:13px; color:var(--text-secondary); margin-top:2px; }
+
+/* Form */
+.f-group { margin-bottom:16px; }
+.f-label { font-size:12.5px; color:var(--text-secondary); margin-bottom:6px; display:flex; align-items:center; gap:5px; font-weight:600; }
+.f-input {
+  width:100%; padding:10px 14px; border-radius:10px;
+  background:var(--input-bg); border:1.5px solid var(--card-border);
+  color:var(--text); font-size:13.5px; transition:border-color .2s; outline:none;
+}
+.f-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(99,102,241,.1); }
+.f-row { display:flex; gap:12px; }
+.f-row .f-group { flex:1; }
+
+/* Buttons */
+.btn-save {
+  padding:10px 28px; border-radius:10px; border:none;
+  background:linear-gradient(135deg,var(--accent), var(--accent-cyan));
+  color:#fff; font-size:13.5px; font-weight:700; cursor:pointer; transition:all .2s;
+}
+.btn-save:hover { transform:translateY(-1px); box-shadow:0 4px 16px rgba(99,102,241,.3); }
+.btn-danger {
+  padding:10px 20px; border-radius:10px; border:1.5px solid rgba(239,68,68,.25);
+  background:rgba(239,68,68,.06); color:var(--danger); font-size:13px; font-weight:600;
+  cursor:pointer; transition:all .18s;
+}
+.btn-danger:hover { background:rgba(239,68,68,.12); }
+
+/* Toggle */
+.toggle-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--input-bg); }
+.toggle-row:last-child { border-bottom:none; }
+.toggle-label { font-size:13.5px; color:var(--text); }
+.toggle-sub { font-size:12px; color:var(--text-muted); }
+.toggle-switch {
+  position:relative; width:44px; height:24px; border-radius:12px;
+  background:var(--card-border); cursor:pointer; transition:background .25s; flex-shrink:0;
+}
+.toggle-switch.on { background:var(--success); }
+.toggle-switch::after {
+  content:''; position:absolute; top:2px; left:2px;
+  width:20px; height:20px; border-radius:50%; background:#fff;
+  transition:transform .25s; box-shadow:0 1px 3px rgba(0,0,0,.15);
+}
+.toggle-switch.on::after { transform:translateX(20px); }
+
+/* Voice settings */
+.voice-preview {
+  display:flex; align-items:center; gap:12px; padding:10px 14px;
+  background:var(--input-bg); border-radius:10px; margin-top:8px;
+}
+.voice-play-btn {
+  width:36px; height:36px; border-radius:50%; border:none;
+  background:var(--accent); color:#fff; font-size:14px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; transition:all .18s;
+}
+.voice-play-btn:hover { transform:scale(1.08); }
+.voice-info { flex:1; }
+.voice-name { font-size:13px; font-weight:600; color:var(--text); }
+.voice-desc { font-size:11.5px; color:var(--text-muted); }
+
+/* Toast */
+.toast-container { position:fixed; top:70px; right:24px; z-index:999; display:flex; flex-direction:column; gap:8px; }
+.toast { padding:10px 20px; border-radius:10px; font-size:13px; font-weight:600; animation:toastIn .3s ease; backdrop-filter:blur(8px); box-shadow:0 4px 16px rgba(0,0,0,.1); }
+.toast-ok { background:#f0fdf4; border:1px solid #bbf7d0; color:#16a34a; }
+.toast-err { background:#fef2f2; border:1px solid #fecaca; color:#dc2626; }
+@keyframes toastIn { from{opacity:0;transform:translateX(30px)} to{opacity:1;transform:translateX(0)} }
+
+/* Responsive */
+@media(max-width:640px){
+  .page-wrap { padding:16px 14px 60px; }
+  .f-row { flex-direction:column; gap:0; }
+  .avatar-section { flex-direction:column; align-items:flex-start; }
+}
+</style>
+</head>
+<body>
+
+<!-- Top Nav -->
+<nav class="top-nav">
+  <a class="nav-brand" href="/">
+    <span class="logo">AIManagePlatform</span>
+  </a>
+  <div style="flex:1"></div>
+  <a class="nav-link" href="/">← 返回主页</a>
+</nav>
+
+<div class="page-wrap">
+  <div class="page-header">
+    <h1 class="page-title"><span>⚙️ 个人设置</span></h1>
+    <p class="page-desc">管理你的个人资料、安全设置与使用偏好</p>
+  </div>
+
+  <!-- ① 个人资料 -->
+  <div class="setting-section">
+    <div class="setting-section-title"><span class="st-icon">👤</span> 个人资料</div>
+    <div class="avatar-section">
+      <div class="avatar-preview" id="avatarPreview" onclick="document.getElementById('avatarInput').click()">
+        <div id="avatarFallback">L</div>
+        <div class="avatar-overlay">更换</div>
+      </div>
+      <input type="file" id="avatarInput" accept="image/*" style="display:none;" onchange="previewAvatar(event)">
+      <div class="avatar-info">
+        <div class="user-name" id="settingUserName">lupa</div>
+        <div class="user-email" id="settingUserEmail">871981266@qq.com</div>
+      </div>
+    </div>
+    <div class="f-row">
+      <div class="f-group">
+        <label class="f-label">用户名</label>
+        <input class="f-input" id="settingUsernameInput" placeholder="请输入用户名">
+      </div>
+      <div class="f-group">
+        <label class="f-label">邮箱</label>
+        <input class="f-input" type="email" id="settingEmailInput" placeholder="请输入邮箱">
+      </div>
+    </div>
+    <div style="margin-top:16px;">
+      <button class="btn-save" onclick="saveProfile()">保存资料</button>
+    </div>
+  </div>
+
+  <!-- ② 密码修改 -->
+  <div class="setting-section">
+    <div class="setting-section-title"><span class="st-icon">🔒</span> 密码修改</div>
+    <div class="f-group">
+      <label class="f-label">当前密码</label>
+      <input class="f-input" type="password" id="oldPassword" placeholder="请输入当前密码">
+    </div>
+    <div class="f-row">
+      <div class="f-group">
+        <label class="f-label">新密码</label>
+        <input class="f-input" type="password" id="newPassword" placeholder="请输入新密码（至少6位）">
+      </div>
+      <div class="f-group">
+        <label class="f-label">确认新密码</label>
+        <input class="f-input" type="password" id="confirmPassword" placeholder="请再次输入新密码">
+      </div>
+    </div>
+    <div style="margin-top:16px;">
+      <button class="btn-save" onclick="changePassword()">修改密码</button>
+    </div>
+  </div>
+
+  <!-- ③ 偏好设置 -->
+  <div class="setting-section">
+    <div class="setting-section-title"><span class="st-icon">🎨</span> 偏好设置</div>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">深色模式</div>
+        <div class="toggle-sub">切换浅色/深色主题</div>
+      </div>
+      <div class="toggle-switch" id="toggleDarkMode" onclick="toggleSwitch('toggleDarkMode')"></div>
+    </div>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">语言</div>
+        <div class="toggle-sub">界面显示语言</div>
+      </div>
+      <select class="f-input" id="settingLanguage" style="width:auto; min-width:120px;">
+        <option value="zh">简体中文</option>
+        <option value="en">English</option>
+        <option value="ja">日本語</option>
+      </select>
+    </div>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">侧边栏折叠</div>
+        <div class="toggle-sub">默认收起侧边导航</div>
+      </div>
+      <div class="toggle-switch" id="toggleSidebar" onclick="toggleSwitch('toggleSidebar')"></div>
+    </div>
+  </div>
+
+  <!-- ④ 通知设置 -->
+  <div class="setting-section">
+    <div class="setting-section-title"><span class="st-icon">🔔</span> 通知设置</div>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">对话完成通知</div>
+        <div class="toggle-sub">AI 回复完成后在浏览器通知</div>
+      </div>
+      <div class="toggle-switch on" id="toggleNotiDone" onclick="toggleSwitch('toggleNotiDone')"></div>
+    </div>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">设备上线通知</div>
+        <div class="toggle-sub">硬件设备连接时提示</div>
+      </div>
+      <div class="toggle-switch on" id="toggleNotiDevice" onclick="toggleSwitch('toggleNotiDevice')"></div>
+    </div>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">邮件通知</div>
+        <div class="toggle-sub">重要事件发送邮件提醒</div>
+      </div>
+      <div class="toggle-switch" id="toggleNotiEmail" onclick="toggleSwitch('toggleNotiEmail')"></div>
+    </div>
+  </div>
+
+  <!-- ⑤ 语音设置 -->
+  <div class="setting-section">
+    <div class="setting-section-title"><span class="st-icon">🎙️</span> 语音与 ASR 设置</div>
+    <div class="f-group">
+      <label class="f-label">默认音色</label>
+      <select class="f-input" id="voiceTone">
+        <option value="female-soft">温柔女声</option>
+        <option value="female-crisp">清脆女声</option>
+        <option value="male-steady">稳重男声</option>
+        <option value="male-lively">活泼男声</option>
+        <option value="child">童声</option>
+      </select>
+    </div>
+    <div class="f-row">
+      <div class="f-group">
+        <label class="f-label">语速（0.5 = 慢，2.0 = 快）</label>
+        <input class="f-input" type="range" id="voiceSpeed" min="0.5" max="2.0" step="0.1" value="1.0" oninput="document.getElementById('voiceSpeedVal').textContent=this.value">
+        <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">当前：<span id="voiceSpeedVal">1.0</span></div>
+      </div>
+      <div class="f-group">
+        <label class="f-label">音调（-20 = 低，20 = 高）</label>
+        <input class="f-input" type="range" id="voicePitch" min="-20" max="20" step="1" value="0" oninput="document.getElementById('voicePitchVal').textContent=this.value">
+        <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">当前：<span id="voicePitchVal">0</span></div>
+      </div>
+    </div>
+    <div class="voice-preview">
+      <button class="voice-play-btn" onclick="previewVoice()">▶</button>
+      <div class="voice-info">
+        <div class="voice-name" id="voicePreviewName">温柔女声</div>
+        <div class="voice-desc">试听当前音色效果</div>
+      </div>
+    </div>
+    <div style="margin-top:16px;">
+      <button class="btn-save" onclick="saveVoiceSettings()">保存语音设置</button>
+    </div>
+  </div>
+
+  <!-- ⑥ 危险操作 -->
+  <div class="setting-section" style="border-color:rgba(239,68,68,.2);">
+    <div class="setting-section-title"><span class="st-icon">⚠️</span> 危险操作</div>
+    <p style="font-size:13px; color:var(--text-secondary); margin-bottom:16px; line-height:1.6;">
+      删除账号将清空所有个人数据（对话记录、设备配置、API Key 等），此操作不可恢复。
+    </p>
+    <button class="btn-danger" onclick="confirmDeleteAccount()">删除我的账号</button>
+  </div>
+
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+var USER_API = '/api/users';
+
+function toast(msg, type) {
+  var c = document.getElementById('toastContainer');
+  var t = document.createElement('div');
+  t.className = 'toast toast-' + (type || 'ok');
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(function() { if (t.parentNode) t.parentNode.removeChild(t); }, 3000);
+}
+
+function hdr() {
+  try {
+    var t = localStorage.getItem('access_token');
+    return t ? {'Authorization': 'Bearer ' + t, 'Content-Type': 'application/json'} : {'Content-Type': 'application/json'};
+  } catch(e) { return {'Content-Type': 'application/json'}; }
+}
+
+// ── Toggle Switch ──
+function toggleSwitch(id) {
+  var el = document.getElementById(id);
+  el.classList.toggle('on');
+}
+
+// ── Load user info ──
+async function loadUserInfo() {
+  try {
+    var r = await fetch(USER_API + '/me', {headers: hdr()});
+    if (!r.ok) return;
+    var d = await r.json();
+    document.getElementById('settingUserName').textContent = d.username || '';
+    document.getElementById('settingUserEmail').textContent = d.email || '';
+    document.getElementById('settingUsernameInput').value = d.username || '';
+    document.getElementById('settingEmailInput').value = d.email || '';
+    document.getElementById('avatarFallback').textContent = (d.username || 'U').charAt(0).toUpperCase();
+  } catch(e) {}
+}
+
+// ── Save profile ──
+async function saveProfile() {
+  var username = document.getElementById('settingUsernameInput').value.trim();
+  var email = document.getElementById('settingEmailInput').value.trim();
+  if (!username) { toast('请输入用户名', 'err'); return; }
+  try {
+    var r = await fetch(USER_API + '/me', {
+      method: 'PATCH', headers: hdr(),
+      body: JSON.stringify({username: username, email: email})
+    });
+    if (!r.ok) { var e = await r.json().catch(function(){}); throw new Error(e && e.detail || '保存失败'); }
+    toast('个人资料已更新 ✅', 'ok');
+    loadUserInfo();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+// ── Change password ──
+async function changePassword() {
+  var oldP = document.getElementById('oldPassword').value;
+  var newP = document.getElementById('newPassword').value;
+  var confirmP = document.getElementById('confirmPassword').value;
+  if (!oldP) { toast('请输入当前密码', 'err'); return; }
+  if (newP.length < 6) { toast('新密码至少6位', 'err'); return; }
+  if (newP !== confirmP) { toast('两次新密码不一致', 'err'); return; }
+  try {
+    var r = await fetch(USER_API + '/me/password', {
+      method: 'POST', headers: hdr(),
+      body: JSON.stringify({old_password: oldP, new_password: newP})
+    });
+    if (!r.ok) { var e = await r.json().catch(function(){}); throw new Error(e && e.detail || '修改失败'); }
+    toast('密码已修改 ✅', 'ok');
+    document.getElementById('oldPassword').value = '';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmPassword').value = '';
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+// ── Preview avatar ──
+function previewAvatar(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var preview = document.getElementById('avatarPreview');
+    preview.innerHTML = '<img src="' + e.target.result + '" alt="avatar"><div class="avatar-overlay">更换</div>';
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── Voice preview ──
+function previewVoice() {
+  var tone = document.getElementById('voiceTone');
+  var name = tone.options[tone.selectedIndex].text;
+  document.getElementById('voicePreviewName').textContent = name;
+  toast('🔊 语音预览功能需接入 TTS 服务', 'ok');
+}
+
+function saveVoiceSettings() {
+  var settings = {
+    tone: document.getElementById('voiceTone').value,
+    speed: parseFloat(document.getElementById('voiceSpeed').value),
+    pitch: parseInt(document.getElementById('voicePitch').value),
+  };
+  localStorage.setItem('voice_settings', JSON.stringify(settings));
+  toast('语音设置已保存 ✅', 'ok');
+}
+
+// ── Delete account ──
+function confirmDeleteAccount() {
+  if (!confirm('⚠️ 确定要删除你的账号吗？\n\n此操作将清空所有数据，且不可恢复！\n\n请输入 "DELETE" 确认：')) return;
+  var confirmText = prompt('请输入 DELETE 确认：');
+  if (confirmText !== 'DELETE') { toast('已取消', 'ok'); return; }
+  toast('删除功能需管理员权限，请联系管理员', 'err');
+}
+
+// ── Init ──
+(async function() {
+  await loadUserInfo();
+  // Load saved voice settings
+  try {
+    var vs = JSON.parse(localStorage.getItem('voice_settings') || '{}');
+    if (vs.tone) document.getElementById('voiceTone').value = vs.tone;
+    if (vs.speed) { document.getElementById('voiceSpeed').value = vs.speed; document.getElementById('voiceSpeedVal').textContent = vs.speed; }
+    if (vs.pitch !== undefined) { document.getElementById('voicePitch').value = vs.pitch; document.getElementById('voicePitchVal').textContent = vs.pitch; }
+  } catch(e) {}
+})();
+</script>
+</body>
+</html>

@@ -10,6 +10,10 @@
         ...
 """
 
+from fastapi import Depends
+from sqlalchemy.orm import Session
+
+from app.models.database import get_db
 from app.core.llm_infer import LLMInfer, llm_infer as _llm_infer
 from app.core.stats import StatsManager, stats_manager as _stats_manager
 from app.core.devices import DeviceManager, device_manager as _device_manager
@@ -57,16 +61,16 @@ def get_reminder_manager() -> ReminderManager:
     return _reminder_manager
 
 
-# ── 服务层工厂（每次请求新建实例） ──
+# ── 服务层工厂（每次请求新建实例，支持 db 注入） ──
 
-def get_chat_service() -> ChatService:
-    """获取聊天服务实例"""
-    return ChatService()
+def get_chat_service(db: Session = Depends(get_db)) -> ChatService:
+    """获取聊天服务实例（注入 db session）"""
+    return ChatService(db=db)
 
 
-def get_device_service() -> DeviceService:
-    """获取设备服务实例"""
-    return DeviceService()
+def get_device_service(db: Session = Depends(get_db)) -> DeviceService:
+    """获取设备服务实例（注入 db session）"""
+    return DeviceService(db=db)
 
 
 def get_skill_service() -> SkillService:

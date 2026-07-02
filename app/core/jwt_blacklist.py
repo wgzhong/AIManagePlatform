@@ -44,7 +44,7 @@ def is_blacklisted(token: str) -> bool:
 
 
 def cleanup_expired() -> None:
-    """清理已过期的黑名单 token（应定期调用）"""
+    """清理已过期的黑名单 token（应在每次 logout 时调用）"""
     from datetime import datetime, timezone
     now = datetime.now(timezone.utc)
     expired = [
@@ -55,3 +55,8 @@ def cleanup_expired() -> None:
         del _BLACKLIST[token]
     if expired:
         logger.info("清理了 %d 个过期的黑名单 token", len(expired))
+
+
+def periodic_cleanup() -> None:
+    """供后台任务调用的周期性清理（可选）"""
+    cleanup_expired()

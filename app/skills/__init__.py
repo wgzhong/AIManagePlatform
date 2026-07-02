@@ -77,6 +77,11 @@ def _load_python_skills():
         ALL_SKILLS.append(WeatherSkill())
     except ImportError:
         pass
+    try:
+        from .homeassistant import HomeAssistantSkill
+        ALL_SKILLS.append(HomeAssistantSkill())
+    except ImportError:
+        pass
 
 
 def _init_skills():

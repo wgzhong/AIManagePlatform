@@ -53,6 +53,7 @@ class Settings(BaseSettings):
 
     # 服务运行配置
     app_port: int = 8002
+    internal_api_url: str = ""  # 内部 API 调用地址（Skill 调用后端时），为空则自动生成为 http://localhost:{app_port}
     max_devices_per_key: int = 50
 
     # CORS 配置：逗号分隔的允许源；留空表示允许全部（仅开发用，且强制关闭 credentials）

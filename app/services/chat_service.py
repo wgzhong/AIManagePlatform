@@ -20,36 +20,47 @@ logger = logging.getLogger(__name__)
 
 
 class ChatService:
-    """聊天服务类"""
+    """聊天服务类（支持依赖注入 db session）"""
 
-    def __init__(self):
-        # 注意：不再在实例上持有 asyncio.Lock——每请求新建实例会让锁失效。
-        # 并发保护已下沉到 device_manager 单例的 threading.Lock（详见 P0-2 修复）。
+    def __init__(self, db=None):
+        # db: 可选，由 Depends(get_db) 注入；为 None 时内部自动创建
+        self._db = db
         self._last_response = ""
-    
+
     def _get_db(self):
-        """获取数据库会话"""
+        """获取数据库会话（优先使用注入的 session）"""
+        if self._db is not None:
+            return self._db
         from app.models.database import SessionLocal
-        db = SessionLocal()
-        return db
+        return SessionLocal()
 
     def _safe_db_action(self, user_id: int, action):
         """安全执行数据库操作，自动处理会话关闭和异常。
-        
+
         Args:
             user_id: 用户ID，为空时跳过
-            action: callable(db) 执行数据库操作
+            action: callable(db) 执行数据库操作，返回值会被透传
+        Returns:
+            action(db) 的返回值；异常时返回 None
         """
         if not user_id:
-            return
+            try:
+                return action(None)
+            except Exception:
+                return None
         db = None
+        own_session = self._db is None
         try:
             db = self._get_db()
-            action(db)
+            result = action(db)
+            if own_session:
+                pass  # action 内部应自行 commit
+            return result
         except Exception as e:
             logger.warning("数据库操作失败: %s", e)
+            return None
         finally:
-            if db:
+            if own_session and db is not None:
                 db.close()
 
     def _save_chat_history(self, user_id: int, messages: list, model: str):
@@ -162,11 +173,10 @@ class ChatService:
             enable_think=request.enable_think,
         )
 
-        # ===== 组装：工具规则在最前面（最高优先级）======
+        # ===== 组装：工具规则在最前面（最高优先级）=====
         if tool_rules:
             system_content = tool_rules + "\n\n" + system_content
-        else:
-            system_content = system_content
+        # else: 无需处理，system_content 已是最終值
 
         non_system_messages: List[dict] = []
         for m in request.messages:
@@ -244,14 +254,15 @@ class ChatService:
             if re.search(r"有\s*几\s*点", msg):
                 pass  # 量词，跳过
             else:
-                after = msg.split("几点", 1)[1][:20]
-                exclude_words = ["要求", "建议", "想法", "意见", "原因", "说明", "希望", "期待", "需求", "原因"]
+                after = msg.split("几点", 1)[1][:20] if len(msg.split("几点")) > 1 else ""
+                exclude_words = ["要求", "建议", "想法", "意见", "原因", "说明", "希望", "期待", "需求"]
                 if not any(w in after for w in exclude_words):
-                    # 疑问语境才触发（避免「会议定在几点」这类陈述）
+                    # 疑问语境 / 孤立查询（如仅输入「几点」）才触发
                     is_question = (
                         "？" in msg or "?" in msg
-                        or "了" in msg.split("几点")[1][:10]
+                        or "了" in after[:10]
                         or "开始" in msg or "结束" in msg or "到" in msg
+                        or len(msg.strip()) <= 3  # 「几点」「现在几点」等短查询直接触发
                     )
                     if is_question:
                         return "get_time"
@@ -301,9 +312,8 @@ class ChatService:
             except Exception as e:
                 logger.warning("加载私人技能失败: %s", e)
 
-        logger.info("=== [TOOL-DEBUG] 聊天请求开始 ===")
-        logger.info("[TOOL-DEBUG] 用户消息: %s", [m.get("content", "")[:60] for m in request.messages])
-        logger.debug(f"[TOOL-DEBUG] 用户消息原始列表: {[m.get('content', '')[:60] for m in request.messages]}")
+        logger.info("=== 聊天请求开始 ===")
+        logger.debug("[TOOL] 用户消息: %s", [m.get("content", "")[:60] for m in request.messages])
         
         last_user_msg = ""
         for msg in reversed(request.messages):
@@ -311,29 +321,25 @@ class ChatService:
                 last_user_msg = msg.get("content", "")
                 break
         
-        logger.info("[TOOL-DEBUG] 最后用户消息: '%s'", last_user_msg)
-        logger.debug(f"[TOOL-DEBUG] 最后用户消息(原始) = '{last_user_msg}'")
+        logger.debug("[TOOL] 最后用户消息: '%s'", last_user_msg)
         
         # ===== 语义感知工具意图检测 =====
         forced_skill_name = self._detect_tool_intent(last_user_msg, private_skills)
-
+        
         if forced_skill_name:
-            logger.debug(f"\n[TOOL-DEBUG] ✅ 检测到工具意图: {forced_skill_name}\n")
-            logger.info("[TOOL-DEBUG] 检测到工具意图: %s", forced_skill_name)
+            logger.info("[TOOL] 检测到工具意图: %s", forced_skill_name)
         else:
-            logger.debug(f"[TOOL-DEBUG] ❌ 未检测到工具意图, msg='{last_user_msg}'")
-            logger.info("[TOOL-DEBUG] 未检测到工具意图")
-
-        logger.info("[TOOL-DEBUG] 最终 forced_skill_name: %s", forced_skill_name)
-        logger.debug(f"[TOOL-DEBUG] 最终 forced_skill_name = {forced_skill_name}")
-        logger.info("[TOOL-DEBUG] 发送工具数: %d", len(tools))
+            logger.debug("[TOOL] 未检测到工具意图, msg='%s'", last_user_msg[:50])
+        
+        logger.debug("[TOOL] 最终 forced_skill_name: %s", forced_skill_name)
+        logger.debug("[TOOL] 发送工具数: %d", len(tools))
         for t in tools:
             logger.debug("  工具: %s, params keys: %s", t["function"]["name"], list(t["function"]["parameters"].keys()) if t["function"].get("parameters") else "无")
 
         # ===== 强制工具执行：意图命中时直接执行，不依赖 LLM 返回 tool_calls =====
         
         if forced_skill_name:
-            logger.debug(f"\n[TOOL-DEBUG] 🔧🔧🔧 强制直接执行工具: {forced_skill_name}\n")
+            logger.info("[TOOL] 强制直接执行工具: %s", forced_skill_name)
             # 先从全局技能找，再从私人技能找
             skill = get_skill_by_name(forced_skill_name)
             if not skill and private_skills:
@@ -345,11 +351,17 @@ class ChatService:
             if skill:
                 try:
                     skill_args = self._parse_skill_args(forced_skill_name, last_user_msg)
-                    skill_result = skill.run(skill_args)
+                    # 兼容同步和异步 skill.run()
+                    import asyncio
+                    result = skill.run(skill_args)
+                    if asyncio.iscoroutine(result):
+                        skill_result = await result
+                    else:
+                        skill_result = result
                     self._increment_user_tool_call(request.user_id, forced_skill_name)
-                    logger.debug(f"[TOOL-DEBUG] 工具执行结果: {skill_result}")
+                    logger.debug("[TOOL] 工具执行结果: %s", skill_result[:200])
                 except Exception as skill_err:
-                    logger.debug(f"[TOOL-DEBUG] ⚠️ 工具执行失败: {skill_err}, 回退到正常 LLM 调用")
+                    logger.debug("[TOOL] 工具执行失败: %s", skill_err)
                     logger.warning("强制工具执行失败: %s", skill_err)
                     skill_result = None
 
@@ -367,7 +379,7 @@ class ChatService:
                     {"role": "user", "content": format_prompt}
                 ]
 
-                logger.debug(f"[TOOL-DEBUG] 正在用 LLM 润色结果...")
+                logger.debug("[TOOL] 正在用 LLM 润色结果...")
                 final_usage = None
                 async for text, _tc, usage in stream_chat_request(
                     format_messages, api_key, api_url, None,
@@ -384,20 +396,20 @@ class ChatService:
                         self._last_response += text
                         yield f"data: {json.dumps({'content': text}, ensure_ascii=False)}\n\n"
 
-                logger.debug(f"[TOOL-DEBUG] LLM 润色完成: {self._last_response[:100]}")
-
+                logger.debug("[TOOL] LLM 润色完成, 长度=%d", len(self._last_response))
+                
                 # 保存历史
                 if request.user_id and self._last_response:
                     self._save_chat_history(request.user_id, [
                         {"role": "user", "content": last_user_msg},
                         {"role": "assistant", "content": self._last_response}
                     ], request.model)
-
+                
                 if final_usage:
                     yield f"data: {json.dumps({'usage': final_usage}, ensure_ascii=False)}\n\n"
-
+                
                 yield "data: [DONE]\n\n"
-                logger.debug(f"[TOOL-DEBUG] === 强制工具执行完成 ===\n")
+                logger.debug("[TOOL] === 强制工具执行完成 ===")
                 return
         
         # 用户级统计（stats_service 内部会同步更新全局 stats_manager）
@@ -426,8 +438,7 @@ class ChatService:
                     yield f"data: {json.dumps({'content': text}, ensure_ascii=False)}\n\n"
                 
                 if tool_calls:
-                    logger.info("[TOOL-DEBUG] ✅✅✅ 收到 tool_calls! %s", tool_calls)
-                    logger.debug(f"\n[TOOL-DEBUG] ✅✅✅ 收到 LLM 工具调用: {tool_calls}\n")
+                    logger.info("[TOOL] ✅✅✅ 收到 tool_calls! %s", tool_calls)
                     for call_item in tool_calls:
                         idx = call_item["index"]
                         if idx not in tool_call_buffer:
@@ -478,7 +489,13 @@ class ChatService:
                     
                     skill = get_skill_by_name(skill_name)
                     if skill:
-                        skill_result = skill.run(args)
+                        # 兼容同步和异步 skill.run()
+                        import asyncio
+                        _result = skill.run(args)
+                        if asyncio.iscoroutine(_result):
+                            skill_result = await _result
+                        else:
+                            skill_result = _result
                         self._increment_user_tool_call(request.user_id, skill_name)
                         
                         tool_data = json.dumps(
@@ -534,15 +551,14 @@ class ChatService:
             yield "data: [DONE]\n\n"
         
             # ===== 汇总打印本轮工具调用结果 =====
-            logger.debug(f"\n[TOOL-DEBUG] === 本轮请求结束 ===")
-            logger.debug(f"[TOOL-DEBUG] tool_call_buffer 非空: {bool(tool_call_buffer)}")
+            logger.debug("[TOOL] 本轮请求结束, tool_call_buffer 非空: %s", bool(tool_call_buffer))
             if tool_call_buffer:
                 for idx, info in tool_call_buffer.items():
-                    logger.debug(f"[TOOL-DEBUG]   工具[{idx}]: name={info['name']}, args={info['arguments'][:100]}")
-            else:
-                logger.debug(f"[TOOL-DEBUG] ❌ LLM 未返回任何 tool_calls (直接返回了文本)")
-            logger.debug(f"[TOOL-DEBUG] _last_response 前100字: {self._last_response[:100]}")
-            logger.debug(f"[TOOL-DEBUG] ========================\n")
+                    logger.debug("[TOOL]   工具[%s]: name=%s, args=%s", idx, info['name'], info['arguments'][:100])
+                else:
+                    logger.debug("[TOOL] ❌ LLM 未返回任何 tool_calls (直接返回了文本)")
+            logger.debug("[TOOL] _last_response 前100字: %s", self._last_response[:100])
+            logger.debug("[TOOL] ========================")
             
         except Exception as e:
             error_msg = str(e)

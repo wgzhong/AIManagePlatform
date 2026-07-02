@@ -152,4 +152,6 @@ async def logout(request: Request):
     token = auth_header[7:]  # 去掉 "Bearer " 前缀
     
     add_to_blacklist(token)
+    from app.core.jwt_blacklist import cleanup_expired
+    cleanup_expired()  # 每次 logout 时顺带清理过期 token
     return MessageResponse(message="登出成功")

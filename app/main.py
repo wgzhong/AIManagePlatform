@@ -148,6 +148,11 @@ AI 推理对话平台 API 文档
     app.include_router(pages_router)
     app.include_router(ha_router)
 
+    # 公开健康检查（无鉴权，适合 K8s 探针 / 负载均衡器）
+    @app.get("/health/public")
+    def health_public():
+        return {"status": "ok", "service": "ai-manage-platform", "version": "1.0.0"}
+
     # 挂载静态文件服务（必须在 app 实例上 mount，router.mount 不生效）
     from fastapi.staticfiles import StaticFiles
     import os

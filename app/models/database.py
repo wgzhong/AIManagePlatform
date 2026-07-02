@@ -74,7 +74,7 @@ class UserStats(Base):
     total_output_tokens = Column(Integer, default=0)
     tool_calls = Column(JSON, default={"get_time": 0, "calculate": 0, "get_weather": 0, "total": 0})
     daily_records = Column(JSON, default=[])
-    last_reset = Column(String(20), default=datetime.now().date().isoformat())
+    last_reset = Column(String(20), default=lambda: datetime.now().date().isoformat())
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
 
